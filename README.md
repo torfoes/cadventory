@@ -35,6 +35,7 @@ TODO: Add from project proposal.
 
 Here's an architecture diagram:
 
+```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                               CADventory                             │
 │                                                                      │
@@ -56,7 +57,7 @@ Here's an architecture diagram:
 │    │     CAD Libraries    │◄───────────────────────────────┘         │
 │    └──────────────────────┘                                          │
 └──────────────────────────────────────────────────────────────────────┘
-
+```
 
 
 ## Contributing
