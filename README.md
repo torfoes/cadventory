@@ -10,6 +10,14 @@ TODO: Use the built-in continuous integration in GitLab.
 - [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
 - [ ] Deploy to a .zip distribution...
 
+## SETUP TODO
+
+- The project may use Gitlab for revision control, development logging, and continuous integration (CI) testing.
+- The project shall demonstrate CI testing for at least one platform.
+- The project shall incorporate some code coverage testing.
+- The project shall incorporate some code quality testing.
+- The project shall set up backups of all project data.
+
 
 ## Installation
 
