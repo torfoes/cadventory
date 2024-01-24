@@ -1,3 +1,33 @@
+# use the official gcc image, based on debian
+image: gcc
+
+build:
+  stage: build
+  # instead of calling g++ directly you can also use some build toolkit like make
+  # install the necessary build tools when needed
+  # before_script:
+    - apt update && apt -y install cmake
+  script:
+    - g++ helloworld.cpp -o hello
+  artifacts:
+    paths:
+      - hello
+      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
+      # cache:
+      #   paths:
+      #     - "*.o"
+
+# run tests using the binary built before
+test:
+  stage: test
+  script:
+    - ./runmytests.sh
+
+deploy:
+  stage: deploy
+  script: echo "Define your deployment script!"
+  environment: production
+
 # You can override the included template(s) by including variable overrides
 # SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
 # Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
