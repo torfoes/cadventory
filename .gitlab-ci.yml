@@ -24,8 +24,8 @@ image: gcc
 
 build:
   stage: build
-    - apt update && apt -y install cmake
   script:
+    - apt update && apt -y install cmake
     - g++ helloworld.cpp -o hello
   artifacts:
     paths:
