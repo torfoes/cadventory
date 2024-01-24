@@ -30,6 +30,35 @@ TODO: Tell people where they can go to for help. It can be any combination of an
 
 TODO: Add from project proposal.
 
+
+## Design
+
+Here's an architecture diagram:
+
+┌──────────────────────────────────────────────────────────────────────┐
+│                               CADventory                             │
+│                                                                      │
+│    ┌──────────────────────────────────────────────────────────────┐  │
+│    │                      User Interface (Qt)                     │  │
+│    └─────────────┬───────────────────────┬─────────────────┬──────┘  │
+│                  │                       │                 │         │
+│    ┌─────────────▼───────────┐  ┌────────▼─────────┐  ┌────▼──────┐  │
+│    │  Filesystem Processor   │  │ SQLite or JSON   │◄─│ Report    │  │
+│    └─────────────┬───────────┘  │ Storage Manager  │  │ Generator │  │
+│                  │              └──────────────────┘  └────┬──────┘  │
+│                  │                                         │         │
+│    ┌─────────────▼───────────┐                             │         │
+│    │ Geometry/Image/Document │                             │         │
+│    │ Handler                 │                             │         │
+│    └─────────────┬───────────┘                             │         │
+│                  │                                         │         │
+│    ┌─────────────▼────────┐                                │         │
+│    │     CAD Libraries    │◄───────────────────────────────┘         │
+│    └──────────────────────┘                                          │
+└──────────────────────────────────────────────────────────────────────┘
+
+
+
 ## Contributing
 
 TODO: Document the testing/linting steps.
