@@ -21,11 +21,10 @@ stages:
  - performance
  - cleanup
 
-sast:
-  stage: test
-
 include:
 - template: Auto-DevOps.gitlab-ci.yml
+
+# image: alpine
 
 # use the official gcc image, based on debian
 image: gcc
@@ -34,10 +33,12 @@ build:
   stage: build
   script:
     - echo "Building CADventory"
+    - echo "artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - apt update && apt -y install cmake
     - g++ helloworld.cpp -o cadventory
   artifacts:
     paths:
+      - artifact.txt
       - cadventory
 
 test:
