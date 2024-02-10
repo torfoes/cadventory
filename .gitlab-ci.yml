@@ -33,24 +33,23 @@ image: gcc
 build:
   stage: build
   script:
+    - echo "Building CADventory"
     - apt update && apt -y install cmake
-    - g++ helloworld.cpp -o hello
+    - g++ helloworld.cpp -o cadventory
   artifacts:
     paths:
-      - hello
-      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-      # cache:
-      #   paths:
-      #     - "*.o"
+      - cadventory
 
-# run tests using the binary built before
 test:
   stage: test
   script:
-    - ./runmytests.sh
+    - echo "Testing CADventory"
+    - ls -la
+    - ./cadventory
 
 deploy:
   stage: deploy
-  script: echo "Define your deployment script!"
+  script:
+    - echo "Deploying CADventory"
   environment: production
 
