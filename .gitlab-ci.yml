@@ -4,21 +4,23 @@ image: gcc
 build-mac:
   stage: build
   script:
-    - echo "Building CADventory on `hostname`"
+    - echo "Building CADventory on `hostname` at `pwd`"
+    - echo "PATH=$PATH"
     - echo "artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     # - apt update && apt -y install cmake
     - mkdir .build
     - cd .build && /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.1 -DCMAKE_OSX_ARCHITECTURES=arm64 ..
     - make -j4
+    - find .
   artifacts:
     paths:
       - artifact.txt
-      - cadventory
+      - src/cadventory
 
 test:
   stage: test
   script:
-    - echo "Testing CADventory on `hostname`"
+    - echo "Testing CADventory on `hostname` at `pwd`"
     - ls -la
     - ./cadventory
 
