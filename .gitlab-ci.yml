@@ -8,7 +8,7 @@ build-mac:
     - echo "artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     # - apt update && apt -y install cmake
     - mkdir .build
-    - cd .build && /opt/homebrew/bin/cmake -DQt6_DIR=/opt/homebrew/Cellar/qt/6.6.1 ..
+    - cd .build && /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.1 ..
   artifacts:
     paths:
       - artifact.txt
