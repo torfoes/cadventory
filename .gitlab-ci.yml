@@ -1,15 +1,14 @@
 # use the official gcc image, based on debian
 image: gcc
 
-build:
+build-mac:
   stage: build
   script:
-    - echo "Building CADventory"
+    - echo "Building CADventory on `hostname`"
     - echo "artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
-    - hostname
-    - apt update && apt -y install cmake
+    # - apt update && apt -y install cmake
     - mkdir .build
-    - cd .build && cmake ..
+    - cd .build && /opt/homebrew/bin/cmake ..
   artifacts:
     paths:
       - artifact.txt
@@ -18,13 +17,13 @@ build:
 test:
   stage: test
   script:
-    - echo "Testing CADventory"
+    - echo "Testing CADventoryon `hostname`"
     - ls -la
     - ./cadventory
 
 deploy:
   stage: deploy
   script:
-    - echo "Deploying CADventory"
+    - echo "Deploying CADventory on `hostname`"
   environment: production
 
