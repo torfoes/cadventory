@@ -9,6 +9,7 @@ build-mac:
     # - apt update && apt -y install cmake
     - mkdir .build
     - cd .build && /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.1 ..
+    - make -j4
   artifacts:
     paths:
       - artifact.txt
@@ -17,7 +18,7 @@ build-mac:
 test:
   stage: test
   script:
-    - echo "Testing CADventoryon `hostname`"
+    - echo "Testing CADventory on `hostname`"
     - ls -la
     - ./cadventory
 
