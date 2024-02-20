@@ -9,6 +9,12 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
 include_directories(${QT_INCLUDE_DIRS})
-qt_add_executable(cadventory WIN32 CADventory.cpp main.cpp splash.ui mainwindow.ui)
+set (SRCS
+  src/CADventory.cpp
+  src/main.cpp
+  src/splash.ui
+  src/mainwindow.ui
+)
+qt_add_executable(cadventory WIN32 ${SRCS})
 
 target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets)
