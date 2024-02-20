@@ -3,7 +3,7 @@
 #include <QPixmap>
 #include <QTimer>
 
-#include "./ui_mainwindow.h"
+#include "MainWindow.h"
 
 
 CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr)
@@ -35,7 +35,7 @@ CADventory::~CADventory()
 
 void CADventory::initMainWindow()
 {
-  window = new QMainWindow();
+  window = new MainWindow();
 
   window->show();
   splash->finish(window);
@@ -56,7 +56,7 @@ void CADventory::showSplash()
   splash = new QSplashScreen(pixmap);
   splash->showMessage("Loading... please wait.", Qt::AlignLeft, Qt::black);
   splash->show();
-  // Ensure the splash is displayed immediately.
+  // ensure the splash is displayed immediately
   this->processEvents();
 
   // keep it visible for a minimum time

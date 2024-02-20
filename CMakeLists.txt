@@ -11,9 +11,10 @@ qt_standard_project_setup()
 include_directories(${QT_INCLUDE_DIRS})
 set (SRCS
   src/CADventory.cpp
+  src/MainWindow.cpp
   src/main.cpp
-  src/splash.ui
   src/mainwindow.ui
+  src/splash.ui
 )
 qt_add_executable(cadventory WIN32 ${SRCS})
 
