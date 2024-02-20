@@ -7,7 +7,8 @@ build:
     - echo "Building CADventory"
     - echo "artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - apt update && apt -y install cmake
-    - g++ helloworld.cpp -o cadventory
+    - mkdir .build
+    - cd .build && cmake ..
   artifacts:
     paths:
       - artifact.txt
