@@ -22,21 +22,6 @@ main(int argc, char **argv)
 {
 #endif
   CADventory app(argc, argv);
-  //  QApplication app(argc, argv);
-
-  // std::cout << std::filesystem::current_path()<< std::endl;
-  QPixmap pixmap("../splash.png");
-  if (pixmap.isNull()) {
-    pixmap = QPixmap(512, 512);
-    pixmap.fill(Qt::white);
-  }
-  QSplashScreen splash(pixmap);
-  splash.show();
-  splash.showMessage("Loading from main... please wait.");
-  //  app.processEvents(QEventLoop::AllEvents);
-  app.processEvents();
-
-  sleep(1);
-
+  app.showSplash();
   return app.exec();
 }

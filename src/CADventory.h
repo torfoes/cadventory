@@ -2,21 +2,26 @@
 #define CADVENTORY_H
 
 #include <QApplication>
+#include <QMainWindow>
+#include <QSplashScreen>
 #include <QObject>
-
-//#include "MainWindow.h"
 
 
 class CADventory : public QApplication
 {
-    Q_OBJECT
+  Q_OBJECT
 
-    public:
-    	CADventory(int &argc, char *argv[]);
-	~CADventory();
+public:
+  CADventory(int &argc, char *argv[]);
+  ~CADventory();
+  void showSplash();
 
-    public:
-  //MainWindow *w = NULL;
+private:
+  void initMainWindow();
+
+public:
+  QMainWindow *window;
+  QSplashScreen *splash;
 };
 
 #endif

@@ -1,40 +1,64 @@
 #include "CADventory.h"
 
-#include <QMainWindow>
 #include <QPixmap>
-#include <QSplashScreen>
+#include <QTimer>
 
-#include <unistd.h>
+#include "./ui_mainwindow.h"
 
 
-CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv)
+CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr)
 {
   setOrganizationName("BRL-CAD");
   setOrganizationDomain("brlcad.org");
   setApplicationName("CADventory");
   setApplicationVersion("0.1.0");
 
-  //  w = new MainWindow();
-  QPixmap pixmap("/Users/morrison/Desktop/RSEG127/cadventory/splash.png");
-  if (pixmap.isNull()) {
-    pixmap = QPixmap(512, 512);
-    pixmap.fill(Qt::white);
-  }
-  QSplashScreen splash(pixmap);
-  splash.show();
-  splash.showMessage("Loading... please wait.");
-  this->processEvents();
+  QString appName = QCoreApplication::applicationName();
+  QString appVersion = QCoreApplication::applicationVersion();
 
-  sleep(1);
+  // ANSI escape codes for underlining and reset
+  QString underlineStart = "\033[4m";
+  QString underlineEnd = "\033[0m";
 
-  QMainWindow window;
-  window.show();
-  this->processEvents();
-
-  //  splash.finish(&splash);
+  // Print underlined application name and version
+  qInfo().noquote() << underlineStart + appName + " " + appVersion + underlineEnd;
+  qInfo() << "Loading ... please wait.";
 }
 
 
 CADventory::~CADventory()
 {
+  delete window;
+  delete splash;
+}
+
+
+void CADventory::initMainWindow()
+{
+  window = new QMainWindow();
+
+  window->show();
+  splash->finish(window);
+  delete splash;
+  splash = nullptr;
+
+  qInfo() << "Done loading.";
+}
+
+
+void CADventory::showSplash()
+{
+  QPixmap pixmap("/Users/morrison/Desktop/RSEG127/cadventory/splash.png");
+  if (pixmap.isNull()) {
+    pixmap = QPixmap(512, 512);
+    pixmap.fill(Qt::black);
+  }
+  splash = new QSplashScreen(pixmap);
+  splash->showMessage("Loading... please wait.", Qt::AlignLeft, Qt::black);
+  splash->show();
+  // Ensure the splash is displayed immediately.
+  this->processEvents();
+
+  // keep it visible for a minimum time
+  QTimer::singleShot(2000, this, &CADventory::initMainWindow);
 }
