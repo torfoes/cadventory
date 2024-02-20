@@ -23,7 +23,8 @@ test:
   script:
     - echo "Testing CADventory on `hostname` at `pwd`"
     - ls -la
-    - ./cadventory
+    - find .
+    - .build/cadventory
 
 deploy:
   stage: deploy
