@@ -43,6 +43,8 @@ test-mac:
   stage: test
   tags:
     - mac
+  dependencies: 
+    - build-mac
   script:
     - echo "Testing CADventory on Mac `hostname` at `pwd`"
     - ls -la
@@ -54,6 +56,8 @@ test-linux:
   stage: test
   tags:
     - linux
+  dependencies: 
+    - build-linux
   script:
     - echo "Testing CADventory on Linux `hostname` at `pwd`"
     - ls -la
@@ -65,6 +69,8 @@ deploy-mac:
   stage: deploy
   tags:
     - mac
+  dependencies: 
+    - test-mac
   script:
     - echo "Deploying CADventory on Mac `hostname` at `pwd`"
   environment: production
@@ -73,6 +79,8 @@ deploy-linux:
   stage: deploy
   tags:
     - linux
+  dependencies: 
+    - test-linux
   script:
     - echo "Deploying CADventory on Linux `hostname` at `pwd`"
   environment: production
