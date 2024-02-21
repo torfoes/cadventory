@@ -49,6 +49,7 @@ test-mac:
     - echo "Testing CADventory on Mac `hostname` at `pwd`"
     - ls -la
     - find .
+    - find / -name libQt6Widgets.so.6
     - file .build/cadventory
     - .build/cadventory --no-gui
 
