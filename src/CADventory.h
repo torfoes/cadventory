@@ -27,7 +27,7 @@ private:
 
 public:
   QMainWindow *window;
-  QSplashScreen *splash;
+  QWidget *splash;
   bool loaded;
 };
 

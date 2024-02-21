@@ -6,6 +6,7 @@
 #include <QTimer>
 
 #include "MainWindow.h"
+#include "SplashDialog.h"
 #include "FilesystemIndexer.h"
 
 
@@ -44,10 +45,16 @@ void CADventory::initMainWindow()
   connect(this, &CADventory::indexingComplete, static_cast<MainWindow*>(window), &MainWindow::updateStatusLabel);
 
   window->show();
-  splash->finish(window);
-  delete splash;
-  splash = nullptr;
+  QSplashScreen *splat = dynamic_cast<QSplashScreen*>(splash);
+  if (splat) {
+    splat->finish(window);
+    delete splat;
+  } else {
+    QDialog *diag = static_cast<QDialog*>(splash);
+    delete diag;
+  }
 
+  splash = nullptr;
   qInfo() << "Done loading.";
 }
 
@@ -56,11 +63,13 @@ void CADventory::showSplash()
 {
   QPixmap pixmap("/Users/morrison/Desktop/RSEG127/cadventory/splash.png");
   if (pixmap.isNull()) {
-    pixmap = QPixmap(512, 512);
-    pixmap.fill(Qt::black);
+    // pixmap = QPixmap(512, 512);
+    // pixmap.fill(Qt::black);
+    splash = new SplashDialog();
+  } else {
+    splash = new QSplashScreen(pixmap);
+    static_cast<QSplashScreen*>(splash)->showMessage("Loading... please wait.", Qt::AlignLeft, Qt::black);
   }
-  splash = new QSplashScreen(pixmap);
-  splash->showMessage("Loading... please wait.", Qt::AlignLeft, Qt::black);
   splash->show();
   // ensure the splash is displayed immediately
   this->processEvents();
@@ -84,7 +93,9 @@ void CADventory::indexDirectory(const char *path)
           message.resize(MAX_MSG-3);
           message.append("...");
         }
-        splash->showMessage(QString::fromStdString(message), Qt::AlignLeft, Qt::white);
+        QSplashScreen* sc = dynamic_cast<QSplashScreen*>(splash);
+        if (sc)
+          sc->showMessage(QString::fromStdString(message), Qt::AlignLeft, Qt::white);
         QApplication::processEvents(); // keep UI responsive
       }
     }
