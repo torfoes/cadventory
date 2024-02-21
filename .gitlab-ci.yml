@@ -7,7 +7,6 @@ build-mac:
   script:
     - echo "Building CADventory on Mac `hostname` at `pwd`"
     - echo "PATH=$PATH"
-    # - apt update && apt -y install cmake
     - mkdir .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
@@ -37,17 +36,35 @@ build-linux:
       - .build/artifact.txt
       - .build/cadventory
 
-test:
+test-mac:
   stage: test
+  only: [mac]
   script:
-    - echo "Testing CADventory on `hostname` at `pwd`"
+    - echo "Testing CADventory on Mac `hostname` at `pwd`"
     - ls -la
     - find .
     - .build/cadventory
 
-deploy:
-  stage: deploy
+test-linux:
+  stage: test
+  only: [linux]
   script:
-    - echo "Deploying CADventory on `hostname` at `pwd`"
+    - echo "Testing CADventory on Linux `hostname` at `pwd`"
+    - ls -la
+    - find .
+    - .build/cadventory
+
+deploy-mac:
+  stage: deploy
+  only: [mac]
+  script:
+    - echo "Deploying CADventory on Mac `hostname` at `pwd`"
+  environment: production
+
+deploy-linux:
+  stage: deploy
+  only: [linux]
+  script:
+    - echo "Deploying CADventory on Linux `hostname` at `pwd`"
   environment: production
 
