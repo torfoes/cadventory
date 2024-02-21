@@ -19,6 +19,9 @@ public:
 
   void indexDirectory(const char *path);
 
+signals:
+  void indexingComplete(const char *summary);
+
 private:
   void initMainWindow();
 

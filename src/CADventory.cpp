@@ -1,5 +1,7 @@
 #include "CADventory.h"
 
+#include <iostream>
+
 #include <QPixmap>
 #include <QTimer>
 
@@ -38,6 +40,8 @@ CADventory::~CADventory()
 void CADventory::initMainWindow()
 {
   window = new MainWindow();
+
+  connect(this, &CADventory::indexingComplete, static_cast<MainWindow*>(window), &MainWindow::updateStatusLabel);
 
   window->show();
   splash->finish(window);
@@ -111,7 +115,14 @@ void CADventory::indexDirectory(const char *path)
 
   loaded = true;
   // keep it visible for a minimum time
-  QTimer::singleShot(500, this, &CADventory::initMainWindow);
+  // QTimer::singleShot(500, this, &CADventory::initMainWindow);
+  initMainWindow();
+
+  // update the main window
+  QString message = QString("Indexed " + QString::number(f.indexed()) + " files (" + QString::number(gfiles.size()) + " geometry, " + QString::number(imgfiles.size()) + " images)");
+
+  emit indexingComplete(message.toUtf8().constData());
+
 }
 
 

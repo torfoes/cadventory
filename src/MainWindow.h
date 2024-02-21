@@ -14,6 +14,9 @@ public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
 
+public slots:
+  void updateStatusLabel(const char *status);
+
 private:
   Ui::MainWindow ui;
 };
