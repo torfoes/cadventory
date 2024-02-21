@@ -60,10 +60,12 @@ void CADventory::showSplash()
   splash->show();
   // ensure the splash is displayed immediately
   this->processEvents();
+  this->processEvents();
+  this->processEvents();
   qInfo() << "Splash visible?";
 
   // keep it visible for a minimum time
-  QTimer::singleShot(1000, this, &CADventory::initMainWindow);
+  QTimer::singleShot(2000, this, &CADventory::initMainWindow);
 }
 
 
@@ -84,10 +86,10 @@ void CADventory::indexDirectory(const char *path)
   qInfo() << "Found" << gfiles.size() << "geometry files";
   qInfo() << "Found" << imgfiles.size() << "image files";
 
-#if 0
   for (const auto& file : gfiles) {
     qInfo() << "Geometry: " << file;
   }
+#if 0
   for (const auto& file : imgfiles) {
     qInfo() << "Image: " << file;
   }
