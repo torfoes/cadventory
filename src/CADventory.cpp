@@ -119,11 +119,11 @@ void CADventory::indexDirectory(const char *path)
   qInfo() << "Found" << imgfiles.size() << "image files";
 
   for (const auto& file : gfiles) {
-    qInfo() << "Geometry: " + file;
+    qInfo() << "Geometry: " + QString::fromStdString(file);
   }
 #if 0
   for (const auto& file : imgfiles) {
-    qInfo() << "Image: " + file;
+    qInfo() << "Image: " + QString::fromStdString(file);
   }
 #endif
 
