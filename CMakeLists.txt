@@ -12,6 +12,7 @@ include_directories(${QT_INCLUDE_DIRS})
 set (SRCS
   src/CADventory.cpp
   src/MainWindow.cpp
+  src/FilesystemIndexer.cpp
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
