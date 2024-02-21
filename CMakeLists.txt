@@ -11,8 +11,9 @@ qt_standard_project_setup()
 include_directories(${QT_INCLUDE_DIRS})
 set (SRCS
   src/CADventory.cpp
-  src/MainWindow.cpp
   src/FilesystemIndexer.cpp
+  src/MainWindow.cpp
+  src/SplashDialog.cpp
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
