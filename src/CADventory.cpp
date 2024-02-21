@@ -64,7 +64,7 @@ void CADventory::initMainWindow()
 
 void CADventory::showSplash()
 {
-  QPixmap pixmap("/Users/morrison/Desktop/RSEG127/cadventory/splash.png");
+  QPixmap pixmap("../splash.png");
   if (pixmap.isNull()) {
     // pixmap = QPixmap(512, 512);
     // pixmap.fill(Qt::black);
