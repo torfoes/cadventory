@@ -47,6 +47,7 @@ test-mac:
     - echo "Testing CADventory on Mac `hostname` at `pwd`"
     - ls -la
     - find .
+    - file .build/cadventory
     - .build/cadventory --no-gui
 
 test-linux:
@@ -57,6 +58,7 @@ test-linux:
     - echo "Testing CADventory on Linux `hostname` at `pwd`"
     - ls -la
     - find .
+    - file .build/cadventory
     - .build/cadventory --no-gui
 
 deploy-mac:
