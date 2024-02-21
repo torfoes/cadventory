@@ -43,7 +43,7 @@ test-mac:
     - echo "Testing CADventory on Mac `hostname` at `pwd`"
     - ls -la
     - find .
-    - .build/cadventory --no-gui
+    - ./cadventory --no-gui
 
 test-linux:
   stage: test
@@ -52,19 +52,19 @@ test-linux:
     - echo "Testing CADventory on Linux `hostname` at `pwd`"
     - ls -la
     - find .
-    - .build/cadventory --no-gui
+    - ./cadventory --no-gui
 
-deploy-mac:
-  stage: deploy
-  only: [mac]
-  script:
-    - echo "Deploying CADventory on Mac `hostname` at `pwd`"
-  environment: production
+#deploy-mac:
+#  stage: deploy
+#  only: [mac]
+#  script:
+#    - echo "Deploying CADventory on Mac `hostname` at `pwd`"
+#  environment: production
 
-deploy-linux:
-  stage: deploy
-  only: [linux]
-  script:
-    - echo "Deploying CADventory on Linux `hostname` at `pwd`"
-  environment: production
+#deploy-linux:
+#  stage: deploy
+#  only: [linux]
+#  script:
+#    - echo "Deploying CADventory on Linux `hostname` at `pwd`"
+#  environment: production
 
