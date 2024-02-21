@@ -41,7 +41,7 @@ FilesystemIndexer::setProgressCallback(std::function<void(const std::string&)> f
 size_t
 FilesystemIndexer::indexDirectory(const std::string& dir) {
 
-  if (dir == "")
+  if (dir == "" || !std::filesystem::exists(dir))
     return 0;
 
   std::filesystem::path path = dir;
