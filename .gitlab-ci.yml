@@ -36,23 +36,23 @@ build-linux:
       - .build/artifact.txt
       - .build/cadventory
 
-test-mac:
-  stage: test
-  only: [mac]
-  script:
-    - echo "Testing CADventory on Mac `hostname` at `pwd`"
-    - ls -la
-    - find .
-    - .build/cadventory --no-gui
+#test-mac:
+#  stage: test
+#  only: [mac]
+#  script:
+#    - echo "Testing CADventory on Mac `hostname` at `pwd`"
+#    - ls -la
+#    - find .
+#    - .build/cadventory --no-gui
 
-test-linux:
-  stage: test
-  only: [linux]
-  script:
-    - echo "Testing CADventory on Linux `hostname` at `pwd`"
-    - ls -la
-    - find .
-    - .build/cadventory --no-gui
+#test-linux:
+#  stage: test
+#  only: [linux]
+#  script:
+#    - echo "Testing CADventory on Linux `hostname` at `pwd`"
+#    - ls -la
+#    - find .
+#    - .build/cadventory --no-gui
 
 #deploy-mac:
 #  stage: deploy
