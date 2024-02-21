@@ -23,5 +23,6 @@ main(int argc, char **argv)
 #endif
   CADventory app(argc, argv);
   app.showSplash();
+  app.indexDirectory("/Users/morrison");
   return app.exec();
 }

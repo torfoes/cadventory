@@ -15,6 +15,7 @@ public:
   CADventory(int &argc, char *argv[]);
   ~CADventory();
   void showSplash();
+  void indexDirectory(const char *path);
 
 private:
   void initMainWindow();

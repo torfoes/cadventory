@@ -25,24 +25,6 @@ CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), win
   qInfo().noquote() << underlineStart + appName + " " + appVersion + underlineEnd;
   qInfo() << "Loading ... please wait.";
 
-  qInfo() << "Indexing...";
-  FilesystemIndexer f = FilesystemIndexer("/Users/morrison/");
-  qInfo() << "... (found" << f.indexed() << "files) indexing done.";
-
-  std::vector<std::string> gfilesuffixes{".g"};
-  std::vector<std::string> imgfilesuffixes{".png", ".jpg", ".gif"};
-
-  qInfo() << "Scanning...";
-  std::vector<std::string> gfiles = f.findFilesWithSuffixes(gfiles);
-  std::vector<std::string> imgfiles = f.findFilesWithSuffixes(imgfiles);
-  qInfo() << "...scanning done.";
-
-  for (const auto& file : gfiles) {
-    qInfo() << "Geometry: " << file;
-  }
-  for (const auto& file : imgfiles) {
-    qInfo() << "Image: " << file;
-  }
 }
 
 
@@ -78,7 +60,36 @@ void CADventory::showSplash()
   splash->show();
   // ensure the splash is displayed immediately
   this->processEvents();
+  qInfo() << "Splash visible?";
 
   // keep it visible for a minimum time
-  QTimer::singleShot(2000, this, &CADventory::initMainWindow);
+  QTimer::singleShot(1000, this, &CADventory::initMainWindow);
+}
+
+
+void CADventory::indexDirectory(const char *path)
+{
+  qInfo() << "Indexing...";
+  FilesystemIndexer f = FilesystemIndexer(path);
+  qInfo() << "... (found" << f.indexed() << "files) indexing done.";
+
+  std::vector<std::string> gfilesuffixes{".g"};
+  std::vector<std::string> imgfilesuffixes{".png", ".jpg", ".gif"};
+
+  qInfo() << "Scanning...";
+  std::vector<std::string> gfiles = f.findFilesWithSuffixes(gfilesuffixes);
+  std::vector<std::string> imgfiles = f.findFilesWithSuffixes(imgfilesuffixes);
+  qInfo() << "...scanning done.";
+
+  qInfo() << "Found" << gfiles.size() << "geometry files";
+  qInfo() << "Found" << imgfiles.size() << "image files";
+
+#if 0
+  for (const auto& file : gfiles) {
+    qInfo() << "Geometry: " << file;
+  }
+  for (const auto& file : imgfiles) {
+    qInfo() << "Image: " << file;
+  }
+#endif
 }
