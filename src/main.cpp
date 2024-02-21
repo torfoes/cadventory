@@ -4,9 +4,10 @@
 #include <QPixmap>
 #include <QSplashScreen>
 
+#include <stdlib.h>
 #include <iostream>
-#include <unistd.h>
 #include <filesystem>
+
 
 #ifdef _WIN32
 int APIENTRY
@@ -26,8 +27,12 @@ main(int argc, char **argv)
   app.showSplash();
 
   QTimer::singleShot(250, [&app]() {
+    const char *home = getenv("HOME");
+    if (!home)
+      home = "~";
     app.processEvents();
-    app.indexDirectory("/Users/morrison/.CADventory");
+    std::string localDir = std::string(home) + std::string("/.CADventory");
+    app.indexDirectory(localDir.c_str());
   });
 
   return app.exec();
