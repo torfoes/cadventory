@@ -13,6 +13,8 @@ public:
 
   std::vector<std::string> findFilesWithSuffixes(const std::vector<std::string>& suffixes);
 
+  size_t indexed();
+
 private:
   std::unordered_map<std::string, std::vector<std::string>> fileIndex;
 

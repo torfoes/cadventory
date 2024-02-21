@@ -4,6 +4,7 @@
 #include <QTimer>
 
 #include "MainWindow.h"
+#include "FilesystemIndexer.h"
 
 
 CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr)
@@ -23,6 +24,25 @@ CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), win
   // print underlined application name and version
   qInfo().noquote() << underlineStart + appName + " " + appVersion + underlineEnd;
   qInfo() << "Loading ... please wait.";
+
+  qInfo() << "Indexing...";
+  FilesystemIndexer f = FilesystemIndexer("/Users/morrison/");
+  qInfo() << "... (found" << f.indexed() << "files) indexing done.";
+
+  std::vector<std::string> gfilesuffixes{".g"};
+  std::vector<std::string> imgfilesuffixes{".png", ".jpg", ".gif"};
+
+  qInfo() << "Scanning...";
+  std::vector<std::string> gfiles = f.findFilesWithSuffixes(gfiles);
+  std::vector<std::string> imgfiles = f.findFilesWithSuffixes(imgfiles);
+  qInfo() << "...scanning done.";
+
+  for (const auto& file : gfiles) {
+    qInfo() << "Geometry: " << file;
+  }
+  for (const auto& file : imgfiles) {
+    qInfo() << "Image: " << file;
+  }
 }
 
 

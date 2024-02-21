@@ -34,3 +34,7 @@ FilesystemIndexer::indexDirectory(const std::string& dir) {
 }
 
 
+size_t
+FilesystemIndexer::indexed() {
+  return fileIndex.size();
+}
