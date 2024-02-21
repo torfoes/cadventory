@@ -128,8 +128,6 @@ void CADventory::indexDirectory(const char *path)
 #endif
 
   loaded = true;
-  // keep it visible for a minimum time
-  // QTimer::singleShot(500, this, &CADventory::initMainWindow);
   initMainWindow();
 
   // update the main window
