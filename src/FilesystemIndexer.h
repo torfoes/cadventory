@@ -2,6 +2,8 @@
 #define FILESYSTEMINDEXER_H
 
 #include <unordered_map>
+#include <unordered_set>
+#include <functional>
 #include <vector>
 #include <string>
 
@@ -9,7 +11,14 @@
 class FilesystemIndexer {
 
 public:
-  explicit FilesystemIndexer(const char* rootDir);
+  explicit FilesystemIndexer(const char *rootDir = nullptr);
+  FilesystemIndexer(const FilesystemIndexer&) = delete;
+  ~FilesystemIndexer();
+
+  void setProgressCallback(std::function<void(const std::string&)> callback);
+
+  // returns number of files indexed
+  size_t indexDirectory(const std::string& path);
 
   std::vector<std::string> findFilesWithSuffixes(const std::vector<std::string>& suffixes);
 
@@ -17,8 +26,9 @@ public:
 
 private:
   std::unordered_map<std::string, std::vector<std::string>> fileIndex;
+  std::unordered_set<std::string> visitedPaths;
 
-  void indexDirectory(const std::string& path);
+  std::function<void(const std::string&)> callback;
 };
 
 
