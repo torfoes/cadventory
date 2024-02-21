@@ -1,5 +1,6 @@
 #include "CADventory.h"
 
+#include <QTimer>
 #include <QPixmap>
 #include <QSplashScreen>
 
@@ -23,6 +24,11 @@ main(int argc, char **argv)
 #endif
   CADventory app(argc, argv);
   app.showSplash();
-  app.indexDirectory("/Users/morrison");
+
+  QTimer::singleShot(250, [&app]() {
+    app.processEvents();
+    app.indexDirectory("/Users/morrison");
+  });
+
   return app.exec();
 }
