@@ -98,13 +98,6 @@ FilesystemIndexer::indexDirectory(const std::string& dir) {
 
       bool isReadable = (status.permissions() & std::filesystem::perms::owner_read) != std::filesystem::perms::none;
 
-      if (it->path() == "/Users/morrison/Library/Application Support/MobileSync") {
-        std::cout << "ENCOUNTERED " << isReadable << std::endl;
-        it.disable_recursion_pending();
-        ++it;
-        continue;
-      }
-
       if (isReadable) {
         if (it->is_regular_file()) {
           auto suffix = it->path().extension().string();
