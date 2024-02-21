@@ -7,7 +7,7 @@
 #include "FilesystemIndexer.h"
 
 
-CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr)
+CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr), loaded(false)
 {
   setOrganizationName("BRL-CAD");
   setOrganizationDomain("brlcad.org");
@@ -60,19 +60,33 @@ void CADventory::showSplash()
   splash->show();
   // ensure the splash is displayed immediately
   this->processEvents();
-  this->processEvents();
-  this->processEvents();
-  qInfo() << "Splash visible?";
-
-  // keep it visible for a minimum time
-  QTimer::singleShot(2000, this, &CADventory::initMainWindow);
 }
 
 
 void CADventory::indexDirectory(const char *path)
 {
   qInfo() << "Indexing...";
-  FilesystemIndexer f = FilesystemIndexer(path);
+  FilesystemIndexer f = FilesystemIndexer();
+
+  f.setProgressCallback([this](const std::string& msg) {
+    static size_t counter = 0;
+    static const int MAX_MSG = 80;
+
+    /* NOTE: only displaying every 1000 directories */
+    if (counter++ % 1000 == 0) {
+      if (splash) {
+        std::string message = msg;
+        if (message.size() > MAX_MSG-3) {
+          message.resize(MAX_MSG-3);
+          message.append("...");
+        }
+        splash->showMessage(QString::fromStdString(message), Qt::AlignLeft, Qt::white);
+        QApplication::processEvents(); // keep UI responsive
+      }
+    }
+  });
+
+  size_t cnt = f.indexDirectory(path);
   qInfo() << "... (found" << f.indexed() << "files) indexing done.";
 
   std::vector<std::string> gfilesuffixes{".g"};
@@ -94,4 +108,10 @@ void CADventory::indexDirectory(const char *path)
     qInfo() << "Image: " << file;
   }
 #endif
+
+  loaded = true;
+  // keep it visible for a minimum time
+  QTimer::singleShot(500, this, &CADventory::initMainWindow);
 }
+
+

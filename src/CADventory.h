@@ -14,7 +14,9 @@ class CADventory : public QApplication
 public:
   CADventory(int &argc, char *argv[]);
   ~CADventory();
+
   void showSplash();
+
   void indexDirectory(const char *path);
 
 private:
@@ -23,6 +25,7 @@ private:
 public:
   QMainWindow *window;
   QSplashScreen *splash;
+  bool loaded;
 };
 
 #endif /* CADVENTORY_H */
