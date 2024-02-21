@@ -3,14 +3,33 @@ image: gcc
 
 build-mac:
   stage: build
+  only: mac
   script:
-    - echo "Building CADventory on `hostname` at `pwd`"
+    - echo "Building CADventory on Mac `hostname` at `pwd`"
     - echo "PATH=$PATH"
     # - apt update && apt -y install cmake
     - mkdir .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.1 -DCMAKE_OSX_ARCHITECTURES=arm64 ..
+    - make -j4
+    - find .
+  artifacts:
+    paths:
+      - .build/artifact.txt
+      - .build/cadventory
+
+build-linux:
+  stage: build
+  only: linux
+  script:
+    - echo "Building CADventory on Linux `hostname` at `pwd`"
+    - echo "PATH=$PATH"
+    - apt update && apt -y install cmake
+    - mkdir .build
+    - cd .build
+    - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
+    - cmake ..
     - make -j4
     - find .
   artifacts:
@@ -29,6 +48,6 @@ test:
 deploy:
   stage: deploy
   script:
-    - echo "Deploying CADventory on `hostname`"
+    - echo "Deploying CADventory on `hostname` at `pwd`"
   environment: production
 
