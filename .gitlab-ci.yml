@@ -65,6 +65,7 @@ test-linux:
     - find .
     - find / -name libQt6Widgets.so.6
     - file .build/cadventory
+    - export QT_QPA_PLATFORM=offscreen
     - .build/cadventory --no-gui
 
 deploy-mac:
