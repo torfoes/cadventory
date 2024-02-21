@@ -20,7 +20,7 @@ CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), win
   QString underlineStart = "\033[4m";
   QString underlineEnd = "\033[0m";
 
-  // Print underlined application name and version
+  // print underlined application name and version
   qInfo().noquote() << underlineStart + appName + " " + appVersion + underlineEnd;
   qInfo() << "Loading ... please wait.";
 }

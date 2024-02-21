@@ -24,4 +24,4 @@ public:
   QSplashScreen *splash;
 };
 
-#endif
+#endif /* CADVENTORY_H */
