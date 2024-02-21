@@ -27,7 +27,7 @@ main(int argc, char **argv)
 
   QTimer::singleShot(250, [&app]() {
     app.processEvents();
-    app.indexDirectory("/Users/morrison");
+    app.indexDirectory("/Users/morrison/.CADventory");
   });
 
   return app.exec();
