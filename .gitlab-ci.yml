@@ -60,6 +60,7 @@ test-linux:
     - build-linux
   script:
     - echo "Testing CADventory on Linux `hostname` at `pwd`"
+    - apt update && apt -y install qt6-base-dev
     - ls -la
     - find .
     - find / -name libQt6Widgets.so.6
