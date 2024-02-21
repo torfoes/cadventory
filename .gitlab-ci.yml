@@ -3,7 +3,7 @@ image: gcc
 
 build-mac:
   stage: build
-  only: mac
+  only: [mac]
   script:
     - echo "Building CADventory on Mac `hostname` at `pwd`"
     - echo "PATH=$PATH"
@@ -21,7 +21,7 @@ build-mac:
 
 build-linux:
   stage: build
-  only: linux
+  only: [linux]
   script:
     - echo "Building CADventory on Linux `hostname` at `pwd`"
     - echo "PATH=$PATH"
