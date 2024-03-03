@@ -19,6 +19,7 @@ set (SRCS
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
+  src/Library.cpp
 )
 qt_add_executable(cadventory WIN32 ${SRCS})
 
