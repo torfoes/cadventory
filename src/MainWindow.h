@@ -17,6 +17,7 @@ public:
 
 public slots:
   void updateStatusLabel(const char *status);
+  void on_addLibraryButton_clicked();
 
 private:
   Ui::MainWindow ui;
