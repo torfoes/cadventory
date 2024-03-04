@@ -19,7 +19,7 @@ MainWindow::~MainWindow()
 void
 MainWindow::updateStatusLabel(const char *status)
 {
-  ui.label->setText(status);
+  ui.indexingStatus->setText(status);
 }
 
 
