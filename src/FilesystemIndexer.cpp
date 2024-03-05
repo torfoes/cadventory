@@ -5,9 +5,9 @@
 #include <iostream>
 
 
-FilesystemIndexer::FilesystemIndexer(const char* rootDir) : callback(nullptr) {
+FilesystemIndexer::FilesystemIndexer(const char* rootDir, size_t depth) : callback(nullptr) {
   if (rootDir) {
-    indexDirectory(rootDir);
+    indexDirectory(rootDir, depth);
   }
 }
 
@@ -39,9 +39,9 @@ FilesystemIndexer::setProgressCallback(std::function<void(const std::string&)> f
 
 
 size_t
-FilesystemIndexer::indexDirectory(const std::string& dir) {
+FilesystemIndexer::indexDirectory(const std::string& dir, size_t depth) {
 
-  if (dir == "" || !std::filesystem::exists(dir))
+  if (dir == "" || !std::filesystem::exists(dir) || depth == 0)
     return 0;
 
   std::filesystem::path path = dir;
@@ -63,8 +63,10 @@ FilesystemIndexer::indexDirectory(const std::string& dir) {
           continue;
 
         if (std::filesystem::is_directory(entry.status())) {
-          // recurse
-          count += indexDirectory(entry.path());
+          // recurse if we've not reached our depth limit
+          if (depth < 0 || depth > 1) {
+            count += indexDirectory(entry.path().string(), depth - 1);
+          }
         } else if (std::filesystem::is_regular_file(entry.status())) {
           auto suffix = entry.path().extension().string();
           fileIndex[suffix].push_back(entry.path().string());
@@ -87,6 +89,14 @@ FilesystemIndexer::indexDirectory(const std::string& dir) {
 
 
 #if 0
+
+/* NOTE: this is the previous method but despite superior logic, it's
+ * unusable for now (CSM 20240305).  due to a bug in the Mac OS X
+ * c++17 support for std::filesystem, it throws an exception that
+ * crashes the controlling terminal process and is not recoverable.
+ * keeping it around as a reminder to recheck in a few years.
+ */
+
 void
 FilesystemIndexer::indexDirectory(const std::string& dir) {
   std::filesystem::path path = dir;
