@@ -11,14 +11,14 @@
 class FilesystemIndexer {
 
 public:
-  explicit FilesystemIndexer(const char *rootDir = nullptr);
+  explicit FilesystemIndexer(const char *rootDir = nullptr, size_t depth = 3);
   FilesystemIndexer(const FilesystemIndexer&) = delete;
   ~FilesystemIndexer();
 
   void setProgressCallback(std::function<void(const std::string&)> callback);
 
   // returns number of files indexed
-  size_t indexDirectory(const std::string& path);
+  size_t indexDirectory(const std::string& path, size_t depth = 3);
 
   std::vector<std::string> findFilesWithSuffixes(const std::vector<std::string>& suffixes);
 
