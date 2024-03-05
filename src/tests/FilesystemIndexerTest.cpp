@@ -1,47 +1,73 @@
+
+/* let catch provide main() */
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch_test_macros.hpp>
+
 #include "FilesystemIndexer.h"
-#include <chrono>
-#include <iostream>
-#include <cassert>
+#include <filesystem>
+#include <fstream>
 
-void testIndexDirectoryPerformance() {
-    FilesystemIndexer indexer;
 
-    auto start = std::chrono::high_resolution_clock::now();
-    size_t files = indexer.indexDirectory("/");
-    auto end = std::chrono::high_resolution_clock::now();
+class FilesystemIndexerFixture {
+public:
+  std::filesystem::path testDir;
+  FilesystemIndexer indexer;
 
-    std::chrono::duration<double, std::milli> duration = end - start;
-    auto rate = files / (duration.count() / 1000.0);
-    std::cout << "Index Rate is " << rate << " files/sec" << std::endl;
-    std::cout << "Indexing " << files << " files took " << duration.count() << " ms" << std::endl;
+  FilesystemIndexerFixture() {
+    /* set up a little hierarchy */
+    testDir = std::filesystem::temp_directory_path() / "FilesystemIndexerTest";
+    std::filesystem::create_directories(testDir);
+    std::ofstream(testDir / "test1.txt");
+    std::ofstream(testDir / "test2.cpp");
+    std::filesystem::create_directory(testDir / "subdir");
+    std::ofstream(testDir / "subdir" / "test3.cpp");
+    std::ofstream(testDir / "subdir" / "test4.h");
+  }
 
-    // Check if the indexing meets our performance criteria
-    assert(rate > 10000); // 10k files/sec
+  ~FilesystemIndexerFixture() {
+    /* delete our test hierarchy */
+    std::filesystem::remove_all(testDir);
+  }
+};
+
+
+TEST_CASE_METHOD(FilesystemIndexerFixture, "IndexesCorrectNumberOfFiles", "[FilesystemIndexer]") {
+  size_t filesIndexed = indexer.indexDirectory(testDir.string(), 2);
+  REQUIRE(filesIndexed == 4);
 }
 
-void testFindFilesWithSuffixesPerformance() {
-    // Assuming the indexer has been populated with a large dataset
-    FilesystemIndexer indexer;
-    indexer.indexDirectory(".");
 
-    std::vector<std::string> suffixes = {".cpp", ".h", ".png", ".jpg", ".txt"};
-
-    auto start = std::chrono::high_resolution_clock::now();
-    auto files = indexer.findFilesWithSuffixes(suffixes);
-    auto end = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double, std::milli> duration = end - start;
-    auto rate = files.size() / (duration.count() / 1000.0);
-    std::cout << "Find rate is " << rate << " files/sec" << std::endl;
-    std::cout << "Finding files with given suffixes took " << duration.count() << " ms" << std::endl;
-
-    // Check if file finding meets our criteria
-    assert(rate > 100000); // 100k files/sec
+TEST_CASE_METHOD(FilesystemIndexerFixture, "RespectsDepthParameter", "[FilesystemIndexer]") {
+  size_t shallowIndex = indexer.indexDirectory(testDir.string(), 1);
+  REQUIRE(shallowIndex == 2);
 }
 
-int main() {
-    testIndexDirectoryPerformance();
-    testFindFilesWithSuffixesPerformance();
 
-    return 0;
+TEST_CASE_METHOD(FilesystemIndexerFixture, "FindsFilesWithGivenSuffixes", "[FilesystemIndexer]") {
+  indexer.indexDirectory(testDir.string(), 2);
+  auto cppFiles = indexer.findFilesWithSuffixes({".cpp"});
+  REQUIRE(cppFiles.size() == 2);
+
+  auto headerFiles = indexer.findFilesWithSuffixes({".h"});
+  REQUIRE(headerFiles.size() == 1);
+}
+
+
+TEST_CASE_METHOD(FilesystemIndexerFixture, "HandlesNonExistentDirectoryGracefully", "[FilesystemIndexer]") {
+  size_t filesIndexed = indexer.indexDirectory(testDir.string() + "/nonexistent", 2);
+  REQUIRE(filesIndexed == 0);
+}
+
+
+TEST_CASE_METHOD(FilesystemIndexerFixture, "Depth -1 Traverses the Full Hierarchy", "[FilesystemIndexer]") {
+  // -1 should index all files
+  size_t filesIndexed = indexer.indexDirectory(testDir.string(), -1);
+  REQUIRE(filesIndexed == 4);
+}
+
+
+TEST_CASE_METHOD(FilesystemIndexerFixture, "Depth 0 Does Not Traverse", "[FilesystemIndexer]") {
+  // 0 should not index any files
+  size_t filesIndexed = indexer.indexDirectory(testDir.string(), 0);
+  REQUIRE(filesIndexed == 0);
 }
