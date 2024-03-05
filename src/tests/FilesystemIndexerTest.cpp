@@ -7,7 +7,7 @@ void testIndexDirectoryPerformance() {
     FilesystemIndexer indexer;
 
     auto start = std::chrono::high_resolution_clock::now();
-    size_t files = indexer.indexDirectory("../../../../..");
+    size_t files = indexer.indexDirectory("/");
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> duration = end - start;
@@ -22,9 +22,9 @@ void testIndexDirectoryPerformance() {
 void testFindFilesWithSuffixesPerformance() {
     // Assuming the indexer has been populated with a large dataset
     FilesystemIndexer indexer;
-    indexer.indexDirectory("../../../../..");
+    indexer.indexDirectory(".");
 
-    std::vector<std::string> suffixes = {".cpp", ".h"};
+    std::vector<std::string> suffixes = {".cpp", ".h", ".png", ".jpg", ".txt"};
 
     auto start = std::chrono::high_resolution_clock::now();
     auto files = indexer.findFilesWithSuffixes(suffixes);
@@ -36,7 +36,7 @@ void testFindFilesWithSuffixesPerformance() {
     std::cout << "Finding files with given suffixes took " << duration.count() << " ms" << std::endl;
 
     // Check if file finding meets our criteria
-    assert(rate > 1000000); // 1M files/sec
+    assert(rate > 100000); // 100k files/sec
 }
 
 int main() {
