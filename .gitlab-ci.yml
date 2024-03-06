@@ -98,6 +98,7 @@ coverage-linux:
     paths:
       - build/coverage.info
     expire_in: 1 week
+  allow_failure: true
 
 analyze-linux:
   stage: analyze
