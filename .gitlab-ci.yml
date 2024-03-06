@@ -58,7 +58,7 @@ test-mac:
     - find .
     - file .build/cadventory
     - .build/cadventory --no-gui
-    - cd .build && ctest --verbose
+    - cd .build && /opt/homebrew/bin/ctest --verbose
 
 test-linux:
   stage: test
@@ -68,7 +68,7 @@ test-linux:
     - build-linux
   script:
     - echo "Testing CADventory on Linux `hostname` at `pwd`"
-    - apt update && apt -y install qt6-base-dev
+    - apt update && apt -y install qt6-base-dev ctest
     - ls -la
     - find .
     - find / -name libQt6Widgets.so.6
