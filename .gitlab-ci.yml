@@ -46,6 +46,24 @@ build-linux:
       - .build # save the whole shebang so we can run ctest and more later
     expire_in: 24 hours
 
+build-windows:
+  stage: build
+  tags:
+    - windows
+  script:
+    - echo "Building CADventory on Windows $Env:COMPUTERNAME at $Env:PWD"
+    - echo "PATH=$Env:PATH"
+    - New-Item -ItemType Directory -Force -Path .build
+    - cd .build
+    - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
+    - cmake -G "Visual Studio 16 2019" -A x64 ..
+    - cmake --build . --config Release -- /m:4
+    - Get-ChildItem -Recurse
+  artifacts:
+    paths:
+      - .build/
+    expire_in: 1 hour
+
 test-mac:
   stage: test
   tags:
@@ -82,6 +100,21 @@ test-linux:
   artifacts:
     paths:
       - .build # needs full tree for coverage and analysis
+
+test-windows:
+  stage: test
+  tags:
+    - windows
+  dependencies: 
+    - build-windows
+  script:
+    - echo "Testing CADventory on Windows $Env:COMPUTERNAME at $Env:PWD"
+    - ls -la
+    - cd .build
+    - .\cadventory.exe --no-gui
+  artifacts:
+    paths:
+      - .build/cadventory
 
 coverage-linux:
   stage: coverage
