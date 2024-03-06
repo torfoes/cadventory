@@ -96,8 +96,6 @@ coverage-linux:
   artifacts:
     paths:
       - build/coverage.info
-    reports:
-      cobertura: build/coverage.info
     expire_in: 1 week
 
 analyze-linux:
