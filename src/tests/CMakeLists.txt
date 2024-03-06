@@ -2,7 +2,7 @@
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(FilesystemIndexerPerfTest FilesystemIndexerPerfTest.cpp ../FilesystemIndexer.cpp)
-add_test(NAME FilesystemIndexerPerformanceTest COMMAND FilesystemIndexerPerfTest)
+add_test(NAME FilesystemIndexerPerformanceTests COMMAND FilesystemIndexerPerfTest)
 
 
 Include(FetchContent)
