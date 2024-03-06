@@ -175,4 +175,15 @@ deploy-linux:
   script:
     - echo "Deploying CADventory on Linux `hostname` at `pwd`"
   environment: production
+
+deploy-windows:
+  stage: deploy
+  tags:
+    - windows
+  dependencies: 
+    - test-windows
+  script:
+    - echo "Deploying CADventory on Windows $Env:COMPUTERNAME at $Env:PWD"
+  environment: production
+
   
