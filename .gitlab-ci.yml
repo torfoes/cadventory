@@ -95,6 +95,7 @@ coverage-linux:
     - cd .build
     - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
     - make clean && make -j2
+    - export QT_QPA_PLATFORM=offscreen
     - ./cadventory --no-gui
     - ctest
     - lcov --directory . --capture --output-file coverage.info
