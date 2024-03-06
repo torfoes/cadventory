@@ -1,6 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <vector>
 #include <string>
 #include <sqlite3.h>
 
