@@ -90,7 +90,7 @@ coverage-linux:
   dependencies:
     - test-linux
   script:
-    - echo "Coverage testing CADventory on Linux `hostname` at `pwd`
+    - echo "Coverage testing CADventory on Linux `hostname` at `pwd`"
     - apt-get update && apt-get install -y lcov
     - cd .build
     - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
