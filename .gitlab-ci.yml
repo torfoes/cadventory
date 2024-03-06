@@ -81,7 +81,7 @@ test-linux:
     - cd .build && ctest --verbose
   artifacts:
     paths:
-      - .build/cadventory
+      - .build # needs full tree for coverage and analysis
 
 coverage-linux:
   stage: coverage
