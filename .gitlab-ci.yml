@@ -91,7 +91,7 @@ coverage-linux:
     - test-linux
   script:
     - echo "Coverage testing CADventory on Linux `hostname` at `pwd`"
-    - apt-get update && apt-get install -y lcov
+    - apt-get update && apt-get install -y qt6-base-dev sqlite3 cmake lcov
     - cd .build
     - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
     - make clean && make -j2
@@ -113,8 +113,8 @@ analyze-linux:
   dependencies:
     - test-linux
   script:
-    - apt-get update && apt-get install -y clang-tools
-    - cd build
+    - apt-get update && apt-get install -y qt6-base-dev sqlite3 cmake clang-tools
+    - cd .build
     - make clean
     - scan-build make
   allow_failure: true
