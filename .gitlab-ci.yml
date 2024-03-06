@@ -98,11 +98,13 @@ coverage-linux:
     - ctest
     - lcov --directory . --capture --output-file coverage.info
     - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system libraries
-    - lcov --list coverage.info # For debugging
+    - lcov --remove coverage.info '*catch*' --output-file coverage.info # filter out Catch2
+    - lcov --list coverage.info | tee coverage.txt # display and save a copy
     - lcov --summary coverage.info
   artifacts:
     paths:
-      - build/coverage.info
+      - .build/coverage.txt
+      - .build/coverage.info
     expire_in: 1 week
   allow_failure: true
 
@@ -115,7 +117,7 @@ analyze-linux:
   script:
     - apt-get update && apt-get install -y qt6-base-dev sqlite3 cmake clang-tools
     - cd .build
-    - make clean
+    - cmake --build . --target clean
     - scan-build make
   allow_failure: true
 
