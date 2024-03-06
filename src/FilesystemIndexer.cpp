@@ -84,6 +84,9 @@ FilesystemIndexer::indexDirectory(const std::string& dir, size_t depth) {
     // std::cerr << "WARNING: Skipping " << dir << " - " << e.what() << std::endl;
   }
 
+  // clear out so we can re-index later
+  visitedPaths.clear();
+
   return count;
 }
 
