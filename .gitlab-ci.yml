@@ -1,6 +1,12 @@
 # use the official gcc image, based on debian
 image: gcc
 
+stages:
+ - build
+ - test
+ - coverage
+ - analyze
+
 build-mac:
   stage: build
   tags:
@@ -51,6 +57,7 @@ test-mac:
     - find .
     - file .build/cadventory
     - .build/cadventory --no-gui
+    - cd .build && ctest --verbose
 
 test-linux:
   stage: test
@@ -67,6 +74,44 @@ test-linux:
     - file .build/cadventory
     - export QT_QPA_PLATFORM=offscreen
     - .build/cadventory --no-gui
+    - cd .build && ctest --verbose
+
+coverage-linux:
+  stage: coverage
+  tags:
+    - linux
+  dependencies:
+    - test-linux
+  script:
+    - echo "Coverage testing CADventory on Linux `hostname` at `pwd`
+    - apt-get update && apt-get install -y lcov
+    - cd .build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
+    - make clean && make -j2
+    - ctest
+    - lcov --directory . --capture --output-file coverage.info
+    - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter out system libraries
+    - lcov --list coverage.info # For debugging
+    - lcov --summary coverage.info
+  artifacts:
+    paths:
+      - build/coverage.info
+    reports:
+      cobertura: build/coverage.info
+    expire_in: 1 week
+
+analyze-linux:
+  stage: analyze
+  tags:
+    - linux
+  dependencies:
+    - test-linux
+  script:
+    - apt-get update && apt-get install -y clang-tools
+    - cd build
+    - make clean
+    - scan-build make
+  allow_failure: true
 
 deploy-mac:
   stage: deploy
