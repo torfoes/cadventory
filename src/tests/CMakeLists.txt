@@ -2,7 +2,6 @@
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 add_executable(FilesystemIndexerPerfTest FilesystemIndexerPerfTest.cpp ../FilesystemIndexer.cpp)
-
 add_test(NAME FilesystemIndexerPerformanceTest COMMAND FilesystemIndexerPerfTest)
 
 
@@ -18,5 +17,8 @@ FetchContent_MakeAvailable(Catch2)
 
 add_executable(FilesystemIndexerTest FilesystemIndexerTest.cpp ../FilesystemIndexer.cpp)
 target_link_libraries(FilesystemIndexerTest PRIVATE Catch2::Catch2WithMain)
-
 add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
+
+add_executable(ModelTest ModelTest.cpp ../Model.cpp)
+target_link_libraries(ModelTest PRIVATE Catch2::Catch2WithMain SQLite3)
+add_test(NAME ModelTests COMMAND ModelTest)
