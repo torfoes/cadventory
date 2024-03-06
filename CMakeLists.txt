@@ -10,12 +10,15 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
-include_directories(${QT_INCLUDE_DIRS})
+find_package(SQLite3)
+
+include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS})
 set (SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
   src/MainWindow.cpp
   src/SplashDialog.cpp
+  src/Model.cpp
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
@@ -23,7 +26,7 @@ set (SRCS
 )
 qt_add_executable(cadventory WIN32 ${SRCS})
 
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets SQLite3)
 
 # testing
 enable_testing()
