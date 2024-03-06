@@ -82,7 +82,7 @@ void CADventory::showSplash()
 void CADventory::indexDirectory(const char *path)
 {
   qInfo() << "Indexing...";
-  FilesystemIndexer f = FilesystemIndexer();
+  FilesystemIndexer f = FilesystemIndexer(path);
 
   f.setProgressCallback([this](const std::string& msg) {
     static size_t counter = 0;
