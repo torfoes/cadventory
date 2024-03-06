@@ -54,14 +54,14 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>0</y>
+      <y>10</y>
       <width>861</width>
-      <height>461</height>
+      <height>451</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout" rowminimumheight="0" columnminimumwidth="150,150">
      <property name="sizeConstraint">
-      <enum>QLayout::SetMaximumSize</enum>
+      <enum>QLayout::SetDefaultConstraint</enum>
      </property>
      <item row="0" column="0">
       <widget class="QToolButton" name="addLibraryButton">
