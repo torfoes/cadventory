@@ -26,7 +26,7 @@ set (SRCS
 )
 qt_add_executable(cadventory WIN32 ${SRCS})
 
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets SQLite3)
+target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite3)
 
 # testing
 enable_testing()
