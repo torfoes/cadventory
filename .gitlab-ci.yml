@@ -27,7 +27,7 @@ build-linux:
     - echo "Building CADventory on Linux `hostname` at `pwd`"
     - echo "PATH=$PATH"
     - apt update && apt -y install cmake
-    - apt -y install qt6-base-dev
+    - apt -y install qt6-base-dev sqlite3
     - mkdir .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
