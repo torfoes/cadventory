@@ -6,8 +6,11 @@
 void testIndexDirectoryPerformance() {
     FilesystemIndexer indexer;
 
-    auto start = std::chrono::high_resolution_clock::now();
+    // once to prime
     size_t files = indexer.indexDirectory("/");
+
+    auto start = std::chrono::high_resolution_clock::now();
+    files = indexer.indexDirectory("/");
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> duration = end - start;
