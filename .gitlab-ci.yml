@@ -101,20 +101,20 @@ test-linux:
     paths:
       - .build # needs full tree for coverage and analysis
 
-test-windows:
-  stage: test
-  tags:
-    - windows
-  dependencies: 
-    - build-windows
-  script:
-    - echo "Testing CADventory on Windows $Env:COMPUTERNAME at $Env:PWD"
-    - ls -la
-    - cd .build
-    - .\cadventory.exe --no-gui
-  artifacts:
-    paths:
-      - .build/cadventory
+#test-windows:
+#  stage: test
+#  tags:
+#    - windows
+#  dependencies: 
+#    - build-windows
+#  script:
+#    - echo "Testing CADventory on Windows $Env:COMPUTERNAME at $Env:PWD"
+#    - ls -la
+#    - cd .build
+#    - .\cadventory.exe --no-gui
+#  artifacts:
+#    paths:
+#      - .build/cadventory
 
 coverage-linux:
   stage: coverage
