@@ -10,7 +10,17 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
-find_package(SQLite3 REQUIRED)
+#find_package(SQLite3 REQUIRED)
+include(cmake/sqlite.cmake)
+
+# import the static library that was built
+add_library(sqlite_static IMPORTED STATIC GLOBAL)
+add_dependencies(sqlite_static sqlite)
+set_target_properties(sqlite_static PROPERTIES
+  IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
+)
+#  INTERFACE_INCLUDE_DIRECTORIES "${sqlite_INCLUDE_DIR}"
+
 
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS})
 set (SRCS
@@ -25,8 +35,10 @@ set (SRCS
   src/Library.cpp
 )
 qt_add_executable(cadventory WIN32 ${SRCS})
+add_dependencies(cadventory sqlite_static)
 
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite3)
+target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite_static)
 
 # testing
 enable_testing()
