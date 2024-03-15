@@ -56,7 +56,8 @@ build-windows:
     - New-Item -ItemType Directory -Force -Path .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
-    - cmake -G "Visual Studio 16 2019" -A x64 ..
+    - '& "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"'
+    - cmake -G "Visual Studio 17 2022" -A x64 ..
     - cmake --build . --config Release -- /m:4
     - Get-ChildItem -Recurse
   artifacts:
