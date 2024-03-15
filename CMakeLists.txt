@@ -10,7 +10,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
-find_package(SQLite3)
+find_package(SQLite3 REQUIRED)
 
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS})
 set (SRCS
