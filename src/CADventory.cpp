@@ -104,7 +104,7 @@ void CADventory::indexDirectory(const char *path)
     }
   });
 
-  size_t cnt = f.indexDirectory(path);
+  f.indexDirectory(path);
   qInfo() << "... (found" << f.indexed() << "files) indexing done.";
 
   std::vector<std::string> gfilesuffixes{".g"};
