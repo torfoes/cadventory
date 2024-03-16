@@ -5,7 +5,7 @@
 #include <iostream>
 
 
-FilesystemIndexer::FilesystemIndexer(const char* rootDir, size_t depth) : callback(nullptr) {
+FilesystemIndexer::FilesystemIndexer(const char* rootDir, long depth) : callback(nullptr) {
   if (rootDir) {
     indexDirectory(rootDir, depth);
   }
@@ -39,7 +39,7 @@ FilesystemIndexer::setProgressCallback(std::function<void(const std::string&)> f
 
 
 size_t
-FilesystemIndexer::indexDirectory(const std::string& dir, size_t depth) {
+FilesystemIndexer::indexDirectory(const std::string& dir, long depth) {
 
   if (dir == "" || !std::filesystem::exists(dir) || depth == 0)
     return 0;
