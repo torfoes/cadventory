@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+  endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
@@ -21,6 +24,12 @@ set_target_properties(sqlite_static PROPERTIES
 )
 #  INTERFACE_INCLUDE_DIRECTORIES "${sqlite_INCLUDE_DIR}"
 
+# All Warnings
+if (MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -Wextra -pedantic)
+endif()
 
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS})
 set (SRCS
