@@ -38,7 +38,7 @@ build-linux:
     - mkdir .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
-    - find .
+    - find ..
     - cmake ..
     - make -j4
     - find .
