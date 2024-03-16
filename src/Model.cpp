@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-Model::Model(const std::string& path) : dbPath(path), db(nullptr) {
+Model::Model(const std::string& path) : db(nullptr), dbPath(path) {
   if (sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
     std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
   } else {
