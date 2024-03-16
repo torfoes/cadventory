@@ -24,8 +24,8 @@ add_library(sqlite_static IMPORTED STATIC GLOBAL)
 add_dependencies(sqlite_static sqlite)
 set_target_properties(sqlite_static PROPERTIES
   IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
+  INTERFACE_INCLUDE_DIRECTORIES "${sqlite_INCLUDE_DIR}"
 )
-#  INTERFACE_INCLUDE_DIRECTORIES "${sqlite_INCLUDE_DIR}"
 
 # All Warnings
 if (MSVC)

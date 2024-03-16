@@ -14,7 +14,7 @@
 # ==============================================================================
 include (ExternalProject)
 
-set(sqlite_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/sqlite)
+set(sqlite_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/sqlite/install/include)
 set(sqlite_URL https://sqlite.org/2024/sqlite-amalgamation-3450200.zip)
 set(sqlite_HASH SHA256=65230414820d43a6d1445d1d98cfe57e8eb9f7ac0d6a96ad6932e0647cce51db)
 #set(sqlite_URL  https://mirror.bazel.build/www.sqlite.org/2017/sqlite-amalgamation-3200000.zip)
