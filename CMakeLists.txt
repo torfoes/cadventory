@@ -23,7 +23,10 @@ add_library(sqlite_static IMPORTED STATIC GLOBAL)
 add_dependencies(sqlite_static sqlite)
 set_target_properties(sqlite_static PROPERTIES
   IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${sqlite_INCLUDE_DIR}"
+)
+add_custom_command(TARGET sqlite_static POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${sqlite_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/include/sqlite)
 )
 
 # All Warnings
