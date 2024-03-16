@@ -4,6 +4,7 @@
 
 #include <QPixmap>
 #include <QTimer>
+#include <QString>
 
 #include "MainWindow.h"
 #include "SplashDialog.h"
