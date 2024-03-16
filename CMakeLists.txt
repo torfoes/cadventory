@@ -16,7 +16,7 @@ if(MSVC)
 endif()
 
 
-if (NOT CADVENTORY_BUILD_SQLITE)
+if (DEFINED CADVENTORY_USE_SQLITE)
   find_package(SQLite3 REQUIRED)
 else()
   include(cmake/sqlite.cmake)
@@ -52,7 +52,8 @@ qt_add_executable(cadventory WIN32 ${SRCS})
 add_dependencies(cadventory sqlite_static)
 
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-if (NOT CADVENTORY_BUILD_SQLITE)
+target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
+if (DEFINED CADVENTORY_USE_SQLITE)
   target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite3)
 else()
   target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite_static)
