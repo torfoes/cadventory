@@ -79,7 +79,7 @@ FilesystemIndexer::indexDirectory(const std::string& dir, size_t depth) {
         std::cerr << "WARNING: Unable to access " << entry.path() << " - " << e.what() << std::endl;
       }
     }
-  } catch (const std::filesystem::filesystem_error& e) {
+  } catch (const std::filesystem::filesystem_error& /*e*/) {
     // handle fs security and/or attributes silently for now..
     // std::cerr << "WARNING: Skipping " << dir << " - " << e.what() << std::endl;
   }
