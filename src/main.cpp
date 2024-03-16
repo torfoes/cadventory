@@ -10,6 +10,9 @@
 
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+
 int APIENTRY
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
