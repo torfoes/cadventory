@@ -26,7 +26,7 @@ set_target_properties(sqlite_static PROPERTIES
 )
 add_custom_command(TARGET sqlite_static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${sqlite_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/include/sqlite)
+  ${sqlite_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/include/sqlite
 )
 
 # All Warnings
