@@ -15,18 +15,18 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
 endif()
 
-#find_package(SQLite3 REQUIRED)
-include(cmake/sqlite.cmake)
+
+if (NOT CADVENTORY_BUILD_SQLITE)
+  find_package(SQLite3 REQUIRED)
+else()
+  include(cmake/sqlite.cmake)
+endif()
 
 # import the static library that was built
 add_library(sqlite_static IMPORTED STATIC GLOBAL)
 add_dependencies(sqlite_static sqlite)
 set_target_properties(sqlite_static PROPERTIES
   IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
-)
-add_custom_command(TARGET sqlite_static POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${sqlite_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/include/sqlite
 )
 
 # All Warnings
@@ -52,7 +52,12 @@ qt_add_executable(cadventory WIN32 ${SRCS})
 add_dependencies(cadventory sqlite_static)
 
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite_static)
+if (NOT CADVENTORY_BUILD_SQLITE)
+  target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite3)
+else()
+  target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite_static)
+endif()
+
 
 # testing
 enable_testing()
