@@ -36,7 +36,7 @@ else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS})
+include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_DIR})
 set (SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
