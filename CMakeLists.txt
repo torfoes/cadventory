@@ -56,7 +56,7 @@ add_dependencies(cadventory sqlite_static)
 
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets ${SQLITE_LIBRARY mingw32.lib}
+target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets ${SQLITE_LIBRARY} mingw32.lib
 )
 
 
