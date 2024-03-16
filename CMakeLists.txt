@@ -18,8 +18,10 @@ endif()
 
 if (DEFINED CADVENTORY_USE_SQLITE)
   find_package(SQLite3 REQUIRED)
+  set (SQLITE_LIBRARY sqlite3)
 else()
   include(cmake/sqlite.cmake)
+  set (SQLITE_LIBRARY sqlite_static)
 endif()
 
 # import the static library that was built
@@ -51,13 +53,10 @@ set (SRCS
 qt_add_executable(cadventory WIN32 ${SRCS})
 add_dependencies(cadventory sqlite_static)
 
+
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
-if (DEFINED CADVENTORY_USE_SQLITE)
-  target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite3)
-else()
-  target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets sqlite_static)
-endif()
+target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets ${SQLITE_LIBRARY})
 
 
 # testing

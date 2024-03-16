@@ -20,5 +20,7 @@ target_link_libraries(FilesystemIndexerTest PRIVATE Catch2::Catch2WithMain)
 add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
 
 add_executable(ModelTest ModelTest.cpp ../Model.cpp)
-target_link_libraries(ModelTest PRIVATE Catch2::Catch2WithMain sqlite3)
+
+target_link_libraries(ModelTest PRIVATE Catch2::Catch2WithMain ${SQLITE_LIBRARY})
+  
 add_test(NAME ModelTests COMMAND ModelTest)
