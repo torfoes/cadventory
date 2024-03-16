@@ -12,8 +12,7 @@ qt_standard_project_setup()
 
 # flag adjustments Qt requires
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
-    qt_set_msvc_cplusplus_options()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
 endif()
 
 #find_package(SQLite3 REQUIRED)
