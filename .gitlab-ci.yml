@@ -18,7 +18,7 @@ build-mac:
     - mkdir .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
-    - /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.2_1 -DCMAKE_INSTALL_PATH=install -DCMAKE_OSX_ARCHITECTURES=arm64 ..
+    - /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.2_1 -DCMAKE_INSTALL_PREFIX=install -DCMAKE_OSX_ARCHITECTURES=arm64 ..
     - make -j4 VERBOSE=1
     - make install
     - find .
@@ -40,7 +40,7 @@ build-linux:
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - find ..
-    - cmake -DCMAKE_INSTALL_PATH=install ..
+    - cmake -DCMAKE_INSTALL_PREFIX=install ..
     - make -j4 VERBOSE=1
     - make install
     - find .
