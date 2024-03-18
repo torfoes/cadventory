@@ -72,14 +72,14 @@ install(FILES doc/CADventory.docx
   DESTINATION ${CMAKE_INSTALL_DOCDIR}
 )
 
-if (WIN32)
-  qt_generate_deploy_app_script(
-    TARGET cadventory
-    OUTPUT_SCRIPT deploy_script
-    NO_UNSUPPORTED_PLATFORM_ERROR
-  )
-  install(SCRIPT ${deploy_script})
-endif (WIN32)
+# if (WIN32)
+#   qt_generate_deploy_app_script(
+#     TARGET cadventory
+#     OUTPUT_SCRIPT deploy_script
+#     NO_UNSUPPORTED_PLATFORM_ERROR
+#   )
+#   install(SCRIPT ${deploy_script})
+# endif (WIN32)
 
 
 # testing
