@@ -61,18 +61,25 @@ target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets ${SQLITE_LIBRARY
 
 
 # deployment on Windows needs DLLs copied
-if(WIN32)
-  # windeployqt copies them
-  find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS "${_qt_bin_dir}" NO_DEFAULT_PATH)
+# if(WIN32)
+#   # windeployqt copies them
+#   find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS "${_qt_bin_dir}" NO_DEFAULT_PATH)
   
-  if(NOT WINDEPLOYQT_EXECUTABLE)
-    message(SEND_ERROR "Failed to find windeployqt.")
-  else()
-    add_custom_command(TARGET cadventory POST_BUILD
-      COMMAND "${WINDEPLOYQT_EXECUTABLE}" $<TARGET_FILE_DIR:cadventory> COMMENT "Deploying Qt dependencies..."
-    )
-  endif()
-endif()
+#   if(NOT WINDEPLOYQT_EXECUTABLE)
+#     message(SEND_ERROR "Failed to find windeployqt.")
+#   else()
+#     add_custom_command(TARGET cadventory POST_BUILD
+#       COMMAND "${WINDEPLOYQT_EXECUTABLE}" $<TARGET_FILE_DIR:cadventory> COMMENT "Deploying Qt dependencies..."
+#     )
+#   endif()
+# endif()
+
+qt_generate_deploy_app_script(
+    TARGET cadventory
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${deploy_script})
 
 
 # testing
