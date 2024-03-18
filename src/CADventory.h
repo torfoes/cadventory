@@ -29,6 +29,7 @@ public:
   QMainWindow *window;
   QWidget *splash;
   bool loaded;
+  bool gui;
 };
 
 #endif /* CADVENTORY_H */

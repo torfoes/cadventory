@@ -12,7 +12,7 @@
 #include "FilesystemIndexer.h"
 
 
-CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr), loaded(false)
+CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr), loaded(false), gui(true)
 {
   setOrganizationName("BRL-CAD");
   setOrganizationDomain("brlcad.org");
@@ -31,8 +31,10 @@ CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), win
   qInfo() << "Loading ... please wait.";
 
   // if anything is specified, assume CLI-mode
-  if (argc > 1)
+  if (argc > 1) {
+    this->gui = false;
     connect(this, &CADventory::indexingComplete, this, &QCoreApplication::quit);
+  }
 }
 
 
@@ -66,6 +68,9 @@ void CADventory::initMainWindow()
 
 void CADventory::showSplash()
 {
+  if (!this->gui)
+    return;
+
   /* first look rel to binary */
   QString relativePathToBinary = QCoreApplication::applicationDirPath() + "/../share/splash.png";
   /* alternatively look rel to cwd */
