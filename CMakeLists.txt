@@ -15,7 +15,7 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
 endif()
 
-
+# support sqlite built from external or against system
 if (DEFINED CADVENTORY_USE_SQLITE)
   find_package(SQLite3 REQUIRED)
   set (SQLITE_LIBRARY sqlite3)
@@ -31,13 +31,14 @@ set_target_properties(sqlite_static PROPERTIES
   IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
 )
 
-# All Warnings
+# all warnings for compliance
 if (MSVC)
   add_compile_options(/W4)
 else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
+# build CADventory
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_DIR})
 set (SRCS
   src/CADventory.cpp
@@ -51,35 +52,28 @@ set (SRCS
   src/Library.cpp
 )
 qt_add_executable(cadventory WIN32 ${SRCS})
+
+# note dependencies
 add_dependencies(cadventory sqlite_static)
-
-
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets ${SQLITE_LIBRARY}
+target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui ${SQLITE_LIBRARY}
 )
 
-
 # deployment on Windows needs DLLs copied
-# if(WIN32)
-#   # windeployqt copies them
-#   find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS "${_qt_bin_dir}" NO_DEFAULT_PATH)
-  
-#   if(NOT WINDEPLOYQT_EXECUTABLE)
-#     message(SEND_ERROR "Failed to find windeployqt.")
-#   else()
-#     add_custom_command(TARGET cadventory POST_BUILD
-#       COMMAND "${WINDEPLOYQT_EXECUTABLE}" $<TARGET_FILE_DIR:cadventory> COMMENT "Deploying Qt dependencies..."
-#     )
-#   endif()
-# endif()
+install(TARGETS cadventory
+  BUNDLE  DESTINATION .
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
-qt_generate_deploy_app_script(
+if (WIN32)
+  qt_generate_deploy_app_script(
     TARGET cadventory
     OUTPUT_SCRIPT deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
-)
-install(SCRIPT ${deploy_script})
+  )
+  install(SCRIPT ${deploy_script})
+endif (WIN32)
 
 
 # testing
