@@ -116,7 +116,7 @@ test-windows:
     - .\\Release\\cadventory.exe --no-gui
   artifacts:
     paths:
-      - .build/Release/cadventory
+      - .build\\Release\\cadventory.exe
 
 coverage-linux:
   stage: coverage
