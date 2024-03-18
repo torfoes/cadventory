@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>470</y>
+      <y>500</y>
       <width>781</width>
       <height>71</height>
      </rect>
@@ -36,7 +36,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>430</y>
+      <y>470</y>
       <width>781</width>
       <height>71</height>
      </rect>
@@ -56,12 +56,18 @@
       <x>10</x>
       <y>10</y>
       <width>861</width>
-      <height>451</height>
+      <height>481</height>
      </rect>
     </property>
-    <layout class="QGridLayout" name="gridLayout" rowminimumheight="0" columnminimumwidth="150,150">
+    <layout class="QGridLayout" name="gridLayout" rowminimumheight="0" columnminimumwidth="100,100">
      <property name="sizeConstraint">
       <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
+     <property name="topMargin">
+      <number>1</number>
+     </property>
+     <property name="bottomMargin">
+      <number>20</number>
      </property>
      <item row="0" column="0">
       <widget class="QToolButton" name="addLibraryButton">
