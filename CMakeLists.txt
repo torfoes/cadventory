@@ -65,6 +65,12 @@ install(TARGETS cadventory
   BUNDLE  DESTINATION .
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+install(FILES splash.png
+  DESTINATION ${CMAKE_INSTALL_DATADIR}
+)
+install(FILES doc/CADventory.docx
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}
+)
 
 if (WIN32)
   qt_generate_deploy_app_script(
