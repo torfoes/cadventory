@@ -59,7 +59,7 @@
       <height>481</height>
      </rect>
     </property>
-    <layout class="QGridLayout" name="gridLayout" rowminimumheight="0" columnminimumwidth="100,100">
+    <layout class="QGridLayout" name="gridLayout">
      <property name="sizeConstraint">
       <enum>QLayout::SetDefaultConstraint</enum>
      </property>
@@ -70,8 +70,23 @@
       <number>20</number>
      </property>
      <item row="0" column="0">
-      <widget class="QToolButton" name="addLibraryButton">
+      <widget class="QPushButton" name="addLibraryButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
+        <size>
+         <width>128</width>
+         <height>128</height>
+        </size>
+       </property>
+       <property name="baseSize">
         <size>
          <width>128</width>
          <height>128</height>
@@ -79,16 +94,23 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>72</pointsize>
+         <pointsize>92</pointsize>
+         <italic>false</italic>
          <bold>true</bold>
+         <underline>false</underline>
+         <strikeout>false</strikeout>
          <kerning>true</kerning>
+         <hintingpreference>PreferDefaultHinting</hintingpreference>
         </font>
+       </property>
+       <property name="mouseTracking">
+        <bool>false</bool>
        </property>
        <property name="autoFillBackground">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>+</string>
+        <string>⨁</string>
        </property>
        <property name="iconSize">
         <size>
@@ -99,14 +121,26 @@
        <property name="checkable">
         <bool>false</bool>
        </property>
-       <property name="toolButtonStyle">
-        <enum>Qt::ToolButtonIconOnly</enum>
+       <property name="flat">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QToolButton" name="homeLibraryButton">
+      <widget class="QPushButton" name="homeLibraryButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
+        <size>
+         <width>128</width>
+         <height>128</height>
+        </size>
+       </property>
+       <property name="baseSize">
         <size>
          <width>128</width>
          <height>128</height>
