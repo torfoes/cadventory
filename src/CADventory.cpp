@@ -5,6 +5,7 @@
 #include <QPixmap>
 #include <QTimer>
 #include <QString>
+#include <QDir>
 
 #include "MainWindow.h"
 #include "SplashDialog.h"
@@ -65,7 +66,18 @@ void CADventory::initMainWindow()
 
 void CADventory::showSplash()
 {
-  QPixmap pixmap("../splash.png");
+  /* first look rel to binary */
+  QString relativePathToBinary = QCoreApplication::applicationDirPath() + "/../share/splash.png";
+  /* alternatively look rel to cwd */
+  QString fallbackPath = QDir::current().absoluteFilePath("../splash.png");
+
+  QPixmap pixmap;
+  if (QFile::exists(relativePathToBinary)) {
+    pixmap.load(relativePathToBinary);
+  } else if (QFile::exists(fallbackPath)) {
+    pixmap.load(fallbackPath);
+  }
+
   if (pixmap.isNull()) {
     // pixmap = QPixmap(512, 512);
     // pixmap.fill(Qt::black);
