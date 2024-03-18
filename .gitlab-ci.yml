@@ -62,7 +62,7 @@ build-windows:
     - '& "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\VsDevCmd.bat"'
     - cmake -DCMAKE_PREFIX_PATH=C:\\Qt\\6.8.0\\msvc2019_arm64\lib\cmake -G "Visual Studio 17 2022" -DCMAKE_INSTALL_PREFIX=install -A arm64 ..
     - cmake --build . --config Release -- /m:4
-    - cmake --install . --config Release
+    - cmake --build . --config Release --target install
   artifacts:
     paths:
       - .build\\install
