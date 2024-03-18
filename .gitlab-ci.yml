@@ -18,13 +18,14 @@ build-mac:
     - mkdir .build
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
-    - /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.2_1 -DCMAKE_OSX_ARCHITECTURES=arm64 ..
+    - /opt/homebrew/bin/cmake -DCMAKE_PREFIX_PATH=/opt/homebrew/Cellar/qt/6.6.2_1 -DCMAKE_INSTALL_PATH=install -DCMAKE_OSX_ARCHITECTURES=arm64 ..
     - make -j4 VERBOSE=1
+    - make install
     - find .
   artifacts:
     paths:
       - .build/artifact.txt
-      - .build/cadventory
+      - .build/install
 
 build-linux:
   stage: build
@@ -39,8 +40,9 @@ build-linux:
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - find ..
-    - cmake ..
+    - cmake -DCMAKE_INSTALL_PATH=install ..
     - make -j4 VERBOSE=1
+    - make install
     - find .
   artifacts:
     paths:
@@ -58,11 +60,12 @@ build-windows:
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - '& "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\VsDevCmd.bat"'
-    - cmake -DCMAKE_PREFIX_PATH=C:\\Qt\\6.8.0\\msvc2019_arm64\lib\cmake -G "Visual Studio 17 2022" -A arm64 ..
+    - cmake -DCMAKE_PREFIX_PATH=C:\\Qt\\6.8.0\\msvc2019_arm64\lib\cmake -G "Visual Studio 17 2022" -DCMAKE_INSTALL_PREFIX=install -A arm64 ..
     - cmake --build . --config Release -- /m:4
+    - cmake --install .
   artifacts:
     paths:
-      - .build/
+      - .build\\install
     expire_in: 1 hour
 
 test-mac:
@@ -75,12 +78,12 @@ test-mac:
     - echo "Testing CADventory on Mac `hostname` at `pwd`"
     - ls -la
     - find .
-    - file .build/cadventory
-    - .build/cadventory --no-gui
+    - file .build/install/bin/cadventory
+    - .build/install/bin/cadventory --no-gui
     - cd .build && /opt/homebrew/bin/ctest --verbose
   artifacts:
     paths:
-      - .build/cadventory
+      - .build/install
 
 test-linux:
   stage: test
@@ -96,7 +99,7 @@ test-linux:
     - find / -name libQt6Widgets.so.6
     - file .build/cadventory
     - export QT_QPA_PLATFORM=offscreen
-    - .build/cadventory --no-gui
+    - .build/install/bin/cadventory --no-gui
     - cd .build && ctest --verbose
   artifacts:
     paths:
@@ -113,10 +116,10 @@ test-windows:
     - dir
     - cd .build
     - $Env:QT_QPA_PLATFORM = "offscreen"
-    - .\\Release\\cadventory.exe --no-gui
+    - .\\install\\bin\\cadventory.exe --no-gui
   artifacts:
     paths:
-      - .build\\Release\\cadventory.exe
+      - .build\\install\\cadventory.exe
 
 coverage-linux:
   stage: coverage
