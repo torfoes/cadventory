@@ -1,6 +1,7 @@
 
 #include "MainWindow.h"
 
+#include <iostream>
 #include <QFileDialog>
 #include <QPushButton>
 
@@ -38,7 +39,15 @@ MainWindow::on_addLibraryButton_clicked()
     font.setPointSize(20);
     newButton->setFont(font);
 
+    size_t buttons = ui.gridLayout->count();
+    std::cout << "count is " << buttons << std::endl;
     // TODO: adjust button properties to connect signal to slot
-    ui.gridLayout->addWidget(newButton); // TODO: need a ui.layout->addWidget
+    //    ui.gridLayout->addWidget(newButton); // TODO: need a ui.layout->addWidget
+    if (buttons % 4 == 0) {
+      ui.gridLayout->addWidget(newButton, buttons / 4, buttons % 4);
+    } else {
+      size_t rows = ui.gridLayout->rowCount();
+      ui.gridLayout->addWidget(newButton, rows-1, buttons % 4);
+    }
   }
 }

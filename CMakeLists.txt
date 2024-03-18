@@ -43,6 +43,7 @@ include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_
 set (SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
+  src/FlowLayout.cpp
   src/MainWindow.cpp
   src/SplashDialog.cpp
   src/Model.cpp
