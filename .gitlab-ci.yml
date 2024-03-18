@@ -113,11 +113,11 @@ test-windows:
     - echo "Testing CADventory on Windows $Env:COMPUTERNAME at $Env:PWD"
     - dir
     - cd .build
-    - .\cadventory.exe --no-gui
+    - $Env:QT_QPA_PLATFORM = "offscreen"
+    - .\\Release\\cadventory.exe --no-gui
   artifacts:
     paths:
-      - .build/cadventory
-#    - $Enf:QT_QPA_PLATFORM = "offscreen"
+      - .build/Release/cadventory
 
 coverage-linux:
   stage: coverage
