@@ -10,6 +10,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
   this->setFixedSize(QSize(876, 600));
   ui.setupUi(this);
+
+  /* adjust the + button label position */
+  QLayoutItem* item = ui.gridLayout->itemAt(0);
+  QPushButton* addButton = qobject_cast<QPushButton*>(item->widget());
+  if (addButton) {
+    addButton->setStyleSheet("QPushButton { padding-top: -10px; }");
+  }
 }
 
 
@@ -83,7 +90,6 @@ MainWindow::on_addLibraryButton_clicked()
         QFont buttonFont = addButton->font();
         buttonFont.setPointSize(50);
         addButton->setFont(buttonFont);
-        addButton->setStyleSheet("QPushButton { padding-top: 2px; }");
       }
 
       for (size_t i = 0; i < (size_t)ui.gridLayout->count(); ++i) {
