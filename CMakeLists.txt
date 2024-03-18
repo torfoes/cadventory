@@ -12,7 +12,7 @@ qt_standard_project_setup()
 
 # flag adjustments Qt requires
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
 endif()
 
 
@@ -58,6 +58,21 @@ target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
 target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets ${SQLITE_LIBRARY}
 )
+
+
+# deployment on Windows needs DLLs copied
+if(WIN32)
+  # windeployqt copies them
+  find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt HINTS "${_qt_bin_dir}" NO_DEFAULT_PATH)
+  
+  if(NOT WINDEPLOYQT_EXECUTABLE)
+    message(SEND_ERROR "Failed to find windeployqt.")
+  else()
+    add_custom_command(TARGET cadventory POST_BUILD
+      COMMAND "${WINDEPLOYQT_EXECUTABLE}" $<TARGET_FILE_DIR:cadventory> COMMENT "Deploying Qt dependencies..."
+    )
+  endif()
+endif()
 
 
 # testing
