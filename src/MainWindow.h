@@ -18,11 +18,13 @@ class MainWindow : public QMainWindow
   Q_OBJECT
 
 public:
-  explicit MainWindow(QWidget *parent = nullptr);
+  explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
 
+  void addLibrary(const char* label = nullptr, const char* path = nullptr);
+
 public slots:
-  void updateStatusLabel(const char *status);
+  void updateStatusLabel(const char* status);
   void on_addLibraryButton_clicked();
 
 protected:

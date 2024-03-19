@@ -1,5 +1,5 @@
 
-#include "MainWindow.h"
+#include "./MainWindow.h"
 
 #include <iostream>
 #include <QFileDialog>
@@ -27,7 +27,15 @@ MainWindow::~MainWindow()
 
 
 void
-MainWindow::updateStatusLabel(const char *status)
+MainWindow::addLibrary(const char* label, const char* path)
+{
+  Library *newlib = new Library(label, path);
+  libraries.push_back(newlib);
+}
+
+
+void
+MainWindow::updateStatusLabel(const char* status)
 {
   ui.indexingStatus->setText(status);
 }
@@ -112,20 +120,18 @@ void
 MainWindow::saveState()
 {
     QSettings settings("BRL-CAD", "CADventory");
-    settings.beginWriteArray("buttons");
+    settings.beginWriteArray("libraries");
     int index = 0;
     foreach(QPushButton* button, this->findChildren<QPushButton*>()) {
         settings.setArrayIndex(index++);
         settings.setValue("text", button->text());
-        settings.setValue("x", button->pos().x());
-        settings.setValue("y", button->pos().y());
     }
     settings.endArray();
 }
 
 void MainWindow::loadState() {
     QSettings settings("BRL-CAD", "CADventory");
-    int size = settings.beginReadArray("buttons");
+    int size = settings.beginReadArray("libraries");
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
         QPushButton* button = new QPushButton(this);
