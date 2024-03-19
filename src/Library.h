@@ -8,11 +8,14 @@
 class Library {
 
 public:
-  explicit Library(const char *path = nullptr);
+  explicit Library(const char *label = nullptr, const char *path = nullptr);
   Library(const Library&) = delete;
   ~Library();
 
+  void indexFiles();
+
 private:
+  std::string label;
   std::string path;
   FilesystemIndexer *index;
 };

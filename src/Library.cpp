@@ -1,13 +1,22 @@
-#include "Library.h"
+#include "./Library.h"
 
-Library::Library(const char *_path) :
-  path(_path)
+
+Library::Library(const char* _label, const char* _path) :
+  label(_label),
+  path(_path),
+  index(nullptr)
 {
-  index = new FilesystemIndexer(_path);
 }
+
 
 Library::~Library()
 {
   delete index;
 }
 
+
+void
+Library::indexFiles()
+{
+  index = new FilesystemIndexer(path.c_str());
+}
