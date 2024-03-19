@@ -51,13 +51,18 @@ set (SRCS
   src/splash.ui
   src/Library.cpp
 )
+set (LIBS
+  Qt6::Core
+  Qt6::Widgets
+  Qt6::Gui
+)
 qt_add_executable(cadventory WIN32 ${SRCS})
 
 # note dependencies
 add_dependencies(cadventory sqlite_static)
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
-target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui ${SQLITE_LIBRARY}
+target_link_libraries(cadventory PRIVATE ${LIBS} ${SQLITE_LIBRARY}
 )
 
 # deployment on Windows needs DLLs copied
