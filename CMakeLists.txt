@@ -81,6 +81,7 @@ install(FILES doc/CADventory.docx
 
 # windows insanely wants DLLs in same folder as the app so set it up
 if(WIN32)
+
   # function to copy Qt DLLs for a given target
   function (copy_qt_dlls target)
     foreach (qt_module IN ITEMS ${LIBS})
@@ -101,10 +102,15 @@ if(WIN32)
         string(REGEX REPLACE "^lib" "" dll_name ${lib_name}) 
         set(dll_path "${lib_dir}/../bin/${dll_name}.dll")
 
-        # copy DLL to the target output dir
+        # copy DLL to the target output build dir
         add_custom_command(TARGET ${target} POST_BUILD
           COMMAND ${CMAKE_COMMAND} -E copy_if_different "${dll_path}" $<TARGET_FILE_DIR:${target}>
           COMMENT "Copying ${dll_path} to $<TARGET_FILE_DIR:${target}>"
+        )
+
+        # copy DLL to the install dir
+        install(FILES ${dll_path}
+          DESTINATION $<TARGET_FILE_DIR:${target}>
         )
       else ()
         message(WARNING "DLL for ${qt_module} not found.")
@@ -125,11 +131,16 @@ if(WIN32)
     set(PLUGIN_SRC_DIR "${QT_PLUGINS_DIR}/${plugin}")
     set(PLUGIN_DST_DIR "$<TARGET_FILE_DIR:cadventory>/${plugin}")
 
-    # opy the plugin directory to the application dir
+    # copy the plugin directory to the build dir
     add_custom_command(TARGET cadventory POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUGIN_DST_DIR}
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${PLUGIN_SRC_DIR} ${PLUGIN_DST_DIR}
       COMMENT "Copying Qt plugin: ${plugin}\n"
+    )
+
+    # install plugin directory to the install dir
+    install(DIRECTORY ${PLUGIN_DST_DIR}
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
   endforeach()
 endif()
