@@ -94,13 +94,8 @@
        </property>
        <property name="font">
         <font>
+         <family>Arial Black</family>
          <pointsize>92</pointsize>
-         <italic>false</italic>
-         <bold>true</bold>
-         <underline>false</underline>
-         <strikeout>false</strikeout>
-         <kerning>true</kerning>
-         <hintingpreference>PreferDefaultHinting</hintingpreference>
         </font>
        </property>
        <property name="mouseTracking">
