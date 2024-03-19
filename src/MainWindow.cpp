@@ -19,6 +19,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     addButton->setStyleSheet("QPushButton { padding-top: -10px; }");
   }
 
+  /* To manually reset on Mac:
+   * defaults delete com.brl-cad.CADventory
+   */
   size_t loaded = loadState();
   if (!loaded) {
     addLibrary("Local Home", QDir::homePath().toStdString().c_str());
@@ -153,7 +156,7 @@ size_t
 MainWindow::loadState() {
   QSettings settings("BRL-CAD", "CADventory");
   size_t size = settings.beginReadArray("libraries");
-  for (size_t i = 0; i < size; ++i) {
+  for (size_t i = 1; i < size; ++i) {
     settings.setArrayIndex(i);
     addLibrary(settings.value("name").toString().toStdString().c_str(), settings.value("path").toString().toStdString().c_str());
     addLibraryButton(settings.value("name").toString().toStdString().c_str(), settings.value("path").toString().toStdString().c_str());
