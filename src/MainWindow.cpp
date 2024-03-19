@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
   if (addButton) {
     addButton->setStyleSheet("QPushButton { padding-top: -10px; }");
   }
+  addLibrary("Local Library", QDir::homePath().toStdString().c_str());
 }
 
 
@@ -44,10 +45,12 @@ MainWindow::updateStatusLabel(const char* status)
 void
 MainWindow::on_addLibraryButton_clicked()
 {
-  QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select Folder"), "/path/to/default/directory");
+  QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select Folder"), ".");
   if (!folderPath.isEmpty()) {
     // Create a new button for the selected folder
     QString name = QString(folderPath.toStdString().substr(folderPath.toStdString().find_last_of("/\\") + 1).c_str());
+
+    addLibrary(name.toStdString().c_str(), folderPath.toStdString().c_str());
 
     /* when we have more than this many buttons, we go smaller */
     const size_t LAYOUT_SHIFT = 20;
