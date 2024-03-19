@@ -4,6 +4,7 @@
 #include <iostream>
 #include <QFileDialog>
 #include <QPushButton>
+#include <QSettings>
 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
@@ -103,4 +104,34 @@ MainWindow::on_addLibraryButton_clicked()
       }
     }
   }
+}
+
+
+
+void
+MainWindow::saveState()
+{
+    QSettings settings("BRL-CAD", "CADventory");
+    settings.beginWriteArray("buttons");
+    int index = 0;
+    foreach(QPushButton* button, this->findChildren<QPushButton*>()) {
+        settings.setArrayIndex(index++);
+        settings.setValue("text", button->text());
+        settings.setValue("x", button->pos().x());
+        settings.setValue("y", button->pos().y());
+    }
+    settings.endArray();
+}
+
+void MainWindow::loadState() {
+    QSettings settings("BRL-CAD", "CADventory");
+    int size = settings.beginReadArray("buttons");
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+        QPushButton* button = new QPushButton(this);
+        button->setText(settings.value("text").toString());
+        button->move(settings.value("x").toInt(), settings.value("y").toInt());
+        button->show();
+    }
+    settings.endArray();
 }

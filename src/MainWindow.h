@@ -1,10 +1,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <map>
+#include <string>
+#include <vector>
+
 #include <QMainWindow>
 #include <QObject>
 
 #include "./ui_mainwindow.h"
+
+#include "./Library.h"
 
 
 class MainWindow : public QMainWindow
@@ -19,8 +25,13 @@ public slots:
   void updateStatusLabel(const char *status);
   void on_addLibraryButton_clicked();
 
+protected:
+  void saveState();
+  void loadState();
+
 private:
   Ui::MainWindow ui;
+  std::vector<Library*> libraries;
 };
 
 #endif /* MAINWINDOW_H */
