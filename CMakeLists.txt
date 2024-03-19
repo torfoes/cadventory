@@ -78,13 +78,15 @@ if(WIN32)
   # function to copy Qt DLLs for a given target
   function (copy_qt_dlls target)
     foreach (qt_module IN ITEMS ${LIBS})
-      if (CMAKE_BUILD_TYPE MATCHES "Debug" OR NOT CMAKE)
+      if (CMAKE_BUILD_TYPE MATCHES "Debug")
 	get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_DEBUG)
       else ()
 	get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_RELEASE)
       endif ()
 
       if (lib_location)
+        message("Copying DLLs from ${lib_location}")
+
         # assume DLL is in dir relative to the .lib file
         get_filename_component(lib_dir ${lib_location} DIRECTORY)
         get_filename_component(lib_name ${lib_location} NAME_WE)
@@ -121,7 +123,7 @@ if(WIN32)
     add_custom_command(TARGET cadventory POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUGIN_DST_DIR}
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${PLUGIN_SRC_DIR} ${PLUGIN_DST_DIR}
-      COMMENT "Copying Qt plugin: ${plugin}"
+      COMMENT "Copying Qt plugin: ${plugin}\n"
     )
   endforeach()
 endif()
