@@ -31,6 +31,8 @@ protected:
   void saveState();
   void loadState();
 
+  void addLibraryButton(const char* label = nullptr, const char* path = nullptr);
+
 private:
   Ui::MainWindow ui;
   std::vector<Library*> libraries;
