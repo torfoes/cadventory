@@ -28,8 +28,8 @@ public slots:
   void on_addLibraryButton_clicked();
 
 protected:
-  void saveState();
-  void loadState();
+  size_t saveState();
+  size_t loadState();
 
   void addLibraryButton(const char* label = nullptr, const char* path = nullptr);
 

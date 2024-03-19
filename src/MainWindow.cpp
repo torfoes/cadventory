@@ -18,7 +18,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
   if (addButton) {
     addButton->setStyleSheet("QPushButton { padding-top: -10px; }");
   }
-  addLibrary("Local Library", QDir::homePath().toStdString().c_str());
+
+  size_t loaded = loadState();
+  if (!loaded) {
+    addLibrary("Local Home", QDir::homePath().toStdString().c_str());
+  } else {
+    std::cout << "Loaded " << loaded << " previously registered libraries" << std::endl;
+  }
 }
 
 
@@ -121,33 +127,38 @@ MainWindow::on_addLibraryButton_clicked()
     /* when we click +, add path to our libraries and add a button for it */
     addLibrary(name.toStdString().c_str(), folderPath.toStdString().c_str());
     addLibraryButton(name.toStdString().c_str(), folderPath.toStdString().c_str());
+    saveState();
   }
 }
 
 
-void
+size_t
 MainWindow::saveState()
 {
   QSettings settings("BRL-CAD", "CADventory");
   settings.beginWriteArray("libraries");
-  int index = 0;
+  size_t index = 0;
   for(auto lib : libraries) {
     settings.setArrayIndex(index++);
-    settings.setValue(lib->name(), lib->path());
+    settings.setValue("name", lib->name());
+    settings.setValue("path", lib->path());
   }
   settings.endArray();
+
+  return index;
 }
 
 
-void MainWindow::loadState() {
+size_t
+MainWindow::loadState() {
   QSettings settings("BRL-CAD", "CADventory");
-  int size = settings.beginReadArray("libraries");
-  for (int i = 0; i < size; ++i) {
+  size_t size = settings.beginReadArray("libraries");
+  for (size_t i = 0; i < size; ++i) {
     settings.setArrayIndex(i);
-    QPushButton* button = new QPushButton(this);
-    button->setText(settings.value("text").toString());
-    button->move(settings.value("x").toInt(), settings.value("y").toInt());
-    button->show();
+    addLibrary(settings.value("name").toString().toStdString().c_str(), settings.value("path").toString().toStdString().c_str());
+    addLibraryButton(settings.value("name").toString().toStdString().c_str(), settings.value("path").toString().toStdString().c_str());
   }
   settings.endArray();
+
+  return size;
 }
