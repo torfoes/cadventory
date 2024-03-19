@@ -64,7 +64,7 @@ build-windows:
     - cd .build
     - echo "compilation artifact from project:$CI_PROJECT_PATH, branch:$CI_COMMIT_BRANCH, job_url:$CI_JOB_URL" > artifact.txt
     - '& "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\VsDevCmd.bat"'
-    - cmake -DCMAKE_PREFIX_PATH=C:\\Qt\\6.8.0\\msvc2019_arm64\lib\cmake -G "Visual Studio 17 2022" -DCMAKE_INSTALL_PREFIX=install -A arm64 ..
+    - cmake -DCMAKE_PREFIX_PATH=C:\\Qt\\6.8.0\\msvc2019_arm64\\lib\\cmake -G "Visual Studio 17 2022" -DCMAKE_INSTALL_PREFIX=install -A arm64 ..
     - cmake --build . --config Release -- /m:4
     - cmake --build . --config Release --target install
   artifacts:
