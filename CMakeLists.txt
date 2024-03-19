@@ -66,7 +66,8 @@ install(TARGETS cadventory
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES splash.png
-  DESTINATION ${CMAKE_INSTALL_DATADIR}
+  # eventually should go to DATADIR
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES doc/CADventory.docx
   DESTINATION ${CMAKE_INSTALL_DOCDIR}
