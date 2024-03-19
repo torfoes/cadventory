@@ -14,10 +14,10 @@
 #include <windows.h>
 
 int APIENTRY
-WinMain(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR lpszCmdLine,
-	int nCmdShow)
+WinMain(HINSTANCE /*hInstance*/,
+	HINSTANCE /*hPrevInstance*/,
+	LPSTR /*lpszCmdLine*/,
+	int /*nCmdShow*/)
 {
     int argc = __argc;
     char **argv = __argv;
