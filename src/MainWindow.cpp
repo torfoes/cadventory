@@ -138,7 +138,7 @@ MainWindow::on_addLibraryButton_clicked()
 size_t
 MainWindow::saveState()
 {
-  QSettings settings("BRL-CAD", "CADventory");
+  QSettings settings;
   settings.beginWriteArray("libraries");
   size_t index = 0;
   for(auto lib : libraries) {
