@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QString>
 #include <QDir>
+#include <QSettings>
 
 #include "MainWindow.h"
 #include "SplashDialog.h"
@@ -34,6 +35,11 @@ CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), win
   if (argc > 1) {
     this->gui = false;
     connect(this, &CADventory::indexingComplete, this, &QCoreApplication::quit);
+
+    // could be separate setting, but let CLI-mode also wipe out all settings
+    QSettings settings;
+    settings.clear();
+    settings.sync();
   }
 }
 
