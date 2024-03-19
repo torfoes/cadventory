@@ -13,11 +13,13 @@ public:
   ~Library();
 
   void indexFiles();
+  const char* name();
+  const char* path();
 
 private:
-  std::string label;
-  std::string path;
-  FilesystemIndexer *index;
+  std::string shortName;
+  std::string fullPath;
+  FilesystemIndexer* index;
 };
 
 

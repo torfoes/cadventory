@@ -2,8 +2,8 @@
 
 
 Library::Library(const char* _label, const char* _path) :
-  label(_label),
-  path(_path),
+  shortName(_label),
+  fullPath(_path),
   index(nullptr)
 {
 }
@@ -15,8 +15,22 @@ Library::~Library()
 }
 
 
+const char*
+Library::name()
+{
+  return shortName.c_str();
+}
+
+
+const char*
+Library::path()
+{
+  return fullPath.c_str();
+}
+
+
 void
 Library::indexFiles()
 {
-  index = new FilesystemIndexer(path.c_str());
+  index = new FilesystemIndexer(fullPath.c_str());
 }
