@@ -2,6 +2,7 @@
 #define LIBRARY_H
 
 #include <string>
+#include <vector>
 #include "FilesystemIndexer.h"
 
 
@@ -15,6 +16,12 @@ public:
   size_t indexFiles();
   const char* name();
   const char* path();
+
+  std::vector<std::string> getModels();
+  std::vector<std::string> getGeometry();
+  std::vector<std::string> getImages();
+  std::vector<std::string> getDocuments();
+  std::vector<std::string> getData();
 
 private:
   std::string shortName;
