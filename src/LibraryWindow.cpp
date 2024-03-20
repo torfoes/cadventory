@@ -18,7 +18,8 @@ void
 LibraryWindow::loadFromLibrary(Library* _library)
 {
   this->library = _library;
-  /* ... do more ... */
+  this->setWindowTitle(library->name());
+  this->ui.currentLibrary->setText(library->name());
 }
 
 
