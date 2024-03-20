@@ -65,7 +65,7 @@ MainWindow::openLibrary()
   }
 
   if (foundLibrary) {
-    LibraryWindow* libraryWindow = new LibraryWindow(this);
+    LibraryWindow* libraryWindow = new LibraryWindow(nullptr);
     libraryWindow->loadFromLibrary(foundLibrary);
     libraryWindow->show();
   } else {
