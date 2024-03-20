@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
   /* explain how to reset the list */
   std::cout << "To manually reset on Mac:" << std::endl
-            << "  defaults delete com.brl-cad.CADventory" << std::endl;
+            << "  defaults delete org.brlcad.CADventory" << std::endl;
   std::cout << "To reset via app, run with --no-gui option." << std::endl;
 
   size_t loaded = loadState();
