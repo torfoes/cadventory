@@ -1,12 +1,15 @@
 #include "CADventory.h"
 
+#include <QDir>
 #include <QTimer>
 #include <QPixmap>
+#include <QString>
 #include <QSplashScreen>
 
 #include <stdlib.h>
 #include <iostream>
 #include <filesystem>
+#include <string>
 
 
 #ifdef _WIN32
@@ -30,11 +33,12 @@ main(int argc, char **argv)
   app.showSplash();
 
   QTimer::singleShot(250, [&app]() {
-    const char *home = getenv("HOME");
-    if (!home)
-      home = "~";
+    std::string home = QDir::homePath().toStdString();
+    const char *homestr = home.c_str();
+    if (!homestr)
+      homestr = ".";
     app.processEvents();
-    std::string localDir = std::string(home) + std::string("/.CADventory");
+    std::string localDir = std::string(home);
     app.indexDirectory(localDir.c_str());
   });
 
