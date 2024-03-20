@@ -1,6 +1,8 @@
 
 #include "./LibraryWindow.h"
 
+#include <QStringListModel>
+
 
 LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
 {
@@ -31,18 +33,33 @@ LibraryWindow::loadFromLibrary(Library* _library)
     ui.listWidget->addItem(item);
   }
 
-  auto populateList = [](QListWidget* listWidget, const std::vector<std::string>& items) {
-    /* clear existing data */
-    listWidget->clear();
-    for (const auto& item : items) {
-      listWidget->addItem(QString::fromStdString(item));
+  /* prepare MVC model for our list views */
+  auto populateModel = [this](QStringListModel* model, const std::vector<std::string>& fullPaths) {
+    QStringList list;
+    std::string base = std::string(library->path()) + "/";
+    for (const auto& fullPath : fullPaths) {
+      std::string relativePath = fullPath.substr(base.length());
+      list << QString::fromStdString(relativePath);
     }
+    model->setStringList(list);
   };
 
-  populateList(ui.geometryListView, library->getGeometry());
-  populateList(ui.imagesListView, library->getImages());
-  populateList(ui.documentsListView, library->getDocuments());
-  populateList(ui.dataListView, library->getData());
+  QStringListModel *geometryModel = new QStringListModel(this);
+  QStringListModel *imagesModel = new QStringListModel(this);
+  QStringListModel *documentsModel = new QStringListModel(this);
+  QStringListModel *dataModel = new QStringListModel(this);
+
+  /* populate the MVC models */
+  populateModel(geometryModel, library->getGeometry());
+  populateModel(imagesModel, library->getImages());
+  populateModel(documentsModel, library->getDocuments());
+  populateModel(dataModel, library->getData());
+
+  /* wire the MVC models to the list views */
+  ui.geometryListView->setModel(geometryModel);
+  ui.imagesListView->setModel(imagesModel);
+  ui.documentsListView->setModel(documentsModel);
+  ui.dataListView->setModel(dataModel);
 }
 
 
