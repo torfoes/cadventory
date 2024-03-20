@@ -44,6 +44,10 @@ MainWindow::addLibrary(const char* label, const char* path)
 {
   Library *newlib = new Library(label, path);
   libraries.push_back(newlib);
+  size_t files = newlib->indexFiles();
+
+  QString libCount = QString("Scanned ") + QString::number(files) + QString(" file(s) in ") + label;
+  this->updateStatusLabel(libCount.toStdString().c_str());
 }
 
 

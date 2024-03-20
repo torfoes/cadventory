@@ -29,8 +29,9 @@ Library::path()
 }
 
 
-void
+size_t
 Library::indexFiles()
 {
   index = new FilesystemIndexer(fullPath.c_str());
+  return index->indexed();
 }

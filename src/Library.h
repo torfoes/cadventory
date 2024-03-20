@@ -12,7 +12,7 @@ public:
   Library(const Library&) = delete;
   ~Library();
 
-  void indexFiles();
+  size_t indexFiles();
   const char* name();
   const char* path();
 
