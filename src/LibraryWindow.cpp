@@ -30,6 +30,19 @@ LibraryWindow::loadFromLibrary(Library* _library)
     QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(dir));
     ui.listWidget->addItem(item);
   }
+
+  auto populateList = [](QListWidget* listWidget, const std::vector<std::string>& items) {
+    /* clear existing data */
+    listWidget->clear();
+    for (const auto& item : items) {
+      listWidget->addItem(QString::fromStdString(item));
+    }
+  };
+
+  populateList(ui.geometryListView, library->getGeometry());
+  populateList(ui.imagesListView, library->getImages());
+  populateList(ui.documentsListView, library->getDocuments());
+  populateList(ui.dataListView, library->getData());
 }
 
 
