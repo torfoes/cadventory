@@ -21,3 +21,9 @@ LibraryWindow::loadFromLibrary(Library* _library)
   /* ... do more ... */
 }
 
+
+void
+LibraryWindow::on_allLibraries_clicked()
+{
+  this->hide();
+}

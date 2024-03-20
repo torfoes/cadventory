@@ -23,6 +23,9 @@ public:
 
   void loadFromLibrary(Library *library);
 
+public slots:
+  void on_allLibraries_clicked();
+
 private:
   Ui::LibraryWindow ui;
   Library* library;
