@@ -7,6 +7,7 @@
 #include <QSplashScreen>
 
 #include <stdlib.h>
+#include <stdlib.h>
 #include <iostream>
 #include <filesystem>
 #include <string>
@@ -41,6 +42,7 @@ main(int argc, char **argv)
     std::string localDir = std::string(home);
     app.indexDirectory(localDir.c_str());
   });
+  printf("Starting CADventory\n");
 
   return app.exec();
 }
