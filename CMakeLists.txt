@@ -46,10 +46,12 @@ set (SRCS
   src/MainWindow.cpp
   src/SplashDialog.cpp
   src/Model.cpp
+  src/librarywindow.ui
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
   src/Library.cpp
+  src/LibraryWindow.cpp
 )
 set (LIBS
   Qt6::Core
