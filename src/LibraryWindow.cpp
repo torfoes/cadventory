@@ -8,6 +8,10 @@ LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
 {
   this->setFixedSize(QSize(640, 480));
   ui.setupUi(this);
+
+  /* make Model selections update the tabs */
+  connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
+
 }
 
 
@@ -44,10 +48,10 @@ LibraryWindow::loadFromLibrary(Library* _library)
     model->setStringList(list);
   };
 
-  QStringListModel *geometryModel = new QStringListModel(this);
-  QStringListModel *imagesModel = new QStringListModel(this);
-  QStringListModel *documentsModel = new QStringListModel(this);
-  QStringListModel *dataModel = new QStringListModel(this);
+  geometryModel = new QStringListModel(this);
+  imagesModel = new QStringListModel(this);
+  documentsModel = new QStringListModel(this);
+  dataModel = new QStringListModel(this);
 
   /* populate the MVC models */
   populateModel(geometryModel, library->getGeometry());
@@ -68,3 +72,42 @@ LibraryWindow::on_allLibraries_clicked()
 {
   this->hide();
 }
+
+
+void
+LibraryWindow::updateListModelForDirectory(QStringListModel* model, const std::vector<std::string>& allItems, const std::string& directory)
+{
+  QStringList filteredItems;
+  std::string base = library->path() + (directory == "." ? "" : "/" + directory);
+  for (const auto& item : allItems) {
+    if (item.find(base) == 0) { // item starts with base path
+      std::string relativePath = item.substr(base.length() + 1); // +1 to skip leading slash
+      filteredItems << QString::fromStdString(relativePath);
+    }
+  }
+  model->setStringList(filteredItems);
+}
+
+
+void
+LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* /*previous*/)
+{
+  if (!current)
+    return; // nada selected
+
+  QString selectedDir = current->text();
+
+  /* retrieve full lists */
+  std::vector<std::string> allGeometry = library->getGeometry();
+  std::vector<std::string> allImages = library->getImages();
+  std::vector<std::string> allDocuments = library->getDocuments();
+  std::vector<std::string> allData = library->getData();
+
+  /* filter and update the models for each category */
+  updateListModelForDirectory(geometryModel, allGeometry, selectedDir.toStdString());
+  updateListModelForDirectory(imagesModel, allImages, selectedDir.toStdString());
+  updateListModelForDirectory(documentsModel, allDocuments, selectedDir.toStdString());
+  updateListModelForDirectory(dataModel, allData, selectedDir.toStdString());
+}
+
+

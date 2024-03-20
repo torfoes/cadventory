@@ -215,16 +215,21 @@ std::vector<std::string>
 Library::getData()
 {
   std::vector<std::string> dataSuffixes = {
+    ".Z",
+    ".bz2",
     ".csv",
     ".hdf5",
     ".json",
     ".mat",
     ".nc",
     ".ods",
+    ".tar",
+    ".tgz",
     ".vtk",
     ".xls",
     ".xml",
     ".xyz",
+    ".zip",
     ".zzzdat"
   };
 

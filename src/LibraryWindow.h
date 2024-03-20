@@ -7,6 +7,8 @@
 
 #include <QWidget>
 #include <QObject>
+#include <QListWidgetItem>
+#include <QStringListModel>
 
 #include "./ui_librarywindow.h"
 
@@ -23,12 +25,22 @@ public:
 
   void loadFromLibrary(Library *library);
 
+protected:
+  void updateListModelForDirectory(QStringListModel* model, const std::vector<std::string>& allItems, const std::string& directory);
+
 public slots:
   void on_allLibraries_clicked();
+  void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
   Ui::LibraryWindow ui;
   Library* library;
+
+  QStringListModel *geometryModel;
+  QStringListModel *imagesModel;
+  QStringListModel *documentsModel;
+  QStringListModel *dataModel;
 };
+
 
 #endif /* LIBRARYWINDOW_H */
