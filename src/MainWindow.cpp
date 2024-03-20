@@ -22,6 +22,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     addButton->setStyleSheet("QPushButton { padding-top: -10px; }");
   }
 
+  /* connect the default home dir button */
+  connect(ui.homeLibraryButton, &QPushButton::released, this, &MainWindow::openLibrary);
+
   /* To manually reset on Mac:
    * defaults delete com.brl-cad.CADventory
    */
