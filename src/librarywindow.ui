@@ -94,7 +94,7 @@
     <attribute name="title">
      <string>Geometry</string>
     </attribute>
-    <widget class="QWidget" name="gridLayoutWidget">
+    <widget class="QListView" name="geometryListView">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -103,14 +103,13 @@
        <height>381</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="geometryGrid"/>
     </widget>
    </widget>
    <widget class="QWidget" name="imagesTab">
     <attribute name="title">
      <string>Images</string>
     </attribute>
-    <widget class="QWidget" name="gridLayoutWidget_4">
+    <widget class="QListView" name="imagesListView">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -119,14 +118,13 @@
        <height>381</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="imagesGrid"/>
     </widget>
    </widget>
    <widget class="QWidget" name="documentsTab">
     <attribute name="title">
      <string>Documents</string>
     </attribute>
-    <widget class="QWidget" name="gridLayoutWidget_3">
+    <widget class="QListView" name="documentsListView">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -135,14 +133,13 @@
        <height>381</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="documentsGrid"/>
     </widget>
    </widget>
    <widget class="QWidget" name="dataTab">
     <attribute name="title">
      <string>Data</string>
     </attribute>
-    <widget class="QWidget" name="gridLayoutWidget_2">
+    <widget class="QListView" name="dataListView">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -151,7 +148,6 @@
        <height>381</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="dataGrid"/>
     </widget>
    </widget>
   </widget>
