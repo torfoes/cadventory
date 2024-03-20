@@ -1,5 +1,8 @@
 #include "./Library.h"
 
+#include <set>
+#include <algorithm>
+
 
 Library::Library(const char* _label, const char* _path) :
   shortName(_label),
@@ -40,11 +43,39 @@ Library::indexFiles()
 std::vector<std::string>
 Library::getModels()
 {
+  /* care about dirs with a .g in them */
   std::vector<std::string> modelSuffixes = {".g"};
-  if (index) {
-    return index->findFilesWithSuffixes(modelSuffixes);
+  std::set<std::string> uniqueDirs; // using set to avoid dupes
+
+  if (!index) {
+    indexFiles();
   }
-  return {};
+
+  auto files = index->findFilesWithSuffixes(modelSuffixes);
+  for (const std::string& file : files) {
+    // remove the filename
+    size_t lastSlashPos = file.find_last_of("/\\");
+    std::string dirPath = file.substr(0, lastSlashPos);
+
+    // make path relative to fullPath
+    if (dirPath.size() >= fullPath.size() && dirPath.compare(0, fullPath.size(), fullPath) == 0) {
+      dirPath = dirPath.substr(fullPath.size());
+      if (dirPath.size() > 0 && (dirPath[0] == '/' || dirPath[0] == '\\')) {
+        // remove leading slash
+        dirPath = dirPath.substr(1);
+      }
+    }
+
+    // convert to "." if the directory is the same as the library path
+    if (dirPath.empty()) {
+      dirPath = ".";
+    }
+
+    uniqueDirs.insert(dirPath);
+  }
+
+  // convert set back to vector
+  return std::vector<std::string>(uniqueDirs.begin(), uniqueDirs.end());
 }
 
 
@@ -107,10 +138,11 @@ Library::getGeometry()
     ".zpr",
     ".zzzgeo"
   };
-  if (index) {
-    return index->findFilesWithSuffixes(geometrySuffixes);
+  if (!index) {
+    indexFiles();
   }
-  return {};
+
+  return index->findFilesWithSuffixes(geometrySuffixes);
 }
 
 
@@ -144,10 +176,12 @@ Library::getImages()
     ".webp",
     ".zzzimg"
   };
-  if (index) {
-    return index->findFilesWithSuffixes(imageSuffixes);
+
+  if (!index) {
+    indexFiles();
   }
-  return {};
+
+  return index->findFilesWithSuffixes(imageSuffixes);
 }
 
 
@@ -168,10 +202,12 @@ Library::getDocuments()
     ".txt",
     ".zzzdoc"
   };
-  if (index) {
-    return index->findFilesWithSuffixes(documentSuffixes);
+
+  if (!index) {
+    indexFiles();
   }
-  return {};
+
+  return index->findFilesWithSuffixes(documentSuffixes);
 }
 
 
@@ -191,8 +227,10 @@ Library::getData()
     ".xyz",
     ".zzzdat"
   };
-  if (index) {
-    return index->findFilesWithSuffixes(dataSuffixes);
+
+  if (!index) {
+    indexFiles();
   }
-  return {};
+
+  return index->findFilesWithSuffixes(dataSuffixes);
 }
