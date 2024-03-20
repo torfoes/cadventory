@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Library</string>
   </property>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
@@ -155,7 +155,7 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="leftLayoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -164,7 +164,7 @@
      <height>34</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="leftHorizontalLayout">
     <item>
      <widget class="QPushButton" name="allLibraries">
       <property name="text">
@@ -199,7 +199,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="rightLayoutWidget">
    <property name="geometry">
     <rect>
      <x>299</x>
@@ -208,7 +208,7 @@
      <height>32</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <layout class="QHBoxLayout" name="rightHorizontalLayout">
     <item>
      <widget class="QComboBox" name="searchDropDown">
       <property name="enabled">
