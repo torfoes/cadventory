@@ -22,6 +22,7 @@ public:
   ~MainWindow();
 
   void addLibrary(const char* label = nullptr, const char* path = nullptr);
+  void openLibrary();
 
 public slots:
   void updateStatusLabel(const char* status);

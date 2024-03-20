@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include <QSettings>
+#include <QMessageBox>
 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
@@ -45,6 +46,33 @@ MainWindow::addLibrary(const char* label, const char* path)
 
 
 void
+MainWindow::openLibrary()
+{
+  QPushButton* button = qobject_cast<QPushButton*>(sender());
+  if (!button)
+    return;
+
+  QString lookupKey = button->text();
+  Library* foundLibrary = nullptr;
+
+  for (Library* lib : libraries) {
+    if (lib->name() == lookupKey) {
+      foundLibrary = lib;
+      break;
+    }
+  }
+
+  if (foundLibrary) {
+    LibraryWindow* libraryWindow = new LibraryWindow(this);
+    libraryWindow->loadFromLibrary(foundLibrary);
+    libraryWindow->show();
+  } else {
+    QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);
+  }
+}
+
+
+void
 MainWindow::addLibraryButton(const char* label, const char* /*path*/)
 {
   /* when we have more than this many buttons, we go smaller */
@@ -78,8 +106,7 @@ MainWindow::addLibraryButton(const char* label, const char* /*path*/)
   font.setPointSize(20);
   newButton->setFont(font);
 
-  // TODO: adjust button properties to connect signal to slot
-  //    ui.gridLayout->addWidget(newButton); // TODO: need a ui.layout->addWidget
+  connect(newButton, &QPushButton::released, this, &MainWindow::openLibrary);
 
   /* add our new button */
   if (buttons % COLUMNS == 0) {
