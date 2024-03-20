@@ -21,12 +21,12 @@ LibraryWindow::loadFromLibrary(Library* _library)
   this->setWindowTitle(library->name() + QString(" Library"));
   this->ui.currentLibrary->setText(library->name());
 
-  /* populate the Models listing */
-  std::vector<std::string> modelDirs = library->getModels();
+  /* start fresh */
   ui.listWidget->clear();
 
-  /* add each dir to the list */
-  for (const std::string& dir : modelDirs) {
+  /* populate Models listing */
+  auto modelDirs = library->getModels();
+  for (const auto& dir : modelDirs) {
     QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(dir));
     ui.listWidget->addItem(item);
   }
