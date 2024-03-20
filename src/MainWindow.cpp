@@ -187,12 +187,14 @@ MainWindow::saveState()
 
 size_t
 MainWindow::loadState() {
-  QSettings settings("BRL-CAD", "CADventory");
+  QSettings settings;
   size_t size = settings.beginReadArray("libraries");
-  for (size_t i = 1; i < size; ++i) {
+  for (size_t i = 0; i < size; ++i) {
     settings.setArrayIndex(i);
-    addLibrary(settings.value("name").toString().toStdString().c_str(), settings.value("path").toString().toStdString().c_str());
-    addLibraryButton(settings.value("name").toString().toStdString().c_str(), settings.value("path").toString().toStdString().c_str());
+    QString name = settings.value("name").toString();
+    QString path = settings.value("path").toString();
+    addLibrary(name.toStdString().c_str(), path.toStdString().c_str());
+    addLibraryButton(name.toStdString().c_str(), path.toStdString().c_str());
   }
   settings.endArray();
 
