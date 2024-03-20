@@ -7,6 +7,8 @@
 #include <QSettings>
 #include <QMessageBox>
 
+#include "LibraryWindow.h"
+
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
