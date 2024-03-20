@@ -186,6 +186,8 @@ MainWindow::saveState()
   settings.beginWriteArray("libraries");
   size_t index = 0;
   for(auto lib : libraries) {
+    if (QString(lib->name()) == QString("Local Home"))
+      continue;
     settings.setArrayIndex(index++);
     settings.setValue("name", lib->name());
     settings.setValue("path", lib->path());
