@@ -94,7 +94,7 @@ if(WIN32)
       endif ()
 
       if (lib_location)
-        message("Copying DLLs from ${lib_location}")
+        message("Copying DLLs from ${lib_location} after compile completes.")
 
         # assume DLL is in dir relative to the .lib file
         get_filename_component(lib_dir ${lib_location} DIRECTORY)
