@@ -18,7 +18,7 @@ void
 LibraryWindow::loadFromLibrary(Library* _library)
 {
   this->library = _library;
-  this->setWindowTitle(library->name());
+  this->setWindowTitle(library->name() + QString(" Library"));
   this->ui.currentLibrary->setText(library->name());
 }
 
