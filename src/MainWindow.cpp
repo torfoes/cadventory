@@ -22,18 +22,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     addButton->setStyleSheet("QPushButton { padding-top: -10px; }");
   }
 
-  /* connect the default home dir button */
-  connect(ui.homeLibraryButton, &QPushButton::released, this, &MainWindow::openLibrary);
+  /* explain how to reset the list */
+  std::cout << "To manually reset on Mac:" << std::endl
+            << "  defaults delete com.brl-cad.CADventory" << std::endl;
+  std::cout << "To reset via app, run with --no-gui option." << std::endl;
 
-  /* To manually reset on Mac:
-   * defaults delete com.brl-cad.CADventory
-   */
   size_t loaded = loadState();
-  if (!loaded) {
-    addLibrary("Local Home", QDir::homePath().toStdString().c_str());
-  } else {
+  if (loaded) {
     std::cout << "Loaded " << loaded << " previously registered libraries" << std::endl;
   }
+
+  QString home = QDir::homePath();
+  addLibrary("Local Home", home.toStdString().c_str());
+  std::cout << "Loaded local home [" << home.toStdString().c_str() <<"] library" << std::endl;
+
+  /* connect the default home dir button */
+  connect(ui.homeLibraryButton, &QPushButton::released, this, &MainWindow::openLibrary);
 }
 
 
@@ -45,6 +49,8 @@ MainWindow::~MainWindow()
 void
 MainWindow::addLibrary(const char* label, const char* path)
 {
+  std::cout << "Adding library [" << label << "] => " << path << std::endl;
+
   Library *newlib = new Library(label, path);
   libraries.push_back(newlib);
   size_t files = newlib->indexFiles();
@@ -65,6 +71,8 @@ MainWindow::openLibrary()
   Library* foundLibrary = nullptr;
 
   for (Library* lib : libraries) {
+    std::cout << "Looking for " << lib->name() << " == " << lookupKey.toStdString() << std::endl;
+
     if (lib->name() == lookupKey) {
       foundLibrary = lib;
       break;
