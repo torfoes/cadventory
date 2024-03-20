@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>library</class>
- <widget class="QWidget" name="library">
+ <class>LibraryWindow</class>
+ <widget class="QWidget" name="LibraryWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -155,7 +155,7 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -199,7 +199,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>299</x>
