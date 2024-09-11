@@ -28,11 +28,6 @@ Click + in GUI and navigate to a folder to index.
 
 To clear all settings, run with --no-gui command-line option.
 
-## Support
-
-Christopher Sean Morrison
-brlcad@gmail.com
-
 
 ## Roadmap
 
@@ -70,15 +65,6 @@ Here's an architecture diagram:
 │    └──────────────────────┘                                          │
 └──────────────────────────────────────────────────────────────────────┘
 ```
-
-
-## Authors and Acknowledgments
-
-Original Author
-Christopher Sean Morrison
-
-CADventory was initiated under RSEG-127, Software Engineering Studio,
-Brandeis University, under the guidance of Erik Hemdal.
 
 
 ## License
