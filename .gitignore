@@ -1,4 +1,5 @@
 *~
 .build
 .idea/
-cadventory.db
+*.db
+/scripts/photos/
