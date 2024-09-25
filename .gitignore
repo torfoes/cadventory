@@ -3,3 +3,4 @@
 .idea/
 *.db
 /scripts/photos/
+.DS_Store
