@@ -133,7 +133,7 @@ def extract_objects(g_file_path):
         return []
 
 
-def generate_image(g_file_path, objects, output_dir, image_size=1024, suffix=''):
+def generate_image(g_file_path, objects, output_dir, image_size=224, suffix=''):
     """
     generate an image (preview or photo) from a .g file using the rt command.
 
