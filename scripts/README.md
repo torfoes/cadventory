@@ -21,3 +21,18 @@ Convert all `.asc` files in a directory to `.g` format:
 python asc_to_g.py --directory /path/to/directory/
 ```
 
+### CLIP Demo
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Basic Command Structure:
+```bash
+python clip_classifier.py <image_path> <label1> <label2> ... [--top-n N] [--threshold T] [--model MODEL_NAME]
+```
+
+
+s
