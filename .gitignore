@@ -2,5 +2,10 @@
 .build
 .idea/
 *.db
-/scripts/photos/
 .DS_Store
+
+# experiments
+/scripts/photos/
+/scripts/venv/
+/scripts/index_models.log
+/scripts/clip_demo.loge
