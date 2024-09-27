@@ -133,7 +133,7 @@ def extract_objects(g_file_path):
         return []
 
 
-def generate_image(g_file_path, objects, output_dir, image_size=224, suffix=''):
+def generate_image(g_file_path, objects, output_dir, image_size=336, suffix=''):
     """
     generate an image (preview or photo) from a .g file using the rt command.
 
@@ -141,9 +141,8 @@ def generate_image(g_file_path, objects, output_dir, image_size=224, suffix=''):
         g_file_path (str): Path to the .g file.
         objects (list): List of objects in the .g file.
         output_dir (str): Directory to store the generated image.
-        image_size (int, optional): Size parameter for the image (default is 1024).
+        image_size (int, optional): Size parameter for the image
         suffix (str, optional): Suffix to append to the output image name (e.g., '_photo').
-
     Returns:
         bytes or None: Binary data of the image, or None if generation failed.
     """
@@ -186,7 +185,7 @@ def generate_image(g_file_path, objects, output_dir, image_size=224, suffix=''):
         return None
 
 
-def insert_model_into_db(short_name, long_name, model_type, owner_id, filesystem_location, summary_sheet, photo=None):
+def insert_model_into_db(short_name, long_name, model_type, owner_id, filesystem_location, photo, summary_sheet=None):
     """Insert a new model into the Models table."""
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -208,7 +207,7 @@ def insert_model_into_db(short_name, long_name, model_type, owner_id, filesystem
         return None
 
 
-def process_g_file(g_file_path, preview_dir, photos_dir, owner_id):
+def process_g_file(g_file_path, photos_dir, owner_id):
     """Process a single .g file: extract objects, generate preview, generate photo, and insert into DB."""
     logging.info(f"Processing .g file: {g_file_path}")
 
@@ -221,7 +220,7 @@ def process_g_file(g_file_path, preview_dir, photos_dir, owner_id):
         g_file_path=g_file_path,
         objects=objects,
         output_dir=photos_dir,
-        image_size=512,
+        image_size=336,
         suffix='_photo'
     )
 
@@ -239,8 +238,8 @@ def process_g_file(g_file_path, preview_dir, photos_dir, owner_id):
         model_type=model_type,
         owner_id=owner_id,
         filesystem_location=g_file_path,
-        summary_sheet=None,
-        photo=photo_data
+        photo=photo_data,
+        summary_sheet=None
     )
 
     if model_id:
@@ -249,7 +248,7 @@ def process_g_file(g_file_path, preview_dir, photos_dir, owner_id):
         logging.error(f"Failed to index model '{short_name}'.")
 
 
-def index_models(index_dir,photos_dir, owner_id):
+def index_models(index_dir, photos_dir, owner_id):
     """Index all .g files in a directory."""
     logging.info(f"Indexing models in directory: {index_dir}")
     for root, dirs, files in os.walk(index_dir):
