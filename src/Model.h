@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <sqlite3.h>
 
 
@@ -11,6 +12,7 @@ struct ModelData {
     std::string short_name;
     std::string primary_file;
     std::string override_info;
+    std::map<std::string, std::string> properties;
 };
 
 
@@ -21,18 +23,28 @@ public:
 
   bool createTable();
 
-  // basic CRUD interface
-  bool insertModel(const std::string& shortName, const std::string& file = "", const std::string& overrides = ""); // Create
-  std::vector<ModelData> getModels(); // Read
+  // model CRUD interface
+  bool insertModel(int id, const std::string& shortName, const std::string& file = "", const std::string& overrides = ""); // Create
+  bool insertModel(const std::string& filePath, const std::string& shortName, const std::string& primaryFile, const std::string& overrides);
+  std::vector<ModelData> getModels();
+  ModelData getModelById(int id);
   bool updateModel(int id, const std::string& shortName, const std::string& file = "", const std::string& overrides = ""); // Update
-  bool deleteModel(int id); // Delete
+  bool deleteModel(int id);
 
+  // tag CRUD + association interface
+  bool addTagToModel(int modelId, const std::string& tagName);
+  std::vector<std::string> getTagsForModel(int modelId);
+  bool removeTagFromModel(int modelId, const std::string& tagName);
+  
+  int hashModel(const std::string& modelDir);
+  std::string dbPath;
 private:
   sqlite3* db;
-  std::string dbPath;
+  
 
   bool executeSQL(const std::string& sql);
   static int callback(void* data, int argc, char** argv, char** azColName);
+  
 };
 
 

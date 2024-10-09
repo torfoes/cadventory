@@ -71,7 +71,7 @@ MainWindow::openLibrary()
   Library* foundLibrary = nullptr;
 
   for (Library* lib : libraries) {
-    std::cout << "Looking for " << lib->name() << " == " << lookupKey.toStdString() << std::endl;
+    // std::cout << "Looking for " << lib->name() << " == " << lookupKey.toStdString() << std::endl;
 
     if (lib->name() == lookupKey) {
       foundLibrary = lib;
@@ -81,7 +81,10 @@ MainWindow::openLibrary()
 
   if (foundLibrary) {
     LibraryWindow* libraryWindow = new LibraryWindow(nullptr);
+    std::cout << "Opening library " << foundLibrary->name() << std::endl;
     libraryWindow->loadFromLibrary(foundLibrary);
+    std::cout << "Loaded library " << foundLibrary->name() << std::endl;
+
     libraryWindow->show();
   } else {
     QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);

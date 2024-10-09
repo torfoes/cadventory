@@ -13,6 +13,7 @@
 #include "./ui_librarywindow.h"
 
 #include "./Library.h"
+#include "./Model.h"
 
 
 class LibraryWindow : public QWidget
@@ -24,6 +25,7 @@ public:
   ~LibraryWindow();
 
   void loadFromLibrary(Library *library);
+  void loadTags();
 
 protected:
   void updateListModelForDirectory(QStringListModel* model, const std::vector<std::string>& allItems, const std::string& directory);
@@ -35,11 +37,15 @@ public slots:
 private:
   Ui::LibraryWindow ui;
   Library* library;
+  Model* model;
 
   QStringListModel *geometryModel;
   QStringListModel *imagesModel;
   QStringListModel *documentsModel;
   QStringListModel *dataModel;
+
+  QStringListModel *tagsModel;
+  QStringListModel *currentTagsModel;
 };
 
 
