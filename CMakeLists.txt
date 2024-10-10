@@ -52,6 +52,7 @@ set (SRCS
   src/splash.ui
   src/Library.cpp
   src/LibraryWindow.cpp
+  src/ProcessGFiles.cpp
 )
 set (LIBS
   Qt6::Core

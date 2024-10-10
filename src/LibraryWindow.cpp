@@ -1,6 +1,7 @@
-
+#include "ProcessGFiles.h"
+#include <filesystem>
 #include "./LibraryWindow.h"
-
+#include <iostream>
 #include <QStringListModel>
 
 
@@ -102,6 +103,22 @@ LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem
   std::vector<std::string> allImages = library->getImages();
   std::vector<std::string> allDocuments = library->getDocuments();
   std::vector<std::string> allData = library->getData();
+
+  // Instantiate the ProcessGFiles class
+  std::string databasePath = "cadventory.db";  // Database path, adjust if needed
+  ProcessGFiles gFileProcessor(databasePath);
+
+  // Iterate over each geometry file
+  for (const auto& file : allGeometry) {
+      std::filesystem::path filePath(file);
+      if (filePath.extension() == ".g") {
+          // Process the .g file if it's a valid BRL-CAD geometry file
+          gFileProcessor.processGFile(filePath);
+          std::cout << "Processed .g file: " << filePath << std::endl;
+      } else {
+          std::cout << "Skipped non-.g file: " << filePath << std::endl;
+      }
+  }
 
   /* filter and update the models for each category */
   updateListModelForDirectory(geometryModel, allGeometry, selectedDir.toStdString());
