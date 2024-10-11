@@ -105,7 +105,7 @@ void ProcessGFiles::processGFile(const fs::path& file_path) {
     try {
         string model_short_name = file_path.stem().string();
 
-        // Extract title
+        // Extract title using updated runCommand
         string title_command = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/mged -c " + file_path.string() + " title";
         auto title_result = runCommand(title_command);
         string title = !title_result.first.empty() ? title_result.first : title_result.second;
@@ -129,7 +129,7 @@ void ProcessGFiles::processGFile(const fs::path& file_path) {
         vector<string> objects_to_try = {"all", "all.g", model_short_name, model_short_name + ".g", model_short_name + ".c"};
         objects_to_try.insert(objects_to_try.end(), tops.begin(), tops.end());
 
-        string png_file = "../previews/" + model_short_name + ".png";
+        string png_file =  model_short_name + ".png";
         string rt_command_template = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/rt -s2048 -o " + png_file + " " + file_path.string() + " ";
 
         bool raytrace_successful = false;
