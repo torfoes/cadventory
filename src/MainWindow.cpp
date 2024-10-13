@@ -6,15 +6,19 @@
 #include <QPushButton>
 #include <QSettings>
 #include <QMessageBox>
+#include <QMenuBar>
+#include <QCryptographicHash>
+#include <QtSql>
 
+#include "audit.h"
 #include "LibraryWindow.h"
-
+#include "auditlogwindow.h"
+#include "previews.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
   this->setFixedSize(QSize(876, 600));
   ui.setupUi(this);
-
   /* adjust the + button label position */
   QLayoutItem* item = ui.gridLayout->itemAt(0);
   QPushButton* addButton = qobject_cast<QPushButton*>(item->widget());
@@ -38,11 +42,75 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
   /* connect the default home dir button */
   connect(ui.homeLibraryButton, &QPushButton::released, this, &MainWindow::openLibrary);
+  // connect audit log window button to open audit log
+  connect(ui.menuAudit_Log, SIGNAL(aboutToShow()), SLOT(openAuditLog()) );
+
+  // watcher = new QFileSystemWatcher();
+  // watcher->addPath("/home/anton/the_watched");
+
+  // for(auto library: libraries){
+  //   std::cout << "library: "<< library->path() << std::endl;;
+  //   watcher->addPath(library->path());
+  // }
+  // put the showmodified function into main window
+
+  // connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(showModified(QString)));
+
+  // hashing example
+  // QFile file("/home/anton/m35.png");
+  // if(file.open(QFile::ReadOnly)){
+  //   QCryptographicHash hash(QCryptographicHash::Md5);
+  //   if(hash.addData(&file)){
+  //     std::cout << "hash: " << QString(hash.result().toHex(0)).toStdString() << std::endl;
+  //   }
+  // }
+
+  QString path = "/home/anton/cadventory/src/test.db";
+
+  db = QSqlDatabase::addDatabase("QSQLITE");
+  db.setDatabaseName(path);
+
+  if (!db.open())
+  {
+      std::cout << "Error: connection with database failed" <<  std::endl;
+      std::cout << db.lastError().text().toStdString() << std::endl;
+  }
+  else
+  {
+      std::cout << "Database: connection ok" <<  std::endl;
+  }
+
+
+  Audit audit(db, libraries);
+
+
+
+
+}
+
+void MainWindow::showModified(const QString& str)
+    {
+        // Q_UNUSED(str)
+        QMessageBox::information(this, "Directory Modified", "Your Directory is modified");
+        std::cout << "modified file: " << str.toStdString() << std::endl;
+
+    }
+
+
+void MainWindow::openAuditLog(){
+    AuditLogWindow* preview_window = new AuditLogWindow(nullptr);
+    preview_window->show();
+
 }
 
 
 MainWindow::~MainWindow()
 {
+
+  // close database
+  // close watcher class :O
+  // delete watcher;
+
 }
 
 
@@ -123,6 +191,7 @@ MainWindow::addLibraryButton(const char* label, const char* /*path*/)
   font.setPointSize(20);
   newButton->setFont(font);
 
+  // this is where it connects QPushButton
   connect(newButton, &QPushButton::released, this, &MainWindow::openLibrary);
 
   /* add our new button */
@@ -154,6 +223,7 @@ MainWindow::addLibraryButton(const char* label, const char* /*path*/)
     }
   }
 }
+
 
 
 void

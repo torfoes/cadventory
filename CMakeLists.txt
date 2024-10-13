@@ -9,7 +9,6 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
-
 # flag adjustments Qt requires
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
@@ -57,15 +56,24 @@ set (LIBS
   Qt6::Core
   Qt6::Widgets
   Qt6::Gui
+  Qt6::Sql
 )
-qt_add_executable(cadventory WIN32 ${SRCS})
-
+qt_add_executable(cadventory WIN32 ${SRCS}
+    src/CADventory.h src/Library.h src/LibraryWindow.h src/MainWindow.h src/Model.h src/SplashDialog.h
+    src/FilesystemIndexer.h
+    src/auditlogwindow.h src/auditlogwindow.cpp src/auditlogwindow.ui
+    src/previews.h src/previews.cpp src/previews.ui
+    src/db_interface.h src/db_interface.cpp
+    src/MyClass.h
+    src/audit.h src/audit.cpp
+)
+find_package(Qt6 REQUIRED COMPONENTS Sql)
 # note dependencies
 add_dependencies(cadventory sqlite_static)
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
-target_link_libraries(cadventory PRIVATE ${LIBS} ${SQLITE_LIBRARY}
-)
+target_link_libraries(cadventory PRIVATE ${LIBS} ${SQLITE_LIBRARY} )
+
 
 # deployment on Windows needs DLLs copied
 install(TARGETS cadventory

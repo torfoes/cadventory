@@ -12,7 +12,6 @@
 #include "SplashDialog.h"
 #include "FilesystemIndexer.h"
 
-
 CADventory::CADventory(int &argc, char *argv[]) : QApplication (argc, argv), window(nullptr), splash(nullptr), loaded(false), gui(true)
 {
   setOrganizationName("BRL-CAD");
@@ -54,7 +53,8 @@ CADventory::~CADventory()
 void CADventory::initMainWindow()
 {
   window = new MainWindow();
-
+  
+  // whenever is indexing completed, update status label of main window
   connect(this, &CADventory::indexingComplete, static_cast<MainWindow*>(window), &MainWindow::updateStatusLabel);
 
   window->show();

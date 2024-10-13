@@ -13,10 +13,10 @@
 #include <string>
 
 
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
-
 int APIENTRY
 WinMain(HINSTANCE /*hInstance*/,
 	HINSTANCE /*hPrevInstance*/,
@@ -40,9 +40,11 @@ main(int argc, char **argv)
       homestr = ".";
     app.processEvents();
     std::string localDir = std::string(home);
+    // std::cout << "home: " << home << std::endl;
     app.indexDirectory(localDir.c_str());
   });
   printf("Starting CADventory\n");
+
 
   return app.exec();
 }

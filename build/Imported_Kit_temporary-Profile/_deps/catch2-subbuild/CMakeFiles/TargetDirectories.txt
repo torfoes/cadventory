@@ -1,0 +1,3 @@
+/home/anton/cadventory/build/Imported_Kit_temporary-Profile/_deps/catch2-subbuild/CMakeFiles/catch2-populate.dir
+/home/anton/cadventory/build/Imported_Kit_temporary-Profile/_deps/catch2-subbuild/CMakeFiles/edit_cache.dir
+/home/anton/cadventory/build/Imported_Kit_temporary-Profile/_deps/catch2-subbuild/CMakeFiles/rebuild_cache.dir

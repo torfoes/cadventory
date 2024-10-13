@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AuditLogWindow</class>
+ <widget class="QWidget" name="AuditLogWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>842</width>
+    <height>640</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QLabel" name="TopLabel">
+       <property name="text">
+        <string>Audit Log Window of Cadventory Test</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Text Label Two</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTimeEdit" name="timeEdit"/>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit">
+           <property name="text">
+            <string>User: </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="submitButton">
+           <property name="text">
+            <string>Submit</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTableWidget" name="tableWidget">
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string/>
+          </property>
+         </row>
+         <column>
+          <property name="text">
+           <string>User</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Action</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>File</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>When</string>
+          </property>
+         </column>
+         <item row="0" column="0">
+          <property name="text">
+           <string>Anton</string>
+          </property>
+         </item>
+         <item row="0" column="1">
+          <property name="text">
+           <string>Delete File</string>
+          </property>
+         </item>
+         <item row="0" column="2">
+          <property name="text">
+           <string>~/brlcad/db...</string>
+          </property>
+         </item>
+         <item row="0" column="3">
+          <property name="text">
+           <string>10/7/2024 10:32 AM</string>
+          </property>
+         </item>
+         <item row="1" column="0">
+          <property name="text">
+           <string>Anton</string>
+          </property>
+         </item>
+         <item row="1" column="1">
+          <property name="text">
+           <string>Edit File</string>
+          </property>
+         </item>
+         <item row="1" column="2">
+          <property name="text">
+           <string>~/brlcad/db...</string>
+          </property>
+         </item>
+         <item row="1" column="3">
+          <property name="text">
+           <string>10/7/2024 10:25AM</string>
+          </property>
+         </item>
+         <item row="2" column="0">
+          <property name="text">
+           <string>Anton</string>
+          </property>
+         </item>
+         <item row="2" column="1">
+          <property name="text">
+           <string>Create File</string>
+          </property>
+         </item>
+         <item row="2" column="2">
+          <property name="text">
+           <string>~/brlcad/db/...</string>
+          </property>
+         </item>
+         <item row="2" column="3">
+          <property name="text">
+           <string>10/7/2024 10:15AM</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
