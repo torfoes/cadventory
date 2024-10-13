@@ -13,8 +13,8 @@
 class ProcessGFiles {
 public:
     ProcessGFiles();
-    void processGFile(const std::filesystem::path& file_path);
-    void executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers = 4);
+    std::map<std::string, std::string> processGFile(const std::filesystem::path& file_path);
+    std::map<std::string, std::string> executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers = 4);
 
 private:
     std::string dbPath;

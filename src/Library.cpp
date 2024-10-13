@@ -1,5 +1,6 @@
 #include "./Library.h"
 #include "./Model.h"
+#include "./ProcessGFiles.h"
 
 #include <set>
 #include <algorithm>
@@ -15,23 +16,34 @@ Library::Library(const char* _label, const char* _path) :
 }
 
 void Library::loadDatabase() {
+  // for (const std::string& filePath : getModels()) {
+  //   model->insertModel(fullPath+"/"+filePath, filePath, "primary_file", "overrides");
+    
+  //   // Split the file name into two halves and use them as tags
+  //   std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+  //   size_t mid = fileName.size() / 2;
+  //   int modelId = model->hashModel(fullPath + "/" + filePath);
+    
+  //   model->addTagToModel(modelId, fileName.substr(0, mid));
+  //   model->addTagToModel(modelId, fileName.substr(mid));
+
+  //   std::string author = model->getProperty(modelId, "author");
+
+  //   model->insertProperty(modelId, "file_path", fullPath + "/" + filePath);
+  //   model->insertProperty(modelId, "library_name", shortName);
+  //   model->insertProperty(modelId, "author", fullPath+"/author/"+"kotda");
+  // }
+
+  ProcessGFiles gFileProcessor;
+  std::map<std::string, std::string> results;
+  // gFileProcessor.executeMultiThreadedProcessing(getModels(), 4);
+
   for (const std::string& filePath : getModels()) {
-    model->insertModel(fullPath+"/"+filePath, filePath, "primary_file", "overrides");
-    
-    // Split the file name into two halves and use them as tags
-    std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-    size_t mid = fileName.size() / 2;
     int modelId = model->hashModel(fullPath + "/" + filePath);
-    
-    model->addTagToModel(modelId, fileName.substr(0, mid));
-    model->addTagToModel(modelId, fileName.substr(mid));
-
-    std::string author = model->getProperty(modelId, "author");
-
-    model->insertProperty(modelId, "file_path", fullPath + "/" + filePath);
-    model->insertProperty(modelId, "library_name", shortName);
-    model->insertProperty(modelId, "author", fullPath+"/author/"+"kotda");
+    model->insertProperties(modelId, gFileProcessor.processGFile(fullPath + "/" + filePath));
   }
+
+
 }
 
 

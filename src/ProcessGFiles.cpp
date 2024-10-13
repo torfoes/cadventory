@@ -55,7 +55,7 @@ void ProcessGFiles::gFileWorker(std::queue<fs::path>& file_queue) {
 }
 
 // Function to execute the multi-threaded processing
-void ProcessGFiles::executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers) {
+std::map<std::string, std::string> ProcessGFiles::executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers) {
     // Fill the queue with `.g` files
     std::queue<fs::path> file_queue;
     for (const auto& file : allGeometry) {
@@ -109,7 +109,7 @@ std::pair<string, string> ProcessGFiles::runCommand(const std::string& command) 
 }
 
 // Extract metadata and generate previews
-void ProcessGFiles::processGFile(const fs::path& file_path) {
+std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& file_path) {
     try {
         string model_short_name = file_path.stem().string();
 
