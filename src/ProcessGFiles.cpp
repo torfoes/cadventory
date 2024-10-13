@@ -19,7 +19,8 @@ namespace fs = std::filesystem;
 
 using namespace std;
 
-mutex db_mutex;
+mutex db_mutex; // To protect database operations
+mutex queue_mutex; // To protect the file queue
 vector<pair<string, string>> failed_files;
 
 // ProcessGFiles constructor
@@ -71,6 +72,57 @@ void ProcessGFiles::createDatabase() {
 
     sqlite3_close(db);
 }
+
+// Worker function to process files from the queue
+void ProcessGFiles::gFileWorker(std::queue<fs::path>& file_queue) {
+    while (true) {
+        fs::path file_path;
+
+        // Lock the queue and get the next file
+        {
+            lock_guard<mutex> lock(queue_mutex);
+            if (file_queue.empty()) {
+                return; // Exit if the queue is empty
+            }
+            file_path = file_queue.front();
+            file_queue.pop();
+        }
+
+        // Process the file
+        try {
+            processGFile(file_path);
+            cout << "Processed .g file: " << file_path << endl;
+        } catch (const exception& e) {
+            cerr << "Error processing file " << file_path << ": " << e.what() << endl;
+        }
+    }
+}
+
+// Function to execute the multi-threaded processing
+void ProcessGFiles::executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers) {
+    // Fill the queue with `.g` files
+    std::queue<fs::path> file_queue;
+    for (const auto& file : allGeometry) {
+        std::filesystem::path filePath(file);
+        if (filePath.extension() == ".g") {
+            file_queue.push(filePath);
+        }
+    }
+
+    // Create worker threads
+    vector<thread> threads;
+    for (int i = 0; i < num_workers; ++i) {
+        threads.emplace_back(&ProcessGFiles::gFileWorker, this, std::ref(file_queue));
+    }
+
+    // Wait for all threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    cout << "All files processed." << endl;
+}
+
 
 // Execute a system command and capture both stdout and stderr
 std::pair<string, string> ProcessGFiles::runCommand(const std::string& command) {

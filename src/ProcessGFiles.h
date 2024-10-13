@@ -5,6 +5,8 @@
 #include <vector>
 #include <filesystem>
 #include <mutex>
+#include <queue>
+#include <thread>
 #include <sqlite3.h>
 #include <utility>
 
@@ -12,12 +14,13 @@ class ProcessGFiles {
 public:
     ProcessGFiles(const std::string& dbPath);
     void processGFile(const std::filesystem::path& file_path);
-    void executeBackgroundProcess(const std::filesystem::path& directory, int num_workers = 4);
+    void executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers = 4);
 
 private:
     std::string dbPath;
     void createDatabase();
     std::pair<std::string, std::string> runCommand(const std::string& command);
+    void gFileWorker(std::queue<std::filesystem::path>& file_queue);
 };
 
-#endif
+#endif // PROCESS_G_FILES_H
