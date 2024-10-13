@@ -82,6 +82,7 @@ MainWindow::openLibrary()
   if (foundLibrary) {
     LibraryWindow* libraryWindow = new LibraryWindow(nullptr);
     std::cout << "Opening library " << foundLibrary->name() << std::endl;
+    foundLibrary->loadDatabase();
     libraryWindow->loadFromLibrary(foundLibrary);
     std::cout << "Loaded library " << foundLibrary->name() << std::endl;
 

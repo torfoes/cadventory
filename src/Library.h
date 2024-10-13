@@ -18,6 +18,7 @@ public:
   const char* name();
   const char* path();
 
+  void loadDatabase();
   std::vector<std::string> getModels();
   std::vector<std::string> getGeometry();
   std::vector<std::string> getImages();
