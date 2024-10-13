@@ -14,6 +14,7 @@
 #include <chrono>
 #include <filesystem>
 #include <QThread>
+#include <map>
 
 namespace fs = std::filesystem;
 
@@ -26,7 +27,7 @@ vector<pair<string, string>> failed_files;
 
 // ProcessGFiles constructor
 ProcessGFiles::ProcessGFiles() {
-    
+
 }
 
 // Worker function to process files from the queue
@@ -110,6 +111,7 @@ std::pair<string, string> ProcessGFiles::runCommand(const std::string& command) 
 
 // Extract metadata and generate previews
 std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& file_path) {
+    map<string, string> result;
     try {
         string model_short_name = file_path.stem().string();
 
@@ -118,6 +120,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
         auto title_result = runCommand(title_command);
         string title = !title_result.first.empty() ? title_result.first : title_result.second;
         title = title.empty() ? "Unknown" : title;
+        result.insert({"Title", title});
 
         // Get tops level objects
         string tops_command = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/mged -c " + file_path.string() + " tops";
@@ -137,7 +140,15 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
         vector<string> objects_to_try = {"all", "all.g", model_short_name, model_short_name + ".g", model_short_name + ".c"};
         objects_to_try.insert(objects_to_try.end(), tops.begin(), tops.end());
 
-        string png_file =  model_short_name + ".png";
+        // Define the output folder path
+        string root_folder = fs::current_path().string();  // Get the current root folder of the project
+        string previews_folder = root_folder + "/previews";
+
+        // Ensure the previews folder exists, create if not
+        fs::create_directories(previews_folder);
+
+        // Define the PNG file path in the previews folder
+        string png_file = previews_folder + "/" + model_short_name + ".png";
         string rt_command_template = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/rt -s2048 -o " + png_file + " " + file_path.string() + " ";
 
         bool raytrace_successful = false;
@@ -164,4 +175,6 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
     } catch (const exception& e) {
         cerr << "Error processing file " << file_path << ": " << e.what() << endl;
     }
+
+    return result;
 }
