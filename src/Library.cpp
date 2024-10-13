@@ -20,7 +20,7 @@ Library::Library(const char* _label, const char* _path) :
     std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
     size_t mid = fileName.size() / 2;
     int modelId = model->hashModel(fullPath + "/" + filePath);
-    std::cout << "adding tags for model " << modelId << std::endl;
+    // std::cout << "adding tags for model " << modelId << std::endl;
     model->addTagToModel(modelId, fileName.substr(0, mid));
     model->addTagToModel(modelId, fileName.substr(mid));
 

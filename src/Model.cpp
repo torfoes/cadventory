@@ -23,7 +23,7 @@ Model::~Model() {
 }
 
 bool Model::createTable() {
-  
+
     std::string sqlModels = R"(
         CREATE TABLE IF NOT EXISTS models (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -288,9 +288,25 @@ bool Model::removeTagFromModel(int modelId, const std::string& tagName) {
 }
 
 bool Model::insertProperty(int modelId, const std::string& key, const std::string& value) {
+  // Check if the property already exists
+  std::string checkSql = "SELECT COUNT(*) FROM model_properties WHERE model_id = ? AND property_key = ?;";
+  sqlite3_stmt* checkStmt;
+  if (sqlite3_prepare_v2(db, checkSql.c_str(), -1, &checkStmt, nullptr) == SQLITE_OK) {
+    sqlite3_bind_int(checkStmt, 1, modelId);
+    sqlite3_bind_text(checkStmt, 2, key.c_str(), -1, SQLITE_STATIC);
+    if (sqlite3_step(checkStmt) == SQLITE_ROW && sqlite3_column_int(checkStmt, 0) > 0) {
+      sqlite3_finalize(checkStmt);
+      return false; // Property already exists
+    }
+    sqlite3_finalize(checkStmt);
+  } else {
+    std::cerr << "SQL error: " << sqlite3_errmsg(db) << std::endl;
+    return false;
+  }
+
+  // Insert the new property
   std::string sql = "INSERT INTO model_properties (model_id, property_key, property_value) VALUES (?, ?, ?);";
   sqlite3_stmt* stmt;
-
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_int(stmt, 1, modelId);
     sqlite3_bind_text(stmt, 2, key.c_str(), -1, SQLITE_STATIC);
