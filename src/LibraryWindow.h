@@ -45,7 +45,9 @@ private:
   QStringListModel *dataModel;
 
   QStringListModel *tagsModel;
+  QListWidget *tagsWidget;
   QStringListModel *currentTagsModel;
+  QStringListModel *currentPropertiesModel;
 };
 
 

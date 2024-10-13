@@ -11,6 +11,8 @@ Library::Library(const char* _label, const char* _path) :
   index(nullptr),
   model(new Model("metadata.db"))
 {
+  
+
   for (const std::string& filePath : getModels()) {
     model->insertModel(fullPath+"/"+filePath, filePath, "primary_file", "overrides");
     
@@ -18,8 +20,20 @@ Library::Library(const char* _label, const char* _path) :
     std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
     size_t mid = fileName.size() / 2;
     int modelId = model->hashModel(fullPath + "/" + filePath);
+    std::cout << "adding tags for model " << modelId << std::endl;
     model->addTagToModel(modelId, fileName.substr(0, mid));
     model->addTagToModel(modelId, fileName.substr(mid));
+
+    std::string author = model->getProperty(modelId, "author");
+    // std::cout << "Author for model " << modelId << ": " << author << std::endl;
+
+    // std::cout << "Inserting property file_path for model " << modelId << std::endl;
+    model->insertProperty(modelId, "file_path", fullPath + "/" + filePath);
+    // std::cout << "Inserting property library_name for model " << modelId << std::endl;
+    model->insertProperty(modelId, "library_name", shortName);
+    // std::cout << "Inserting property author for model " << modelId << std::endl;
+    model->insertProperty(modelId, "author", fullPath+"/author/"+"kotda");
+
   }
 }
 

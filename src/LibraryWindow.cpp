@@ -13,16 +13,16 @@ LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
   this->setFixedSize(QSize(640, 480));
   ui.setupUi(this);
 
+  tagsWidget = new QListWidget(this);
+
   /* make Model selections update the tabs */
   connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
 
 }
 
-
 LibraryWindow::~LibraryWindow()
 {
 }
-
 
 void LibraryWindow::loadFromLibrary(Library* _library)
 {
@@ -57,6 +57,7 @@ void LibraryWindow::loadFromLibrary(Library* _library)
   dataModel = new QStringListModel(this);
   tagsModel = new QStringListModel(this);
   currentTagsModel = new QStringListModel(this);
+  currentPropertiesModel = new QStringListModel(this);
 
   /* populate the MVC models */
   populateModel(geometryModel, library->getGeometry());
@@ -70,15 +71,19 @@ void LibraryWindow::loadFromLibrary(Library* _library)
   ui.documentsListView->setModel(documentsModel);
   ui.dataListView->setModel(dataModel);
   
+  std::cout << "Setting tags model" << std::endl;
   ui.tagsListView->setModel(tagsModel);
+  std::cout << "Seting current tags model" << std::endl;
   ui.currentTagsListView->setModel(currentTagsModel);
+  std::cout << "Setting current properties model" << std::endl;
+  ui.currentPropertiesListView->setModel(currentPropertiesModel);
+  std::cout << "Set current properties model" << std::endl;
 
   /* load tags */
   std::cout << "Calling display tags for library: " << library->name() << std::endl;
   loadTags();
   std::cout << "Called display tags for library: " << library->name() << std::endl;
 }
-
 
 void LibraryWindow::on_allLibraries_clicked()
 {
@@ -98,7 +103,6 @@ void LibraryWindow::updateListModelForDirectory(QStringListModel* listModel, con
   listModel->setStringList(filteredItems);
 }
 
-
 void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* /*previous*/)
 {
   if (!current)
@@ -106,9 +110,9 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidge
 
   QString selectedDir = current->text();
   int modelId = library->model->hashModel(library->fullPath+"/"+selectedDir.toStdString());
-  std::vector<std::string> modelTags = library->model->getTagsForModel(modelId);
 
-  std::cout << "Selected model: " << selectedDir.toStdString() << std::endl;
+  std::vector<std::string> modelTags = library->model->getTagsForModel(modelId);
+  std::cout << ">>Selected model: " << selectedDir.toStdString() << std::endl;
   std::cout << "Tags for model: " << std::endl;
   for (const auto& tag : modelTags) {
     std::cout << tag << " ";
@@ -120,6 +124,16 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidge
     qModelTags << QString::fromStdString(tag);
   }
   currentTagsModel->setStringList(qModelTags);
+
+  QStringList qModelProperties;
+  std::cout << "Properties for model: " << std::endl;
+  std::map<std::string, std::string> modelProperties = library->model->getProperties(modelId);
+  for (const auto& [key, value] : modelProperties) {
+      std::cout << key << ": " << value << std::endl;
+      qModelProperties << QString::fromStdString(key + ": " + value);
+  }
+
+  currentPropertiesModel->setStringList(qModelProperties);
 
   /* retrieve full lists */
   // std::vector<std::string> allGeometry = library->getGeometry();
@@ -159,13 +173,13 @@ void LibraryWindow::loadTags()
 
 void displayModel(const ModelData& model)
 {
-  std::cout << "Model: " << model.short_name << std::endl;
+  std::cout << ">>>Model: " << model.short_name << std::endl;
   std::cout << "Primary file: " << model.primary_file << std::endl;
   std::cout << "Override info: " << model.override_info << std::endl;
   std::cout << "Properties: " << std::endl;
   for (const auto& [key, value] : model.properties) {
     std::cout << "  " << key << ": " << value << std::endl;
   }
-
+  
 
 }

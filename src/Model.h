@@ -35,12 +35,19 @@ public:
   bool addTagToModel(int modelId, const std::string& tagName);
   std::vector<std::string> getTagsForModel(int modelId);
   bool removeTagFromModel(int modelId, const std::string& tagName);
+
+  // properties
+  bool insertProperty(int modelId, const std::string& key, const std::string& value);
+  bool insertProperties(int modelId, const std::map<std::string, std::string>& properties);
+  std::string getProperty(int modelId, const std::string& key); 
+  std::map<std::string, std::string> getProperties(int modelId);
+  bool updateProperty(int modelId, const std::string& key, const std::string& value);
+  bool deleteProperty(int modelId, const std::string& key);
   
   int hashModel(const std::string& modelDir);
   std::string dbPath;
 private:
   sqlite3* db;
-  
 
   bool executeSQL(const std::string& sql);
   static int callback(void* data, int argc, char** argv, char** azColName);
