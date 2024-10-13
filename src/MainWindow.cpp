@@ -9,6 +9,7 @@
 
 #include "LibraryWindow.h"
 
+LibraryWindow* libraryWindow;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -80,8 +81,13 @@ MainWindow::openLibrary()
   }
 
   if (foundLibrary) {
-    LibraryWindow* libraryWindow = new LibraryWindow(nullptr);
+    libraryWindow = new LibraryWindow(nullptr);
     libraryWindow->loadFromLibrary(foundLibrary);
+    libraryWindow->Main = this;
+
+    libraryWindow->add_page_to_tabpanel(QDir::homePath(), "Home");
+    qDebug() << "Home" << QDir::homePath();
+
     libraryWindow->show();
   } else {
     QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);
@@ -213,3 +219,10 @@ MainWindow::loadState() {
 
   return size;
 }
+
+void MainWindow::on_homeLibraryButton_clicked()
+{
+    hide();
+    libraryWindow->show();
+}
+

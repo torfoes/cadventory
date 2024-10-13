@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
+
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
@@ -44,6 +46,7 @@ set (SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
   src/MainWindow.cpp
+  src/MainWindow.h
   src/SplashDialog.cpp
   src/Model.cpp
   src/librarywindow.ui
@@ -52,13 +55,22 @@ set (SRCS
   src/splash.ui
   src/Library.cpp
   src/LibraryWindow.cpp
+  src/LibraryWindow.h
 )
 set (LIBS
   Qt6::Core
   Qt6::Widgets
   Qt6::Gui
 )
-qt_add_executable(cadventory WIN32 ${SRCS})
+qt_add_executable(cadventory WIN32 ${SRCS}
+    src/Preview.qml
+
+    src/navpage.h src/navpage.cpp
+    src/utils.h src/utils.cpp
+    src/driveinfo.h src/driveinfo.cpp
+    src/diriteminfo.h src/diriteminfo.cpp
+    src/navpage.ui src/driveinfo.ui
+    src/diriteminfo.ui)
 
 # note dependencies
 add_dependencies(cadventory sqlite_static)

@@ -1,10 +1,13 @@
 #include "CADventory.h"
+#include "LibraryWindow.h"
 
 #include <QDir>
 #include <QTimer>
 #include <QPixmap>
 #include <QString>
 #include <QSplashScreen>
+#include <QApplication>
+#include <QStyleFactory>
 
 #include <stdlib.h>
 #include <stdlib.h>
@@ -33,6 +36,9 @@ main(int argc, char **argv)
   CADventory app(argc, argv);
   app.showSplash();
 
+  QDir::setCurrent(QDir::homePath());
+
+
   QTimer::singleShot(250, [&app]() {
     std::string home = QDir::homePath().toStdString();
     const char *homestr = home.c_str();
@@ -46,3 +52,6 @@ main(int argc, char **argv)
 
   return app.exec();
 }
+
+
+

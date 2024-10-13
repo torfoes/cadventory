@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <QMainWindow>
+#include <QList>
 #include <QObject>
 
 #include "./ui_mainwindow.h"
@@ -34,7 +35,10 @@ protected:
 
   void addLibraryButton(const char* label = nullptr, const char* path = nullptr);
 
-private:
+  private slots:
+  void on_homeLibraryButton_clicked();
+
+  private:
   Ui::MainWindow ui;
   std::vector<Library*> libraries;
 };
