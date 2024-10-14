@@ -9,7 +9,6 @@
 #include <thread>
 #include <sqlite3.h>
 #include <utility>
-#include <map>
 
 class ProcessGFiles {
 public:

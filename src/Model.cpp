@@ -386,25 +386,6 @@ std::map<std::string, std::string> Model::getProperties(int modelId) {
     return properties;
 }
 
-bool Model::hasProperties(int modelId) {
-  std::string sql = "SELECT 1 FROM model_properties WHERE model_id = ? LIMIT 1;";
-  sqlite3_stmt* stmt;
-  bool hasProperties = false;
-
-  if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-    sqlite3_bind_int(stmt, 1, modelId);
-
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-      hasProperties = true;  // Return true as soon as the first row is found
-    }
-    sqlite3_finalize(stmt);
-  } else {
-    std::cerr << "Failed to check properties: " << sqlite3_errmsg(db) << std::endl;
-  }
-
-  return hasProperties;
-}
-
 bool Model::updateProperty(int modelId, const std::string& key, const std::string& value) {
   std::string sql = "UPDATE model_properties SET property_value = ? WHERE model_id = ? AND property_key = ?;";
   sqlite3_stmt* stmt;
