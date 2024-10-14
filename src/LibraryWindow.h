@@ -9,8 +9,11 @@
 #include <QObject>
 #include <QListWidgetItem>
 #include <QStringListModel>
+#include <QString>
 
 #include "./ui_librarywindow.h"
+#include "MainWindow.h"
+
 
 #include "./Library.h"
 #include "./Model.h"
@@ -34,10 +37,15 @@ public slots:
   void on_allLibraries_clicked();
   void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
-private:
+  // private slots:
+  // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
+
+  private:
   Ui::LibraryWindow ui;
   Library* library;
   Model* model;
+
+  MainWindow* main;
 
   QStringListModel *geometryModel;
   QStringListModel *imagesModel;
@@ -48,6 +56,9 @@ private:
   QListWidget *tagsWidget;
   QStringListModel *currentTagsModel;
   QStringListModel *currentPropertiesModel;
+
+  //void AddItem(const QString& qstrFileName, const QString& qstrPic);
+
 };
 
 

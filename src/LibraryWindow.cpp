@@ -4,16 +4,36 @@
 
 #include <QStringListModel>
 #include <QListWidgetItem>
+#include <QStringList>
+#include <QString>
+#include <QFileInfo>
+
+#include <QStyledItemDelegate>
+
+
 
 #include <iostream>
+#include <string>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+
+QStringList list;
+
+
+
 
 
 LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
 {
-  this->setFixedSize(QSize(640, 480));
+  this->setFixedSize(QSize(876, 600));
   ui.setupUi(this);
 
-  tagsWidget = new QListWidget(this);
+
+
+
+  //tagsWidget = new QListWidget(this);
 
   /* make Model selections update the tabs */
   connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
@@ -83,12 +103,71 @@ void LibraryWindow::loadFromLibrary(Library* _library)
   std::cout << "Calling display tags for library: " << library->name() << std::endl;
   loadTags();
   std::cout << "Called display tags for library: " << library->name() << std::endl;
+
+
+   list = geometryModel->stringList();
+
+
+   std::string root_folder = fs::current_path().string()+"/previews/";  // Get the current root folder of the project
+
+   for (const QString &path : list) {
+       // Check if the string ends with ".g"
+       if (path.endsWith(".g", Qt::CaseInsensitive)) {
+           // Optional: Extract only the filename from the path
+           QString filename = QFileInfo(path).fileName();
+           std::cout << filename.toStdString() << std::endl;
+           //QString filepath = ":/build/previews/"+filename;
+
+           QString filepath = QString::fromStdString(root_folder);
+
+           filepath.append(filename);
+           filepath.chop(2);
+           filepath.append(".png");
+           std::cout << filepath.toStdString() << std::endl;
+           // Print the filename without the extension
+
+           QListWidgetItem *item = new QListWidgetItem(QIcon(filepath), filename);
+QList<QSize> availableSizes = item->icon().availableSizes();
+
+           if (availableSizes.isEmpty()){
+            delete item;
+           }
+           else{
+            ui.listWidgetPage->addItem(item);
+           }
+
+       }
+
+   }
+
+
+
+
+
+   ui.listWidgetPage->setResizeMode(QListView::Adjust);
+   ui.listWidgetPage->setViewMode(QListView::IconMode);
+
+   ui.listWidgetPage->setWordWrap(true);
+
+   ui.listWidgetPage->setIconSize(QSize(72, 72));
+   ui.listWidgetPage->setGridSize(QSize(144, 108));
+   ui.listWidgetPage->setUniformItemSizes(true);
+   ui.listWidgetPage->setMovement(QListView::Static);
+   ui.listWidgetPage->setResizeMode(QListView::Adjust);
+   ui.listWidgetPage->setLayoutMode(QListView::Batched);
+   ui.listWidgetPage->setBatchSize(10);
+
+   QStyledItemDelegate *delegate = new QStyledItemDelegate(this);
+   ui.listWidgetPage->setItemDelegate(delegate);
 }
 
-void LibraryWindow::on_allLibraries_clicked()
+void
+LibraryWindow::on_allLibraries_clicked()
 {
-  this->hide();
+    this->hide();
+    main->show();
 }
+
 
 void LibraryWindow::updateListModelForDirectory(QStringListModel* listModel, const std::vector<std::string>& allItems, const std::string& directory)
 {
@@ -183,3 +262,9 @@ void displayModel(const ModelData& model)
   
 
 }
+
+// void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
+// {
+//     ui.listWidgetPage->
+// }
+

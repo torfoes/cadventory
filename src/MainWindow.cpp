@@ -9,6 +9,7 @@
 
 #include "LibraryWindow.h"
 
+//LibraryWindow* libraryWindow;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -216,4 +217,10 @@ MainWindow::loadState() {
   settings.endArray();
 
   return size;
+}
+
+void MainWindow::on_homeLibraryButton_clicked()
+{
+    //hide();
+    //libraryWindow->show();
 }

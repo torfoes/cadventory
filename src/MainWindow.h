@@ -28,6 +28,9 @@ public slots:
   void updateStatusLabel(const char* status);
   void on_addLibraryButton_clicked();
 
+private slots:
+  void on_homeLibraryButton_clicked();
+
 protected:
   size_t saveState();
   size_t loadState();

@@ -53,13 +53,21 @@ set (SRCS
   src/Library.cpp
   src/LibraryWindow.cpp
   src/ProcessGFiles.cpp
+  src/LibraryWindow.h
+  src/MainWindow.h
+
+  src/Library.h
 )
 set (LIBS
   Qt6::Core
   Qt6::Widgets
   Qt6::Gui
 )
-qt_add_executable(cadventory WIN32 ${SRCS})
+qt_add_executable(cadventory WIN32 ${SRCS}
+
+
+
+)
 
 # note dependencies
 add_dependencies(cadventory sqlite_static)
