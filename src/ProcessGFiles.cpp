@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <QThread>
 #include <map>
+#include <map>
 
 namespace fs = std::filesystem;
 
