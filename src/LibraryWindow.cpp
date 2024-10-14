@@ -192,11 +192,6 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidge
 
   std::vector<std::string> modelTags = library->model->getTagsForModel(modelId);
   std::cout << ">>Selected model: " << selectedDir.toStdString() << std::endl;
-  std::cout << "Tags for model: " << std::endl;
-  for (const auto& tag : modelTags) {
-    std::cout << tag << " ";
-  }
-  std::cout << std::endl;
 
   QStringList qModelTags;
   for (const auto& tag : modelTags) {
@@ -205,13 +200,11 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidge
   currentTagsModel->setStringList(qModelTags);
 
   QStringList qModelProperties;
-  std::cout << "Properties for model: " << std::endl;
   std::map<std::string, std::string> modelProperties = library->model->getProperties(modelId);
   for (const auto& [key, value] : modelProperties) {
-      std::cout << key << ": " << value << std::endl;
       qModelProperties << QString::fromStdString(key + ": " + value);
   }
-
+  library->model->printModel(modelId);
   currentPropertiesModel->setStringList(qModelProperties);
 
   /* retrieve full lists */

@@ -43,8 +43,10 @@ public:
   std::map<std::string, std::string> getProperties(int modelId);
   bool updateProperty(int modelId, const std::string& key, const std::string& value);
   bool deleteProperty(int modelId, const std::string& key);
-  
+  bool hasProperties(int modelId); 
+
   int hashModel(const std::string& modelDir);
+  void printModel(int modelId);
   std::string dbPath;
 private:
   sqlite3* db;

@@ -220,8 +220,6 @@ std::vector<std::string> Model::getTagsForModel(int modelId) {
     sqlite3_stmt* stmt = nullptr;  // Ensure stmt is initialized to nullptr
     int rc;
 
-    // std::cout << "Getting tags for model: " << modelId << std::endl;
-
     rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
     if (rc == SQLITE_OK) {
         // Bind the modelId to the first parameter (?)
@@ -428,6 +426,45 @@ bool Model::deleteProperty(int modelId, const std::string& key) {
   } else {
     std::cerr << "SQL error: " << sqlite3_errmsg(db) << std::endl;
     return false;
+  }
+}
+
+bool Model::hasProperties(int modelId) {
+  std::string sql = "SELECT 1 FROM model_properties WHERE model_id = ? LIMIT 1;";
+  sqlite3_stmt* stmt;
+  bool hasProperties = false;
+
+  if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+    sqlite3_bind_int(stmt, 1, modelId);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      hasProperties = true;  // Return true as soon as the first row is found
+    }
+    sqlite3_finalize(stmt);
+  } else {
+    std::cerr << "Failed to check properties: " << sqlite3_errmsg(db) << std::endl;
+  }
+
+  return hasProperties;
+}
+
+void Model::printModel(int modelId) {
+  ModelData model = getModelById(modelId);
+  std::cout << "Model ID: " << model.id << std::endl;
+  std::cout << "Short Name: " << model.short_name << std::endl;
+  std::cout << "Primary File: " << model.primary_file << std::endl;
+  std::cout << "Override Info: " << model.override_info << std::endl;
+
+  std::map<std::string, std::string> properties = getProperties(modelId);
+  std::cout << "Properties:" << std::endl;
+  for (const auto& [key, value] : properties) {
+    std::cout << "  " << key << ": " << value << std::endl;
+  }
+
+  std::vector<std::string> tags = getTagsForModel(modelId);
+  std::cout << "Tags:" << std::endl;
+  for (const std::string& tag : tags) {
+    std::cout << "  " << tag << std::endl;
   }
 }
 
