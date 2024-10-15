@@ -41,7 +41,9 @@ void Library::loadDatabase() {
   for (const std::string& filePath : getModels()) {
     int modelId = model->hashModel(fullPath + "/" + filePath);
     if(!model->hasProperties(modelId)) {
+      model->insertModel(fullPath+"/"+filePath, filePath, "primary_file", "overrides");
       model->insertProperties(modelId, gFileProcessor.processGFile(fullPath + "/" + filePath));
+
       // Split the file name into two halves and use them as tags
       std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
       size_t mid = fileName.size() / 2;
