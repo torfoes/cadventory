@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "FilesystemIndexer.h"
+#include "./Model.h"
 
 
 class Library {
@@ -17,16 +18,22 @@ public:
   const char* name();
   const char* path();
 
+  void loadDatabase();
   std::vector<std::string> getModels();
   std::vector<std::string> getGeometry();
   std::vector<std::string> getImages();
   std::vector<std::string> getDocuments();
   std::vector<std::string> getData();
+  std::vector<std::string> getTags();
+  
+  Model* model;
+  std::string fullPath;
 
 private:
   std::string shortName;
-  std::string fullPath;
+  
   FilesystemIndexer* index;
+  
 };
 
 
