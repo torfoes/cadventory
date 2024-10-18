@@ -14,12 +14,13 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
 
-QStringList list;
+
 
 
 
@@ -105,15 +106,16 @@ void LibraryWindow::loadFromLibrary(Library* _library)
   std::cout << "Called display tags for library: " << library->name() << std::endl;
 
 
-   list = geometryModel->stringList();
+
 
 
    std::string root_folder = fs::current_path().string()+"/previews/";  // Get the current root folder of the project
 
-   for (const QString &path : list) {
+   for (const QString &path : geometryModel->stringList()) {
        // Check if the string ends with ".g"
        if (path.endsWith(".g", Qt::CaseInsensitive)) {
-           // Optional: Extract only the filename from the path
+
+
            QString filename = QFileInfo(path).fileName();
            std::cout << filename.toStdString() << std::endl;
            //QString filepath = ":/build/previews/"+filename;
@@ -260,4 +262,47 @@ void displayModel(const ModelData& model)
 // {
 //     ui.listWidgetPage->
 // }
+
+
+void LibraryWindow::on_pushButton_clicked()
+{
+    report = this->library->getModels();
+    for(std::string& path : report){
+        path = library->fullPath+"/"+path;
+    }
+}
+
+
+void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
+{
+    std::string name = item->text().toStdString();
+
+    int i = 0;
+    for (const auto& file : report) {
+
+
+        std::filesystem::path filePath(file);
+
+        // Extracting the filename as a string
+        std::string filename = filePath.filename().string();
+
+
+        if(name == filename){
+
+            report.erase(report.begin() + i);
+
+
+              std::cout << filename + " is unselected from report" << std::endl;
+
+            return;
+        }
+        i++;
+    }
+    report.push_back(this->library->fullPath+"/"+name);
+      std::cout << this->library->fullPath+"/"+name << std::endl;
+    std::cout << name + " is selected for report" << std::endl;
+
+
+
+}
 

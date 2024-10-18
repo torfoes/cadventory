@@ -40,6 +40,11 @@ public slots:
   // private slots:
   // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 
+  private slots:
+  void on_pushButton_clicked();
+
+      void on_listWidgetPage_itemClicked(QListWidgetItem *item);
+
   private:
   Ui::LibraryWindow ui;
   Library* library;
@@ -56,6 +61,8 @@ public slots:
   QListWidget *tagsWidget;
   QStringListModel *currentTagsModel;
   QStringListModel *currentPropertiesModel;
+
+  std::vector<std::string> report;
 
   //void AddItem(const QString& qstrFileName, const QString& qstrPic);
 
