@@ -36,14 +36,13 @@ protected:
 public slots:
   void on_allLibraries_clicked();
   void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
-
+  void generateReport();
   // private slots:
   // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 
   private slots:
   void on_pushButton_clicked();
-
-      void on_listWidgetPage_itemClicked(QListWidgetItem *item);
+  void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 
   private:
   Ui::LibraryWindow ui;

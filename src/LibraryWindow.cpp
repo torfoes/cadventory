@@ -1,13 +1,17 @@
 
 #include "./LibraryWindow.h"
 #include "./Model.h"
+#include "./ProcessGFiles.h"
+
 
 #include <QStringListModel>
 #include <QListWidgetItem>
 #include <QStringList>
 #include <QString>
 #include <QFileInfo>
-
+#include <QPdfWriter>
+#include <QPainter>
+#include <QPixmap>
 #include <QStyledItemDelegate>
 
 
@@ -31,18 +35,106 @@ LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
   this->setFixedSize(QSize(876, 600));
   ui.setupUi(this);
 
-
-
-
   //tagsWidget = new QListWidget(this);
 
   /* make Model selections update the tabs */
   connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
-
+  connect(ui.generateReport, &QPushButton::pressed, this, &LibraryWindow::generateReport);
 }
+
 
 LibraryWindow::~LibraryWindow()
 {
+}
+
+void LibraryWindow::generateReport(){
+  // file chooser
+  QString filepath = "/home/anton/report.pdf";
+  QPdfWriter pdfWriter(filepath);
+  
+  // Set the resolution (optional)
+  pdfWriter.setResolution(300);
+
+  // Set the page size (A4, Letter, etc.)
+  pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+
+  // Create a QPainter to draw on the QPdfWriter
+  QPainter painter(&pdfWriter);
+
+  // Set a font for the text
+  QFont font("Helvetica", 18);
+  painter.setFont(font);
+  painter.drawText(750,200, "Cadventory");
+  painter.setPen(QPen(Qt::black, 3));
+  painter.drawLine(-200, 250, 2450, 250);
+  painter.drawLine(-200, 3400, 2450, 3400);
+
+  std::vector<std::string> test_library_models = library->getGeometry();
+  QFont font_two("Helvetica", 6);
+  painter.setFont(font_two);
+  painter.drawText(300, 300, QString::fromStdString("Library: " + std::string(library->name())));
+
+  // will need to adjust for windows, macos "local home" libraries
+
+  std::string dir_slash = std::string(library->name()) + "/";
+  int x = 325;
+  int y = 350;
+  painter.drawText(x, y, "Geometry");
+  y+=25;
+
+  for(const auto& str: geometryModel->stringList()){
+    std::string cur_model = str.toStdString();
+    y+=25;
+    painter.drawText(x, y, QString::fromStdString(cur_model));
+  }
+  y+=50;
+  painter.drawText(x,y, "Images");
+  y+=25;
+  for(const auto& str: imagesModel->stringList()){
+    std::string cur_model = str.toStdString();
+    y+=25;
+    painter.drawText(x, y, QString::fromStdString(cur_model));
+  }
+  y+=50;
+  painter.drawText(x,y,"Documents");
+  y+=25;
+  for(const auto& str: documentsModel->stringList()){
+    std::string cur_model = str.toStdString();
+    y+=25;
+    painter.drawText(x, y, QString::fromStdString(cur_model));
+  }
+
+
+  // Optionally, you can draw more text, shapes, or images here
+
+  ProcessGFiles gFileProcessor; // just to call commands
+  int num_file = 0;
+  std::string temp_dir = "/home/anton/cadventory/.build/";
+  std::cout << "generating gist reports" << std::endl;
+
+  for(auto str: report){
+    std::cout << "model selected: " << str << std::endl;
+    std::string model_to_gist = str;
+    std::string path_gist_output = std::to_string(num_file)+".png";
+    std::string gist_command = "/home/anton/brlcad/build/bin/gist " + model_to_gist + " -o " + temp_dir + path_gist_output;
+
+    auto [output, error]  =  gFileProcessor.runCommand(gist_command);
+    // End painting
+    std::cout << "std output: " << output << std::endl;
+    std::cout << "std error: " << error << std::endl; 
+    num_file++;
+  }
+  painter.rotate(90);
+  for(int k = 0; k <= num_file; k++){
+    std::string png = temp_dir + std::to_string(k) + ".png";
+    QString png_qstr = QString::fromStdString(png);
+    QPixmap gist(png_qstr);
+    bool status_newpage = pdfWriter.newPage();
+    painter.drawPixmap(0, -2408, gist);
+  }
+  painter.end();
+  std::cout << "Report Generated" << std::endl;
+  // open pdf after generation
 }
 
 void LibraryWindow::loadFromLibrary(Library* _library)
@@ -105,10 +197,6 @@ void LibraryWindow::loadFromLibrary(Library* _library)
   loadTags();
   std::cout << "Called display tags for library: " << library->name() << std::endl;
 
-
-
-
-
    std::string root_folder = fs::current_path().string()+"/previews/";  // Get the current root folder of the project
 
    for (const QString &path : geometryModel->stringList()) {
@@ -129,7 +217,7 @@ void LibraryWindow::loadFromLibrary(Library* _library)
            // Print the filename without the extension
 
            QListWidgetItem *item = new QListWidgetItem(QIcon(filepath), filename);
-QList<QSize> availableSizes = item->icon().availableSizes();
+           QList<QSize> availableSizes = item->icon().availableSizes();
 
            if (availableSizes.isEmpty()){
             delete item;
@@ -206,7 +294,7 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidge
   for (const auto& [key, value] : modelProperties) {
       qModelProperties << QString::fromStdString(key + ": " + value);
   }
-  library->model->printModel(modelId);
+  // library->model->printModel(modelId);
   currentPropertiesModel->setStringList(qModelProperties);
 
   /* retrieve full lists */
