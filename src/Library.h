@@ -1,13 +1,16 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
+#include <QObject>
+#include <QThread>
 #include <string>
 #include <vector>
 #include "FilesystemIndexer.h"
 #include "./Model.h"
 
 
-class Library {
+class Library: public QObject {  // Inherit from QObject
+    Q_OBJECT  // Enable signals and slots
 
 public:
   explicit Library(const char *label = nullptr, const char *path = nullptr);
@@ -18,7 +21,7 @@ public:
   const char* name();
   const char* path();
 
-  void loadDatabase();
+  void createDatabase(QWidget *parent);
   std::vector<std::string> getModels();
   std::vector<std::string> getGeometry();
   std::vector<std::string> getImages();
@@ -28,6 +31,9 @@ public:
   
   Model* model;
   std::string fullPath;
+
+signals:
+  void databaseCreationFinished();  // Signal to indicate the processing is complete
 
 private:
   std::string shortName;

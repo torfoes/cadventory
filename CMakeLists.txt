@@ -53,6 +53,7 @@ set (SRCS
   src/Library.cpp
   src/LibraryWindow.cpp
   src/ProcessGFiles.cpp
+  src/ProgressWindow.cpp
   src/LibraryWindow.h
   src/MainWindow.h
 

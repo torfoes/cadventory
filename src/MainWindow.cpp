@@ -9,6 +9,9 @@
 
 #include "LibraryWindow.h"
 
+#include <QtConcurrent/QtConcurrentRun>
+#include <QThreadPool>
+
 //LibraryWindow* libraryWindow;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
@@ -83,7 +86,7 @@ MainWindow::openLibrary()
   if (foundLibrary) {
     LibraryWindow* libraryWindow = new LibraryWindow(nullptr);
     std::cout << "Opening library " << foundLibrary->name() << std::endl;
-    foundLibrary->loadDatabase();
+    // foundLibrary->loadDatabase();
     libraryWindow->loadFromLibrary(foundLibrary);
     std::cout << "Loaded library " << foundLibrary->name() << std::endl;
 
@@ -172,14 +175,24 @@ void
 MainWindow::on_addLibraryButton_clicked()
 {
   QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select Folder"), ".");
+  //libraries.clear();
   if (!folderPath.isEmpty()) {
     // Create a new button for the selected folder
     QString name = QString(folderPath.toStdString().substr(folderPath.toStdString().find_last_of("/\\") + 1).c_str());
 
-    /* when we click +, add path to our libraries and add a button for it */
-    addLibrary(name.toStdString().c_str(), folderPath.toStdString().c_str());
+    // When we click +, add path to our libraries and add a button for it
+    Library *newLibrary = new Library(name.toStdString().c_str(), folderPath.toStdString().c_str());
+    libraries.push_back(newLibrary);
     addLibraryButton(name.toStdString().c_str(), folderPath.toStdString().c_str());
+
+    // Save the state of the application
     saveState();
+
+    // Immediately load the database and process the .g files
+    newLibrary->createDatabase(this);
+
+    // Optionally, update the UI status to indicate processing completion
+    updateStatusLabel("Library added and .g files processed.");
   }
 }
 
