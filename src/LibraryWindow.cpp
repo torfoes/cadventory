@@ -379,13 +379,18 @@ void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
 
             report.erase(report.begin() + i);
 
-
+              QFont font = item->font();
+              font.setBold(false);
+              item->setFont(font);
               std::cout << filename + " is unselected from report" << std::endl;
 
             return;
         }
         i++;
     }
+    QFont font = item->font();
+    font.setBold(true);
+    item->setFont(font);
     report.push_back(this->library->fullPath+"/"+name);
       std::cout << this->library->fullPath+"/"+name << std::endl;
     std::cout << name + " is selected for report" << std::endl;
