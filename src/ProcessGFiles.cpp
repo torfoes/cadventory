@@ -15,6 +15,8 @@
 #include <filesystem>
 #include <QThread>
 #include <map>
+#include "config.h"
+
 
 namespace fs = std::filesystem;
 
@@ -111,19 +113,27 @@ std::pair<string, string> ProcessGFiles::runCommand(const std::string& command) 
 
 // Extract metadata and generate previews
 std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& file_path) {
+    string mged_executable = MGED_EXECUTABLE_PATH;
+    string rt_executable = RT_EXECUTABLE_PATH;
+
+    mged_executable = "\"" + mged_executable + "\"";
+    rt_executable = "\"" + rt_executable + "\"";
+    string file_path_str = "\"" + file_path.string() + "\"";
+
+
     map<string, string> result;
     try {
         string model_short_name = file_path.stem().string();
 
         // Extract title using updated runCommand
-        string title_command = "/home/anton/brlcad/build/bin/mged -c " + file_path.string() + " title";
+        string title_command = mged_executable + " -c " + file_path_str + " title";
         auto title_result = runCommand(title_command);
         string title = !title_result.first.empty() ? title_result.first : title_result.second;
         title = title.empty() ? "Unknown" : title;
         result.insert({"Title", title});
 
         // Get tops level objects
-        string tops_command = "/home/anton/brlcad/build/bin/mged -c " + file_path.string() + " tops";
+        string tops_command = mged_executable + " -c " + file_path_str + " tops";
         auto tops_result = runCommand(tops_command);
         string tops_output = !tops_result.first.empty() ? tops_result.first : tops_result.second;
 
@@ -141,7 +151,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
         objects_to_try.insert(objects_to_try.end(), tops.begin(), tops.end());
 
         // Define the output folder path
-        string root_folder = fs::current_path().string();  // Get the current root folder of the project
+        string root_folder = fs::current_path().string();
         string previews_folder = root_folder + "/previews";
 
         // Ensure the previews folder exists, create if not
@@ -149,7 +159,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
 
         // Define the PNG file path in the previews folder
         string png_file = previews_folder + "/" + model_short_name + ".png";
-        string rt_command_template = "/home/anton/brlcad/build/bin/rt -s2048 -o " + png_file + " " + file_path.string() + " ";
+        string rt_command_template = rt_executable + " -s2048 -o " + png_file + " " + file_path_str + " ";
 
         bool raytrace_successful = false;
         for (const auto& obj : objects_to_try) {
