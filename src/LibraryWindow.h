@@ -1,71 +1,47 @@
+// LibraryWindow.h
+
 #ifndef LIBRARYWINDOW_H
 #define LIBRARYWINDOW_H
 
-#include <map>
-#include <string>
-#include <vector>
-
 #include <QWidget>
-#include <QObject>
 #include <QListWidgetItem>
-#include <QStringListModel>
-#include <QString>
+#include <vector>
+#include <string>
 
-#include "./ui_librarywindow.h"
+#include "ui_librarywindow.h"
+#include "Library.h"
 #include "MainWindow.h"
-
-
-#include "./Library.h"
-#include "./Model.h"
-
 
 class LibraryWindow : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  explicit LibraryWindow(QWidget* parent = nullptr);
-  ~LibraryWindow();
+    explicit LibraryWindow(QWidget* parent = nullptr);
+    ~LibraryWindow();
 
-  void loadFromLibrary(Library *library);
-  void loadTags();
+    void loadFromLibrary(Library* _library);
+    void setMainWindow(MainWindow* mainWindow);
 
-protected:
-  void updateListModelForDirectory(QStringListModel* model, const std::vector<std::string>& allItems, const std::string& directory);
+private slots:
+    void generateReport();
+    void on_allLibraries_clicked();
+    void onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* previous);
+    void on_pushButton_clicked();
+    void on_listWidgetPage_itemClicked(QListWidgetItem* item);
+    void onModelProcessed(int modelId);
+    void onIndexingFinished();
+    void onGeneratePreviewClicked();
 
-public slots:
-  void on_allLibraries_clicked();
-  void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
-  void generateReport();
-  // private slots:
-  // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
+private:
+    void setupPreviewsView();
+    void startIndexing();
 
-  private slots:
-  void on_pushButton_clicked();
-  void on_listWidgetPage_itemClicked(QListWidgetItem *item);
+    Ui::LibraryWindow ui;
+    Library* library;
+    MainWindow* main;
 
-  private:
-  Ui::LibraryWindow ui;
-  Library* library;
-  Model* model;
-
-  MainWindow* main;
-
-  QStringListModel *geometryModel;
-  QStringListModel *imagesModel;
-  QStringListModel *documentsModel;
-  QStringListModel *dataModel;
-
-  QStringListModel *tagsModel;
-  QListWidget *tagsWidget;
-  QStringListModel *currentTagsModel;
-  QStringListModel *currentPropertiesModel;
-
-  std::vector<std::string> report;
-
-  //void AddItem(const QString& qstrFileName, const QString& qstrPic);
-
+    std::vector<std::string> report;
 };
 
-
-#endif /* LIBRARYWINDOW_H */
+#endif // LIBRARYWINDOW_H

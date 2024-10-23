@@ -19,10 +19,8 @@
   <property name="windowTitle">
    <string>Library</string>
   </property>
+  <!-- Left Side GroupBox for Models -->
   <widget class="QGroupBox" name="groupBox">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -34,43 +32,6 @@
    <property name="title">
     <string>Models</string>
    </property>
-   <property name="flat">
-    <bool>false</bool>
-   </property>
-   <widget class="QListWidget" name="listWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>120</y>
-      <width>261</width>
-      <height>371</height>
-     </rect>
-    </property>
-    <item>
-     <property name="text">
-      <string>.</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QPushButton" name="generateReport">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>490</y>
-      <width>261</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Generate Report</string>
-    </property>
-    <property name="checkable">
-     <bool>false</bool>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
@@ -84,116 +45,132 @@
      <string>Select All</string>
     </property>
    </widget>
+   <widget class="QListWidget" name="listWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>60</y>
+      <width>261</width>
+      <height>421</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="generateReport">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>490</y>
+      <width>261</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Generate Report</string>
+    </property>
+   </widget>
   </widget>
-  <widget class="QTabWidget" name="tabWidget">
+  <!-- Model Details GroupBox -->
+  <widget class="QGroupBox" name="modelDetailsGroupBox">
    <property name="geometry">
     <rect>
      <x>270</x>
-     <y>62</y>
+     <y>10</y>
      <width>601</width>
-     <height>521</height>
+     <height>100</height>
     </rect>
    </property>
-   <property name="tabShape">
-    <enum>QTabWidget::TabShape::Triangular</enum>
+   <property name="title">
+    <string>Model Details</string>
    </property>
-   <property name="currentIndex">
-    <number>2</number>
-   </property>
-   <property name="elideMode">
-    <enum>Qt::TextElideMode::ElideMiddle</enum>
-   </property>
-   <widget class="QWidget" name="geometryTab">
-    <attribute name="title">
-     <string>Geometry</string>
-    </attribute>
-    <widget class="QListView" name="geometryListView">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>351</width>
-       <height>381</height>
-      </rect>
-     </property>
-    </widget>
+   <widget class="QLabel" name="modelTitleLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>200</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Title:</string>
+    </property>
    </widget>
-   <widget class="QWidget" name="imagesTab">
-    <attribute name="title">
-     <string>Images</string>
-    </attribute>
-    <widget class="QListView" name="imagesListView">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>601</width>
-       <height>491</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QListView" name="currentTagsListView">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>10</y>
-       <width>131</width>
-       <height>161</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QListView" name="tagsListView">
-     <property name="geometry">
-      <rect>
-       <x>290</x>
-       <y>70</y>
-       <width>121</width>
-       <height>351</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QListView" name="currentPropertiesListView">
-     <property name="geometry">
-      <rect>
-       <x>440</x>
-       <y>270</y>
-       <width>141</width>
-       <height>192</height>
-      </rect>
-     </property>
-    </widget>
+   <widget class="QLabel" name="modelAuthorLabel">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>20</y>
+      <width>200</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Author:</string>
+    </property>
    </widget>
-   <widget class="QWidget" name="documentsTab">
-    <attribute name="title">
-     <string>Documents</string>
-    </attribute>
-    <widget class="QListView" name="documentsListView">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>351</width>
-       <height>381</height>
-      </rect>
-     </property>
-    </widget>
+   <widget class="QLabel" name="modelFilePathLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>400</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>File Path:</string>
+    </property>
    </widget>
-   <widget class="QWidget" name="dataTab">
-    <attribute name="title">
-     <string>Data</string>
-    </attribute>
-    <widget class="QListView" name="dataListView">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>351</width>
-       <height>381</height>
-      </rect>
-     </property>
-    </widget>
+   <widget class="QLabel" name="modelThumbnailLabel">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>20</y>
+      <width>100</width>
+      <height>80</height>
+     </rect>
+    </property>
    </widget>
   </widget>
+  <!-- Previews ListWidget -->
+  <widget class="QListWidget" name="listWidgetPage">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>120</y>
+     <width>601</width>
+     <height>461</height>
+    </rect>
+   </property>
+   <property name="viewMode">
+    <enum>QListView::IconMode</enum>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>72</width>
+     <height>72</height>
+    </size>
+   </property>
+   <property name="gridSize">
+    <size>
+     <width>144</width>
+     <height>108</height>
+    </size>
+   </property>
+   <property name="movement">
+    <enum>QListView::Static</enum>
+   </property>
+   <property name="resizeMode">
+    <enum>QListView::Adjust</enum>
+   </property>
+   <property name="layoutMode">
+    <enum>QListView::Batched</enum>
+   </property>
+   <property name="batchSize">
+    <number>10</number>
+   </property>
+  </widget>
+  <!-- Navigation and Search -->
   <widget class="QWidget" name="leftLayoutWidget">
    <property name="geometry">
     <rect>
@@ -218,9 +195,6 @@
      <widget class="QLabel" name="label">
       <property name="text">
        <string>&lt;</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
       </property>
      </widget>
     </item>
@@ -271,28 +245,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QListWidget" name="listWidgetPage">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>60</y>
-     <width>601</width>
-     <height>521</height>
-    </rect>
-   </property>
-   <property name="resizeMode">
-    <enum>QListView::ResizeMode::Adjust</enum>
-   </property>
-   <property name="layoutMode">
-    <enum>QListView::LayoutMode::Batched</enum>
-   </property>
-   <property name="viewMode">
-    <enum>QListView::ViewMode::IconMode</enum>
-   </property>
   </widget>
  </widget>
  <resources/>

@@ -1,3 +1,5 @@
+# CMakeLists.txt
+
 cmake_minimum_required(VERSION 3.25)
 
 project(CADventory VERSION 0.1.0 LANGUAGES CXX)
@@ -7,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
 qt_standard_project_setup()
 
 # Flag adjustments for Qt requirements
@@ -56,18 +58,15 @@ if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
   message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
 endif()
 
-# Configure the config.h file
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
 )
 
-# Include the directory where config.h is generated
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # --- End BRL-CAD Configuration ---
 
-# Build CADventory
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_DIR})
 set(SRCS
   src/CADventory.cpp
@@ -75,23 +74,29 @@ set(SRCS
   src/MainWindow.cpp
   src/SplashDialog.cpp
   src/Model.cpp
+  src/Library.cpp
+  src/LibraryWindow.cpp
+  src/ProcessGFiles.cpp
+  src/IndexingWorker.cpp
   src/librarywindow.ui
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
-  src/Library.cpp
-  src/LibraryWindow.cpp
-  src/ProcessGFiles.cpp
   src/LibraryWindow.h
   src/MainWindow.h
   src/Library.h
+  src/Model.h
+  src/ProcessGFiles.h
+  src/IndexingWorker.h
 )
 set(LIBS
   Qt6::Core
   Qt6::Widgets
   Qt6::Gui
 )
+
 qt_add_executable(cadventory WIN32 ${SRCS})
+
 
 # Note dependencies
 add_dependencies(cadventory sqlite_static)
@@ -114,7 +119,6 @@ install(FILES doc/CADventory.docx
 
 # Windows wants DLLs in the same folder as the app
 if(WIN32)
-
   # Function to copy Qt DLLs for a given target
   function(copy_qt_dlls target)
     foreach(qt_module IN ITEMS ${LIBS})
