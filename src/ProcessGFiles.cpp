@@ -116,14 +116,14 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
         string model_short_name = file_path.stem().string();
 
         // Extract title using updated runCommand
-        string title_command = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/mged -c " + file_path.string() + " title";
+        string title_command = "/home/anton/brlcad/build/bin/mged -c " + file_path.string() + " title";
         auto title_result = runCommand(title_command);
         string title = !title_result.first.empty() ? title_result.first : title_result.second;
         title = title.empty() ? "Unknown" : title;
         result.insert({"Title", title});
 
         // Get tops level objects
-        string tops_command = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/mged -c " + file_path.string() + " tops";
+        string tops_command = "/home/anton/brlcad/build/bin/mged -c " + file_path.string() + " tops";
         auto tops_result = runCommand(tops_command);
         string tops_output = !tops_result.first.empty() ? tops_result.first : tops_result.second;
 
@@ -149,7 +149,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(const fs::path& f
 
         // Define the PNG file path in the previews folder
         string png_file = previews_folder + "/" + model_short_name + ".png";
-        string rt_command_template = "/mnt/c/Users/Agoni/OneDrive/Desktop/AdamsCode/brlcad/build/bin/rt -s2048 -o " + png_file + " " + file_path.string() + " ";
+        string rt_command_template = "/home/anton/brlcad/build/bin/rt -s2048 -o " + png_file + " " + file_path.string() + " ";
 
         bool raytrace_successful = false;
         for (const auto& obj : objects_to_try) {

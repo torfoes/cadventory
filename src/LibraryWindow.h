@@ -37,6 +37,7 @@ public slots:
   void on_allLibraries_clicked();
   void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
   void generateReport();
+  void on_addTextInput_clicked();
   // private slots:
   // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 

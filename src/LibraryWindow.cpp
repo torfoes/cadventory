@@ -13,13 +13,16 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QStyledItemDelegate>
-
-
+#include <QFileDialog>
+#include <QDesktopServices>
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <iomanip>
+#include <ctime>
+#include <sstream>
 
 namespace fs = std::filesystem;
 
@@ -40,8 +43,15 @@ LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
   /* make Model selections update the tabs */
   connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
   connect(ui.generateReport, &QPushButton::pressed, this, &LibraryWindow::generateReport);
+  // connect(ui.addTextInput, &QPushButton::pressed, this, &LibraryWindow::on_addTextInput_clicked);
+
 }
 
+void LibraryWindow::on_addTextInput_clicked(){
+
+  // ui.verticalLayout->addWidget(new QTextEdit("hello"));
+  // use setPlainText to add the command into the text box
+}
 
 LibraryWindow::~LibraryWindow()
 {
@@ -49,8 +59,15 @@ LibraryWindow::~LibraryWindow()
 
 void LibraryWindow::generateReport(){
   // file chooser
-  QString filepath = "/home/anton/report.pdf";
-  QPdfWriter pdfWriter(filepath);
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t);
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%d-%m-%Y_%H-%M-%S");
+  auto time = oss.str();
+  QString temp_dir_1= QFileDialog::getExistingDirectory(this, tr("Choose Directory to store Output"));
+  std::cout << "directory to save: " << temp_dir_1.toStdString() << std::endl;
+  std::string report_filepath = temp_dir_1.toStdString() + "/report_" + time + ".pdf";
+  QPdfWriter pdfWriter(QString::fromStdString(report_filepath));
   
   // Set the resolution (optional)
   pdfWriter.setResolution(300);
@@ -104,36 +121,39 @@ void LibraryWindow::generateReport(){
     painter.drawText(x, y, QString::fromStdString(cur_model));
   }
 
-
-  // Optionally, you can draw more text, shapes, or images here
-
+  painter.setFont(font);
   ProcessGFiles gFileProcessor; // just to call commands
   int num_file = 0;
-  std::string temp_dir = "/home/anton/cadventory/.build/";
   std::cout << "generating gist reports" << std::endl;
+  painter.rotate(90);
 
   for(auto str: report){
     std::cout << "model selected: " << str << std::endl;
-    std::string model_to_gist = str;
-    std::string path_gist_output = std::to_string(num_file)+".png";
-    std::string gist_command = "/home/anton/brlcad/build/bin/gist " + model_to_gist + " -o " + temp_dir + path_gist_output;
+    std::string path_gist_output = temp_dir_1.toStdString() + "/" + std::to_string(num_file)+".png";
+    std::string gist_command = "/home/anton/brlcad/build/bin/gist " + str + " -o " + path_gist_output;
 
     auto [output, error]  =  gFileProcessor.runCommand(gist_command);
     // End painting
     std::cout << "std output: " << output << std::endl;
-    std::cout << "std error: " << error << std::endl; 
-    num_file++;
-  }
-  painter.rotate(90);
-  for(int k = 0; k <= num_file; k++){
-    std::string png = temp_dir + std::to_string(k) + ".png";
+    std::string png = temp_dir_1.toStdString() + "/" + std::to_string(num_file) + ".png";
     QString png_qstr = QString::fromStdString(png);
     QPixmap gist(png_qstr);
     bool status_newpage = pdfWriter.newPage();
-    painter.drawPixmap(0, -2408, gist);
+    if(output.find("ERROR") == std::string::npos){
+      painter.drawPixmap(0, -2408, gist);
+    }else{
+      painter.rotate(-90);
+      painter.setFont(font);
+      painter.drawText(100, 100, QString::fromStdString(str));
+      painter.setFont(font_two);
+      painter.drawText(100, 150, QString::fromStdString(output));
+      painter.rotate(90);
+    }
+    num_file++;
   }
   painter.end();
   std::cout << "Report Generated" << std::endl;
+  QDesktopServices::openUrl(QUrl(temp_dir_1));
   // open pdf after generation
 }
 

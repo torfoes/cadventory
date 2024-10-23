@@ -43,6 +43,7 @@ main(int argc, char **argv)
     app.indexDirectory(localDir.c_str());
   });
   printf("Starting CADventory\n");
+  
 
   return app.exec();
 }

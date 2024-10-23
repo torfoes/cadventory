@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>876</width>
+    <width>1200</width>
     <height>600</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>876</width>
+    <width>1100</width>
     <height>600</height>
    </size>
   </property>
@@ -82,6 +82,19 @@
     </property>
     <property name="text">
      <string>Select All</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="addTextInput">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>80</y>
+      <width>261</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add new Text thing</string>
     </property>
    </widget>
   </widget>
