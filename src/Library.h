@@ -23,20 +23,34 @@ public:
 
   void createDatabase(QWidget *parent);
   std::vector<std::string> getModels();
+  std::vector<std::string> getModelsView();
   std::vector<std::string> getGeometry();
   std::vector<std::string> getImages();
   std::vector<std::string> getDocuments();
   std::vector<std::string> getData();
   std::vector<std::string> getTags();
+
+  void setTagsSelected(std::vector<std::string> tags);
+  void setPropertySelected(std::string property);
+  void setAscending(bool ascending);
+
   
   Model* model;
   std::string fullPath;
+  
 
 signals:
   void databaseCreationFinished();  // Signal to indicate the processing is complete
 
 private:
   std::string shortName;
+
+  std::vector<std::string> tagsSelected;
+  std::string propertySelected;
+  bool ascending;
+
+  std::vector<std::string> tags;
+  std::vector<std::string> properties;
   
   FilesystemIndexer* index;
   

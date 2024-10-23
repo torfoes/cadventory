@@ -113,7 +113,6 @@ Library::indexFiles()
 }
 
 
-
 std::vector<std::string>
 Library::getModels()
 {
@@ -149,6 +148,68 @@ Library::getModels()
   return filePaths;
 }
 
+std::vector<std::string> Library::getModelsView() {
+    // Get all models
+    std::vector<std::string> models = getModels();
+    std::vector<std::string> filteredModels;
+
+    // Filter models that have all the selected tags
+    for (const std::string& modelPath : models) {
+        size_t modelId = model->hashModel(fullPath + "/" + modelPath);
+        std::vector<std::string> modelTags = model->getTagsForModel(modelId);
+
+        // Check if modelTags contain all tags in tagsSelected
+        bool hasAllTags = std::all_of(tagsSelected.begin(), tagsSelected.end(),
+            [&modelTags](const std::string& tag) {
+                return std::find(modelTags.begin(), modelTags.end(), tag) != modelTags.end();
+            });
+
+        if (hasAllTags) {
+            filteredModels.push_back(modelPath);
+        }
+    }
+
+    // Prepare for sorting
+    struct ModelInfo {
+        std::string path;
+        bool hasProperty;
+        std::string propertyValue;
+    };
+
+    std::vector<ModelInfo> modelsWithProperties;
+    for (const std::string& modelPath : filteredModels) {
+        size_t modelId = model->hashModel(fullPath + "/" + modelPath);
+        std::string propertyValue = model->getProperty(modelId, propertySelected);
+        bool hasProperty = !propertyValue.empty();
+        modelsWithProperties.push_back({modelPath, hasProperty, propertyValue});
+    }
+
+    // Sort the models
+    std::sort(modelsWithProperties.begin(), modelsWithProperties.end(),
+        [this](const ModelInfo& a, const ModelInfo& b) {
+            if (a.hasProperty && b.hasProperty) {
+                // Compare property values
+                if (ascending)
+                    return a.propertyValue < b.propertyValue;
+                else
+                    return a.propertyValue > b.propertyValue;
+            } else if (a.hasProperty != b.hasProperty) {
+                // Models with the property come before those without
+                return a.hasProperty;
+            } else {
+                // Both models lack the property; sort alphabetically by name
+                return a.path < b.path;
+            }
+        });
+
+    // Extract sorted model paths
+    std::vector<std::string> sortedModels;
+    for (const auto& modelInfo : modelsWithProperties) {
+        sortedModels.push_back(modelInfo.path);
+    }
+
+    return sortedModels;
+}
 
 std::vector<std::string>
 Library::getGeometry()
