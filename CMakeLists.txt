@@ -45,17 +45,15 @@ set(BRLCAD_DIR "" CACHE PATH "Path to BRL-CAD installation directory")
 if(BRLCAD_DIR)
   set(MGED_EXECUTABLE "${BRLCAD_DIR}/bin/mged")
   set(RT_EXECUTABLE "${BRLCAD_DIR}/bin/rt")
+  set(GIST_EXECUTABLE "${BRLCAD_DIR}/bin/gist")
 else()
   find_program(MGED_EXECUTABLE mged)
   find_program(RT_EXECUTABLE rt)
+  find_program(GIST_EXECUTABLE gist)
 endif()
 
-if(NOT MGED_EXECUTABLE)
-  message(FATAL_ERROR "Could not find 'mged' executable. Please set BRLCAD_DIR or ensure 'mged' is in your PATH.")
-endif()
-
-if(NOT RT_EXECUTABLE)
-  message(FATAL_ERROR "Could not find 'rt' executable. Please set BRLCAD_DIR or ensure 'rt' is in your PATH.")
+if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
+  message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
 endif()
 
 # Configure the config.h file

@@ -9,4 +9,4 @@ build
 *.user.*
 *.user.*.tmp
 CMakeLists.txt.user
-CMakeLists.txt.user
+CMakeLists.txt.user.*
