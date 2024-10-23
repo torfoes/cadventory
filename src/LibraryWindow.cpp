@@ -359,7 +359,7 @@ void LibraryWindow::on_pushButton_clicked()
         path = library->fullPath+"/"+path;
     }
 }
-
+  
 
 void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
 {
