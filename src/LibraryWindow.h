@@ -1,56 +1,54 @@
 #ifndef LIBRARYWINDOW_H
 #define LIBRARYWINDOW_H
 
+#include <QListWidgetItem>
+#include <QObject>
+#include <QString>
+#include <QStringListModel>
+#include <QWidget>
 #include <map>
 #include <string>
 #include <vector>
 
-#include <QWidget>
-#include <QObject>
-#include <QListWidgetItem>
-#include <QStringListModel>
-#include <QString>
-
+#include "./Library.h"
+#include "./Model.h"
 #include "./ui_librarywindow.h"
 #include "MainWindow.h"
 
-
-#include "./Library.h"
-#include "./Model.h"
-
-
-class LibraryWindow : public QWidget
-{
+class LibraryWindow : public QWidget {
   Q_OBJECT
 
-public:
-  explicit LibraryWindow(QWidget* parent = nullptr);
+ public:
+  explicit LibraryWindow(QWidget *parent = nullptr);
   ~LibraryWindow();
 
   void loadFromLibrary(Library *library);
   void loadTags();
 
-protected:
-  void updateListModelForDirectory(QStringListModel* model, const std::vector<std::string>& allItems, const std::string& directory);
+ protected:
+  void updateListModelForDirectory(QStringListModel *model,
+                                   const std::vector<std::string> &allItems,
+                                   const std::string &directory);
 
-public slots:
+ public slots:
   void on_allLibraries_clicked();
-  void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
+  void onModelSelectionChanged(QListWidgetItem *current,
+                               QListWidgetItem *previous);
   void generateReport();
   void on_addTextInput_clicked();
   // private slots:
   // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 
-  private slots:
+ private slots:
   void on_pushButton_clicked();
   void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 
-  private:
+ private:
   Ui::LibraryWindow ui;
-  Library* library;
-  Model* model;
+  Library *library;
+  Model *model;
 
-  MainWindow* main;
+  MainWindow *main;
 
   QStringListModel *geometryModel;
   QStringListModel *imagesModel;
@@ -64,9 +62,7 @@ public slots:
 
   std::vector<std::string> report;
 
-  //void AddItem(const QString& qstrFileName, const QString& qstrPic);
-
+  // void AddItem(const QString& qstrFileName, const QString& qstrPic);
 };
-
 
 #endif /* LIBRARYWINDOW_H */

@@ -5,15 +5,15 @@
 #include <QThread>
 #include <string>
 #include <vector>
-#include "FilesystemIndexer.h"
+
 #include "./Model.h"
+#include "FilesystemIndexer.h"
 
+class Library : public QObject {  // Inherit from QObject
+  Q_OBJECT                        // Enable signals and slots
 
-class Library: public QObject {  // Inherit from QObject
-    Q_OBJECT  // Enable signals and slots
-
-public:
-  explicit Library(const char *label = nullptr, const char *path = nullptr);
+      public : explicit Library(const char* label = nullptr,
+                                const char* path = nullptr);
   Library(const Library&) = delete;
   ~Library();
 
@@ -21,7 +21,7 @@ public:
   const char* name();
   const char* path();
 
-  void createDatabase(QWidget *parent);
+  void createDatabase(QWidget* parent);
   std::vector<std::string> getModels();
   std::vector<std::string> getModelsView();
   std::vector<std::string> getGeometry();
@@ -34,15 +34,14 @@ public:
   void setPropertySelected(std::string property);
   void setAscending(bool ascending);
 
-  
   Model* model;
   std::string fullPath;
-  
 
-signals:
-  void databaseCreationFinished();  // Signal to indicate the processing is complete
+ signals:
+  void
+  databaseCreationFinished();  // Signal to indicate the processing is complete
 
-private:
+ private:
   std::string shortName;
 
   std::vector<std::string> tagsSelected;
@@ -51,10 +50,8 @@ private:
 
   std::vector<std::string> tags;
   std::vector<std::string> properties;
-  
-  FilesystemIndexer* index;
-  
-};
 
+  FilesystemIndexer* index;
+};
 
 #endif /* FILESYSTEMINDEXER_H */

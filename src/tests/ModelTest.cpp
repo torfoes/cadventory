@@ -2,10 +2,9 @@
 /* let catch provide main() */
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-
-#include "Model.h"
 #include <filesystem>
 
+#include "Model.h"
 
 void setupTestDB(const std::string& path) {
   if (std::filesystem::exists(path)) {
@@ -13,15 +12,16 @@ void setupTestDB(const std::string& path) {
   }
 }
 
-int createTestModel(Model& model, const std::string& name = "TestModel", const std::string& cadFile = "./truck.g", const std::string& overrideInfo = "{}") {
+int createTestModel(Model& model, const std::string& name = "TestModel",
+                    const std::string& cadFile = "./truck.g",
+                    const std::string& overrideInfo = "{}") {
   model.insertModel(cadFile, name, "primary", overrideInfo);
   auto models = model.getModels();
   if (!models.empty()) {
     return models.front().id;
   }
-  return -1; // oops.
+  return -1;  // oops.
 }
-
 
 TEST_CASE("ModelOperations", "[Model]") {
   std::string testDB = "test_models.db";
@@ -29,7 +29,8 @@ TEST_CASE("ModelOperations", "[Model]") {
   Model model(testDB);
 
   SECTION("Insert model") {
-    bool insertResult = model.insertModel("path/to/cad/file", "testModel", "primary", "{\"test\":true}");
+    bool insertResult = model.insertModel("path/to/cad/file", "testModel",
+                                          "primary", "{\"test\":true}");
     REQUIRE(insertResult == true);
   }
 
@@ -46,7 +47,8 @@ TEST_CASE("ModelOperations", "[Model]") {
     int modelId = createTestModel(model);
     REQUIRE(modelId != -1);
 
-    bool updateResult = model.updateModel(modelId, "updatedModel", "new/path/to/cad/file", "{\"updated\":true}");
+    bool updateResult = model.updateModel(
+        modelId, "updatedModel", "new/path/to/cad/file", "{\"updated\":true}");
     REQUIRE(updateResult == true);
 
     auto models = model.getModels();

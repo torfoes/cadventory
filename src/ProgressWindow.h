@@ -1,26 +1,25 @@
 #ifndef PROGRESSWINDOW_H
 #define PROGRESSWINDOW_H
 
-#include <QWidget>
-#include <QProgressBar>
 #include <QLabel>
+#include <QProgressBar>
 #include <QVBoxLayout>
+#include <QWidget>
 
 class ProgressWindow : public QWidget {
-    Q_OBJECT
+  Q_OBJECT
 
-public:
-    ProgressWindow(int totalFiles, QWidget *parent = nullptr);  // Constructor
+ public:
+  ProgressWindow(int totalFiles, QWidget *parent = nullptr);  // Constructor
 
-public slots:
-    void updateProgress();  // Slot to update progress
+ public slots:
+  void updateProgress();  // Slot to update progress
 
-private:
-    QProgressBar *progressBar;
-    QLabel *label;
-    int totalFiles;
-    int filesProcessed;
+ private:
+  QProgressBar *progressBar;
+  QLabel *label;
+  int totalFiles;
+  int filesProcessed;
 };
 
-#endif // PROGRESSWINDOW_H
-
+#endif  // PROGRESSWINDOW_H

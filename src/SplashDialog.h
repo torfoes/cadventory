@@ -3,18 +3,17 @@
 
 #include <QDialog>
 #include <QObject>
+
 #include "./ui_splash.h"
 
-
-class SplashDialog : public QDialog
-{
+class SplashDialog : public QDialog {
   Q_OBJECT
 
-public:
+ public:
   explicit SplashDialog(QWidget *parent = nullptr);
   ~SplashDialog();
 
-private:
+ private:
   Ui::Dialog dialog;
 };
 

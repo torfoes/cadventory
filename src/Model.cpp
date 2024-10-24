@@ -1,10 +1,10 @@
 
 #include "Model.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 Model::Model(const std::string& path) : db(nullptr), dbPath(path) {
   if (sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
@@ -23,8 +23,7 @@ Model::~Model() {
 }
 
 bool Model::createTable() {
-
-    std::string sqlModels = R"(
+  std::string sqlModels = R"(
         CREATE TABLE IF NOT EXISTS models (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             short_name TEXT NOT NULL,
@@ -32,13 +31,13 @@ bool Model::createTable() {
             override_info TEXT
         );
     )";
-    std::string sqlTags = R"(
+  std::string sqlTags = R"(
         CREATE TABLE IF NOT EXISTS tags (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE
         );
     )";
-    std::string sqlModelTags = R"(
+  std::string sqlModelTags = R"(
         CREATE TABLE IF NOT EXISTS model_tags (
             model_id INTEGER NOT NULL,
             tag_id INTEGER NOT NULL,
@@ -47,7 +46,7 @@ bool Model::createTable() {
             FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
         );
     )";
-    std::string sqlModelProperties = R"(
+  std::string sqlModelProperties = R"(
         CREATE TABLE IF NOT EXISTS model_properties (
             model_id INTEGER NOT NULL,
             property_key TEXT NOT NULL,
@@ -58,17 +57,26 @@ bool Model::createTable() {
 
     )";
 
-    return executeSQL(sqlModels) && executeSQL(sqlTags) && executeSQL(sqlModelTags) && executeSQL(sqlModelProperties);
+  return executeSQL(sqlModels) && executeSQL(sqlTags) &&
+         executeSQL(sqlModelTags) && executeSQL(sqlModelProperties);
 }
 
-bool Model::insertModel(const std::string& filePath, const std::string& shortName, const std::string& primaryFile, const std::string& overrides) {
+bool Model::insertModel(const std::string& filePath,
+                        const std::string& shortName,
+                        const std::string& primaryFile,
+                        const std::string& overrides) {
   int id = hashModel(filePath);
   return insertModel(id, shortName, primaryFile, overrides);
 }
 
-bool Model::insertModel(int id, const std::string& shortName, const std::string& primaryFile, const std::string& overrides) {
-  std::string sql = "INSERT INTO models (id, short_name, primary_file, override_info) VALUES (?, ?, ?, ?);";
-  // std::cout << "Inserting model: " << id << " " << shortName << " " << primaryFile << " " << overrides;
+bool Model::insertModel(int id, const std::string& shortName,
+                        const std::string& primaryFile,
+                        const std::string& overrides) {
+  std::string sql =
+      "INSERT INTO models (id, short_name, primary_file, override_info) VALUES "
+      "(?, ?, ?, ?);";
+  // std::cout << "Inserting model: " << id << " " << shortName << " " <<
+  // primaryFile << " " << overrides;
 
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
@@ -78,7 +86,8 @@ bool Model::insertModel(int id, const std::string& shortName, const std::string&
     sqlite3_bind_text(stmt, 4, overrides.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-      // std::cerr << " Insert model failed: " << sqlite3_errmsg(db) << std::endl;
+      // std::cerr << " Insert model failed: " << sqlite3_errmsg(db) <<
+      // std::endl;
       sqlite3_finalize(stmt);
       return false;
     }
@@ -94,16 +103,16 @@ bool Model::insertModel(int id, const std::string& shortName, const std::string&
 
 std::vector<ModelData> Model::getModels() {
   std::vector<ModelData> models;
-  std::string sql = "SELECT id, short_name, primary_file, override_info FROM models;";
+  std::string sql =
+      "SELECT id, short_name, primary_file, override_info FROM models;";
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-      models.push_back({
-          sqlite3_column_int(stmt, 0),
-          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
-          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
-          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))
-        });
+      models.push_back(
+          {sqlite3_column_int(stmt, 0),
+           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
+           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
+           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))});
     }
     sqlite3_finalize(stmt);
   } else {
@@ -113,19 +122,19 @@ std::vector<ModelData> Model::getModels() {
 }
 
 ModelData Model::getModelById(int id) {
-  std::string sql = "SELECT id, short_name, primary_file, override_info FROM models WHERE id = ?;";
+  std::string sql =
+      "SELECT id, short_name, primary_file, override_info FROM models WHERE id "
+      "= ?;";
   sqlite3_stmt* stmt;
   ModelData model = {0, "", "", ""};
 
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_int(stmt, 1, id);
     if (sqlite3_step(stmt) == SQLITE_ROW) {
-      model = {
-        sqlite3_column_int(stmt, 0),
-        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
-        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
-        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))
-      };
+      model = {sqlite3_column_int(stmt, 0),
+               reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
+               reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
+               reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))};
     }
     sqlite3_finalize(stmt);
   } else {
@@ -135,8 +144,12 @@ ModelData Model::getModelById(int id) {
   return model;
 }
 
-bool Model::updateModel(int id, const std::string& shortName, const std::string& primaryFile, const std::string& overrides) {
-  std::string sql = "UPDATE models SET short_name = ?, primary_file = ?, override_info = ? WHERE id = ?;";
+bool Model::updateModel(int id, const std::string& shortName,
+                        const std::string& primaryFile,
+                        const std::string& overrides) {
+  std::string sql =
+      "UPDATE models SET short_name = ?, primary_file = ?, override_info = ? "
+      "WHERE id = ?;";
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_text(stmt, 1, shortName.c_str(), -1, SQLITE_STATIC);
@@ -177,124 +190,142 @@ bool Model::deleteModel(int id) {
 }
 
 bool Model::addTagToModel(int modelId, const std::string& tagName) {
-    // Insert the tag if it doesn't already exist
-    std::string sqlTagInsert = "INSERT OR IGNORE INTO tags (name) VALUES (?);";
-    sqlite3_stmt* stmt;
-    
-    if (sqlite3_prepare_v2(db, sqlTagInsert.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_text(stmt, 1, tagName.c_str(), -1, SQLITE_STATIC);
+  // Insert the tag if it doesn't already exist
+  std::string sqlTagInsert = "INSERT OR IGNORE INTO tags (name) VALUES (?);";
+  sqlite3_stmt* stmt;
+
+  if (sqlite3_prepare_v2(db, sqlTagInsert.c_str(), -1, &stmt, nullptr) ==
+      SQLITE_OK) {
+    sqlite3_bind_text(stmt, 1, tagName.c_str(), -1, SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  } else {
+    std::cerr << "Failed to insert tag: " << sqlite3_errmsg(db) << std::endl;
+    return false;
+  }
+
+  // Link the tag to the model
+  std::string sqlTagId = "SELECT id FROM tags WHERE name = ?;";
+  if (sqlite3_prepare_v2(db, sqlTagId.c_str(), -1, &stmt, nullptr) ==
+      SQLITE_OK) {
+    sqlite3_bind_text(stmt, 1, tagName.c_str(), -1, SQLITE_STATIC);
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      int tagId = sqlite3_column_int(stmt, 0);
+      sqlite3_finalize(stmt);
+
+      std::string sqlLink =
+          "INSERT INTO model_tags (model_id, tag_id) VALUES (?, ?);";
+      if (sqlite3_prepare_v2(db, sqlLink.c_str(), -1, &stmt, nullptr) ==
+          SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, modelId);
+        sqlite3_bind_int(stmt, 2, tagId);
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);
-    } else {
-        std::cerr << "Failed to insert tag: " << sqlite3_errmsg(db) << std::endl;
-        return false;
+        return true;
+      }
     }
+    sqlite3_finalize(stmt);
+  }
 
-    // Link the tag to the model
-    std::string sqlTagId = "SELECT id FROM tags WHERE name = ?;";
-    if (sqlite3_prepare_v2(db, sqlTagId.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_text(stmt, 1, tagName.c_str(), -1, SQLITE_STATIC);
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            int tagId = sqlite3_column_int(stmt, 0);
-            sqlite3_finalize(stmt);
-            
-            std::string sqlLink = "INSERT INTO model_tags (model_id, tag_id) VALUES (?, ?);";
-            if (sqlite3_prepare_v2(db, sqlLink.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-                sqlite3_bind_int(stmt, 1, modelId);
-                sqlite3_bind_int(stmt, 2, tagId);
-                sqlite3_step(stmt);
-                sqlite3_finalize(stmt);
-                return true;
-            }
-        }
-        sqlite3_finalize(stmt);
-    }
-    
-    std::cerr << "Failed to add tag to model: " << sqlite3_errmsg(db) << std::endl;
-    return false;
+  std::cerr << "Failed to add tag to model: " << sqlite3_errmsg(db)
+            << std::endl;
+  return false;
 }
 
 std::vector<std::string> Model::getTagsForModel(int modelId) {
-    std::vector<std::string> tags;
-    std::string sql = "SELECT name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE mt.model_id = ?;";
-    sqlite3_stmt* stmt = nullptr;  // Ensure stmt is initialized to nullptr
-    int rc;
+  std::vector<std::string> tags;
+  std::string sql =
+      "SELECT name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE "
+      "mt.model_id = ?;";
+  sqlite3_stmt* stmt = nullptr;  // Ensure stmt is initialized to nullptr
+  int rc;
 
-    rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
-    if (rc == SQLITE_OK) {
-        // Bind the modelId to the first parameter (?)
-        sqlite3_bind_int(stmt, 1, modelId);
+  rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+  if (rc == SQLITE_OK) {
+    // Bind the modelId to the first parameter (?)
+    sqlite3_bind_int(stmt, 1, modelId);
 
-        // Fetch rows from the query result
-        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-            const char* tagText = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+    // Fetch rows from the query result
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+      const char* tagText =
+          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
 
-            // Ensure tagText is not NULL
-            if (tagText) {
-                tags.push_back(tagText);
-            } else {
-                std::cerr << "Null value encountered for tag name." << std::endl;
-            }
-        }
-
-        if (rc != SQLITE_DONE) {
-            std::cerr << "Error during sqlite3_step: " << sqlite3_errmsg(db) << std::endl;
-        }
-
-        // Finalize the statement to free up memory
-        sqlite3_finalize(stmt);
-    } else {
-        // Log the SQLite error message if prepare fails
-        std::cerr << "Failed to retrieve tags: " << sqlite3_errmsg(db) << std::endl;
+      // Ensure tagText is not NULL
+      if (tagText) {
+        tags.push_back(tagText);
+      } else {
+        std::cerr << "Null value encountered for tag name." << std::endl;
+      }
     }
 
-    return tags;
+    if (rc != SQLITE_DONE) {
+      std::cerr << "Error during sqlite3_step: " << sqlite3_errmsg(db)
+                << std::endl;
+    }
+
+    // Finalize the statement to free up memory
+    sqlite3_finalize(stmt);
+  } else {
+    // Log the SQLite error message if prepare fails
+    std::cerr << "Failed to retrieve tags: " << sqlite3_errmsg(db) << std::endl;
+  }
+
+  return tags;
 }
 
 bool Model::removeTagFromModel(int modelId, const std::string& tagName) {
-    // Get the tag ID first
-    std::string sqlTagId = "SELECT id FROM tags WHERE name = ?;";
-    sqlite3_stmt* stmt;
-    int tagId = -1;
+  // Get the tag ID first
+  std::string sqlTagId = "SELECT id FROM tags WHERE name = ?;";
+  sqlite3_stmt* stmt;
+  int tagId = -1;
 
-    if (sqlite3_prepare_v2(db, sqlTagId.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_text(stmt, 1, tagName.c_str(), -1, SQLITE_STATIC);
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            tagId = sqlite3_column_int(stmt, 0);
-        }
+  if (sqlite3_prepare_v2(db, sqlTagId.c_str(), -1, &stmt, nullptr) ==
+      SQLITE_OK) {
+    sqlite3_bind_text(stmt, 1, tagName.c_str(), -1, SQLITE_STATIC);
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      tagId = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+  }
+
+  if (tagId != -1) {
+    // Delete the association in the model_tags table
+    std::string sql =
+        "DELETE FROM model_tags WHERE model_id = ? AND tag_id = ?;";
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+      sqlite3_bind_int(stmt, 1, modelId);
+      sqlite3_bind_int(stmt, 2, tagId);
+      if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cerr << "Failed to delete tag from model: " << sqlite3_errmsg(db)
+                  << std::endl;
         sqlite3_finalize(stmt);
+        return false;
+      }
+      sqlite3_finalize(stmt);
+      return true;
     }
+  }
 
-    if (tagId != -1) {
-        // Delete the association in the model_tags table
-        std::string sql = "DELETE FROM model_tags WHERE model_id = ? AND tag_id = ?;";
-        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-            sqlite3_bind_int(stmt, 1, modelId);
-            sqlite3_bind_int(stmt, 2, tagId);
-            if (sqlite3_step(stmt) != SQLITE_DONE) {
-                std::cerr << "Failed to delete tag from model: " << sqlite3_errmsg(db) << std::endl;
-                sqlite3_finalize(stmt);
-                return false;
-            }
-            sqlite3_finalize(stmt);
-            return true;
-        }
-    }
-
-    std::cerr << "Tag not found or error occurred: " << sqlite3_errmsg(db) << std::endl;
-    return false;
+  std::cerr << "Tag not found or error occurred: " << sqlite3_errmsg(db)
+            << std::endl;
+  return false;
 }
 
-bool Model::insertProperty(int modelId, const std::string& key, const std::string& value) {
+bool Model::insertProperty(int modelId, const std::string& key,
+                           const std::string& value) {
   // Check if the property already exists
-  std::string checkSql = "SELECT COUNT(*) FROM model_properties WHERE model_id = ? AND property_key = ?;";
+  std::string checkSql =
+      "SELECT COUNT(*) FROM model_properties WHERE model_id = ? AND "
+      "property_key = ?;";
   sqlite3_stmt* checkStmt;
-  if (sqlite3_prepare_v2(db, checkSql.c_str(), -1, &checkStmt, nullptr) == SQLITE_OK) {
+  if (sqlite3_prepare_v2(db, checkSql.c_str(), -1, &checkStmt, nullptr) ==
+      SQLITE_OK) {
     sqlite3_bind_int(checkStmt, 1, modelId);
     sqlite3_bind_text(checkStmt, 2, key.c_str(), -1, SQLITE_STATIC);
-    if (sqlite3_step(checkStmt) == SQLITE_ROW && sqlite3_column_int(checkStmt, 0) > 0) {
+    if (sqlite3_step(checkStmt) == SQLITE_ROW &&
+        sqlite3_column_int(checkStmt, 0) > 0) {
       sqlite3_finalize(checkStmt);
-      return false; // Property already exists
+      return false;  // Property already exists
     }
     sqlite3_finalize(checkStmt);
   } else {
@@ -303,7 +334,9 @@ bool Model::insertProperty(int modelId, const std::string& key, const std::strin
   }
 
   // Insert the new property
-  std::string sql = "INSERT INTO model_properties (model_id, property_key, property_value) VALUES (?, ?, ?);";
+  std::string sql =
+      "INSERT INTO model_properties (model_id, property_key, property_value) "
+      "VALUES (?, ?, ?);";
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_int(stmt, 1, modelId);
@@ -311,7 +344,8 @@ bool Model::insertProperty(int modelId, const std::string& key, const std::strin
     sqlite3_bind_text(stmt, 3, value.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-      std::cerr << "Failed to insert property: " << sqlite3_errmsg(db) << std::endl;
+      std::cerr << "Failed to insert property: " << sqlite3_errmsg(db)
+                << std::endl;
       sqlite3_finalize(stmt);
       return false;
     }
@@ -323,8 +357,11 @@ bool Model::insertProperty(int modelId, const std::string& key, const std::strin
   }
 }
 
-bool Model::insertProperties(int modelId, const std::map<std::string, std::string>& properties) {
-  std::string sql = "INSERT INTO model_properties (model_id, property_key, property_value) VALUES (?, ?, ?);";
+bool Model::insertProperties(
+    int modelId, const std::map<std::string, std::string>& properties) {
+  std::string sql =
+      "INSERT INTO model_properties (model_id, property_key, property_value) "
+      "VALUES (?, ?, ?);";
   sqlite3_stmt* stmt;
 
   for (const auto& [key, value] : properties) {
@@ -334,7 +371,8 @@ bool Model::insertProperties(int modelId, const std::map<std::string, std::strin
       sqlite3_bind_text(stmt, 3, value.c_str(), -1, SQLITE_STATIC);
 
       if (sqlite3_step(stmt) != SQLITE_DONE) {
-        std::cerr << "Failed to insert property: " << sqlite3_errmsg(db) << std::endl;
+        std::cerr << "Failed to insert property: " << sqlite3_errmsg(db)
+                  << std::endl;
         sqlite3_finalize(stmt);
         return false;
       }
@@ -348,7 +386,9 @@ bool Model::insertProperties(int modelId, const std::map<std::string, std::strin
 }
 
 std::string Model::getProperty(int modelId, const std::string& key) {
-  std::string sql = "SELECT property_value FROM model_properties WHERE model_id = ? AND property_key = ?;";
+  std::string sql =
+      "SELECT property_value FROM model_properties WHERE model_id = ? AND "
+      "property_key = ?;";
   sqlite3_stmt* stmt;
   std::string value;
 
@@ -361,33 +401,42 @@ std::string Model::getProperty(int modelId, const std::string& key) {
     }
     sqlite3_finalize(stmt);
   } else {
-    std::cerr << "Failed to fetch property: " << sqlite3_errmsg(db) << std::endl;
+    std::cerr << "Failed to fetch property: " << sqlite3_errmsg(db)
+              << std::endl;
   }
 
   return value;
 }
 
 std::map<std::string, std::string> Model::getProperties(int modelId) {
-    std::map<std::string, std::string> properties;
-    std::string sql = "SELECT property_key, property_value FROM model_properties WHERE model_id = ?;";
-    sqlite3_stmt* stmt;
+  std::map<std::string, std::string> properties;
+  std::string sql =
+      "SELECT property_key, property_value FROM model_properties WHERE "
+      "model_id = ?;";
+  sqlite3_stmt* stmt;
 
-    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, modelId);
-        while (sqlite3_step(stmt) == SQLITE_ROW) {
-            std::string key = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-            std::string value = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-            properties[key] = value;
-        }
-        sqlite3_finalize(stmt);
-    } else {
-        std::cerr << "Failed to fetch properties for model: " << sqlite3_errmsg(db) << std::endl;
+  if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+    sqlite3_bind_int(stmt, 1, modelId);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+      std::string key =
+          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+      std::string value =
+          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+      properties[key] = value;
     }
-    return properties;
+    sqlite3_finalize(stmt);
+  } else {
+    std::cerr << "Failed to fetch properties for model: " << sqlite3_errmsg(db)
+              << std::endl;
+  }
+  return properties;
 }
 
-bool Model::updateProperty(int modelId, const std::string& key, const std::string& value) {
-  std::string sql = "UPDATE model_properties SET property_value = ? WHERE model_id = ? AND property_key = ?;";
+bool Model::updateProperty(int modelId, const std::string& key,
+                           const std::string& value) {
+  std::string sql =
+      "UPDATE model_properties SET property_value = ? WHERE model_id = ? AND "
+      "property_key = ?;";
   sqlite3_stmt* stmt;
 
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
@@ -396,7 +445,8 @@ bool Model::updateProperty(int modelId, const std::string& key, const std::strin
     sqlite3_bind_text(stmt, 3, key.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-      std::cerr << "Failed to update property: " << sqlite3_errmsg(db) << std::endl;
+      std::cerr << "Failed to update property: " << sqlite3_errmsg(db)
+                << std::endl;
       sqlite3_finalize(stmt);
       return false;
     }
@@ -409,7 +459,8 @@ bool Model::updateProperty(int modelId, const std::string& key, const std::strin
 }
 
 bool Model::deleteProperty(int modelId, const std::string& key) {
-  std::string sql = "DELETE FROM model_properties WHERE model_id = ? AND property_key = ?;";
+  std::string sql =
+      "DELETE FROM model_properties WHERE model_id = ? AND property_key = ?;";
   sqlite3_stmt* stmt;
 
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
@@ -417,7 +468,8 @@ bool Model::deleteProperty(int modelId, const std::string& key) {
     sqlite3_bind_text(stmt, 2, key.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-      std::cerr << "Failed to delete property: " << sqlite3_errmsg(db) << std::endl;
+      std::cerr << "Failed to delete property: " << sqlite3_errmsg(db)
+                << std::endl;
       sqlite3_finalize(stmt);
       return false;
     }
@@ -430,7 +482,8 @@ bool Model::deleteProperty(int modelId, const std::string& key) {
 }
 
 bool Model::hasProperties(int modelId) {
-  std::string sql = "SELECT 1 FROM model_properties WHERE model_id = ? LIMIT 1;";
+  std::string sql =
+      "SELECT 1 FROM model_properties WHERE model_id = ? LIMIT 1;";
   sqlite3_stmt* stmt;
   bool hasProperties = false;
 
@@ -442,7 +495,8 @@ bool Model::hasProperties(int modelId) {
     }
     sqlite3_finalize(stmt);
   } else {
-    std::cerr << "Failed to check properties: " << sqlite3_errmsg(db) << std::endl;
+    std::cerr << "Failed to check properties: " << sqlite3_errmsg(db)
+              << std::endl;
   }
 
   return hasProperties;
@@ -493,7 +547,7 @@ int Model::hashModel(const std::string& modelDir) {
   }
 
   std::stringstream buffer;
-  buffer << file.rdbuf(); 
+  buffer << file.rdbuf();
   std::string fileContents = buffer.str();
 
   std::hash<std::string> hasher;

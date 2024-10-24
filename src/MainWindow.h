@@ -1,43 +1,40 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QMainWindow>
+#include <QObject>
 #include <map>
 #include <string>
 #include <vector>
 
-#include <QMainWindow>
-#include <QObject>
-
+#include "./Library.h"
 #include "./ui_mainwindow.h"
 
-#include "./Library.h"
-
-
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
   Q_OBJECT
 
-public:
+ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
 
   void addLibrary(const char* label = nullptr, const char* path = nullptr);
   void openLibrary();
 
-public slots:
+ public slots:
   void updateStatusLabel(const char* status);
   void on_addLibraryButton_clicked();
 
-private slots:
+ private slots:
   void on_homeLibraryButton_clicked();
 
-protected:
+ protected:
   size_t saveState();
   size_t loadState();
 
-  void addLibraryButton(const char* label = nullptr, const char* path = nullptr);
+  void addLibraryButton(const char* label = nullptr,
+                        const char* path = nullptr);
 
-private:
+ private:
   Ui::MainWindow ui;
   std::vector<Library*> libraries;
 };

@@ -1,21 +1,19 @@
 
 #include "./MainWindow.h"
 
-#include <iostream>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSettings>
-#include <QMessageBox>
+#include <QThreadPool>
+#include <QtConcurrent/QtConcurrentRun>
+#include <iostream>
 
 #include "LibraryWindow.h"
 
-#include <QtConcurrent/QtConcurrentRun>
-#include <QThreadPool>
+// LibraryWindow* libraryWindow;
 
-//LibraryWindow* libraryWindow;
-
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
-{
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
   this->setFixedSize(QSize(876, 600));
   ui.setupUi(this);
 
@@ -33,49 +31,44 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
   size_t loaded = loadState();
   if (loaded) {
-    std::cout << "Loaded " << loaded << " previously registered libraries" << std::endl;
+    std::cout << "Loaded " << loaded << " previously registered libraries"
+              << std::endl;
   }
 
   QString home = QDir::homePath();
   addLibrary("Local Home", home.toStdString().c_str());
-  std::cout << "Loaded local home [" << home.toStdString().c_str() <<"] library" << std::endl;
+  std::cout << "Loaded local home [" << home.toStdString().c_str()
+            << "] library" << std::endl;
 
   /* connect the default home dir button */
-  connect(ui.homeLibraryButton, &QPushButton::released, this, &MainWindow::openLibrary);
+  connect(ui.homeLibraryButton, &QPushButton::released, this,
+          &MainWindow::openLibrary);
 }
 
+MainWindow::~MainWindow() {}
 
-MainWindow::~MainWindow()
-{
-}
-
-
-void
-MainWindow::addLibrary(const char* label, const char* path)
-{
+void MainWindow::addLibrary(const char* label, const char* path) {
   std::cout << "Adding library [" << label << "] => " << path << std::endl;
 
-  Library *newlib = new Library(label, path);
+  Library* newlib = new Library(label, path);
   libraries.push_back(newlib);
   size_t files = newlib->indexFiles();
 
-  QString libCount = QString("Scanned ") + QString::number(files) + QString(" file(s) in ") + label;
+  QString libCount = QString("Scanned ") + QString::number(files) +
+                     QString(" file(s) in ") + label;
   this->updateStatusLabel(libCount.toStdString().c_str());
 }
 
-
-void
-MainWindow::openLibrary()
-{
+void MainWindow::openLibrary() {
   QPushButton* button = qobject_cast<QPushButton*>(sender());
-  if (!button)
-    return;
+  if (!button) return;
 
   QString lookupKey = button->text();
   Library* foundLibrary = nullptr;
 
   for (Library* lib : libraries) {
-    // std::cout << "Looking for " << lib->name() << " == " << lookupKey.toStdString() << std::endl;
+    // std::cout << "Looking for " << lib->name() << " == " <<
+    // lookupKey.toStdString() << std::endl;
 
     if (lib->name() == lookupKey) {
       foundLibrary = lib;
@@ -92,14 +85,12 @@ MainWindow::openLibrary()
 
     libraryWindow->show();
   } else {
-    QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);
+    QMessageBox::warning(this, "Library Not Found",
+                         "Could not find the library for " + lookupKey);
   }
 }
 
-
-void
-MainWindow::addLibraryButton(const char* label, const char* /*path*/)
-{
+void MainWindow::addLibraryButton(const char* label, const char* /*path*/) {
   /* when we have more than this many buttons, we go smaller */
   const size_t LAYOUT_SHIFT = 20;
   const size_t COLUMNS = 5;
@@ -116,12 +107,11 @@ MainWindow::addLibraryButton(const char* label, const char* /*path*/)
     }
 
     QPushButton* button = qobject_cast<QPushButton*>(item->widget());
-    if (button)
-      buttons++;
+    if (button) buttons++;
   }
 
   /* start making a new button */
-  QPushButton *newButton = new QPushButton(label, this);
+  QPushButton* newButton = new QPushButton(label, this);
   if (buttons >= LAYOUT_SHIFT) {
     newButton->setFixedSize(SMALLER_SIZE);
   } else {
@@ -138,7 +128,7 @@ MainWindow::addLibraryButton(const char* label, const char* /*path*/)
     ui.gridLayout->addWidget(newButton, buttons / COLUMNS, buttons % COLUMNS);
   } else {
     size_t rows = ui.gridLayout->rowCount();
-    ui.gridLayout->addWidget(newButton, rows-1, buttons % COLUMNS);
+    ui.gridLayout->addWidget(newButton, rows - 1, buttons % COLUMNS);
   }
 
   /* once we have a lot of buttons, make them all smaller */
@@ -163,27 +153,27 @@ MainWindow::addLibraryButton(const char* label, const char* /*path*/)
   }
 }
 
-
-void
-MainWindow::updateStatusLabel(const char* status)
-{
+void MainWindow::updateStatusLabel(const char* status) {
   ui.indexingStatus->setText(status);
 }
 
-
-void
-MainWindow::on_addLibraryButton_clicked()
-{
-  QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select Folder"), ".");
-  //libraries.clear();
+void MainWindow::on_addLibraryButton_clicked() {
+  QString folderPath =
+      QFileDialog::getExistingDirectory(this, tr("Select Folder"), ".");
+  // libraries.clear();
   if (!folderPath.isEmpty()) {
     // Create a new button for the selected folder
-    QString name = QString(folderPath.toStdString().substr(folderPath.toStdString().find_last_of("/\\") + 1).c_str());
+    QString name =
+        QString(folderPath.toStdString()
+                    .substr(folderPath.toStdString().find_last_of("/\\") + 1)
+                    .c_str());
 
     // When we click +, add path to our libraries and add a button for it
-    Library *newLibrary = new Library(name.toStdString().c_str(), folderPath.toStdString().c_str());
+    Library* newLibrary = new Library(name.toStdString().c_str(),
+                                      folderPath.toStdString().c_str());
     libraries.push_back(newLibrary);
-    addLibraryButton(name.toStdString().c_str(), folderPath.toStdString().c_str());
+    addLibraryButton(name.toStdString().c_str(),
+                     folderPath.toStdString().c_str());
 
     // Save the state of the application
     saveState();
@@ -196,16 +186,12 @@ MainWindow::on_addLibraryButton_clicked()
   }
 }
 
-
-size_t
-MainWindow::saveState()
-{
+size_t MainWindow::saveState() {
   QSettings settings;
   settings.beginWriteArray("libraries");
   size_t index = 0;
-  for(auto lib : libraries) {
-    if (QString(lib->name()) == QString("Local Home"))
-      continue;
+  for (auto lib : libraries) {
+    if (QString(lib->name()) == QString("Local Home")) continue;
     settings.setArrayIndex(index++);
     settings.setValue("name", lib->name());
     settings.setValue("path", lib->path());
@@ -215,9 +201,7 @@ MainWindow::saveState()
   return index;
 }
 
-
-size_t
-MainWindow::loadState() {
+size_t MainWindow::loadState() {
   QSettings settings;
   size_t size = settings.beginReadArray("libraries");
   for (size_t i = 0; i < size; ++i) {
@@ -232,8 +216,7 @@ MainWindow::loadState() {
   return size;
 }
 
-void MainWindow::on_homeLibraryButton_clicked()
-{
-    //hide();
-    //libraryWindow->show();
+void MainWindow::on_homeLibraryButton_clicked() {
+  // hide();
+  // libraryWindow->show();
 }

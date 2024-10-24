@@ -3,15 +3,13 @@
 
 #include <QApplication>
 #include <QMainWindow>
-#include <QSplashScreen>
 #include <QObject>
+#include <QSplashScreen>
 
-
-class CADventory : public QApplication
-{
+class CADventory : public QApplication {
   Q_OBJECT
 
-public:
+ public:
   CADventory(int &argc, char *argv[]);
   ~CADventory();
 
@@ -19,13 +17,13 @@ public:
 
   void indexDirectory(const char *path);
 
-signals:
+ signals:
   void indexingComplete(const char *summary);
 
-private:
+ private:
   void initMainWindow();
 
-public:
+ public:
   QMainWindow *window;
   QWidget *splash;
   bool loaded;
