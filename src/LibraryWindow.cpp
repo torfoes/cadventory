@@ -382,7 +382,7 @@ void LibraryWindow::loadTags() {
 // }
 
 void LibraryWindow::on_pushButton_clicked() {
-  report = this->library->getModels();
+  report = this->library->models;
   for (auto& modelData : report) {
     modelData.path = library->fullPath + "/" + modelData.path;
   }
@@ -404,7 +404,7 @@ void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem* item) {
     std::cout << name + " is unselected from report" << std::endl;
 
   } else {
-    auto allModels = library->getModels();
+    auto allModels = library->models;
     auto modelIt = std::find_if(
         allModels.begin(), allModels.end(),
         [&name](const ModelData& md) { return md.short_name == name; });

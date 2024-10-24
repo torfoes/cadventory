@@ -115,7 +115,6 @@ std::vector<ModelData> Library::getModels() {
 }
 
 std::vector<ModelData> Library::getModelsView() {
-  std::vector<ModelData> models = getModels();
   std::vector<ModelData> filteredModels;
 
   for (const ModelData& modelData : models) {
@@ -275,7 +274,7 @@ std::vector<std::string> Library::getTags() {
   std::unordered_map<std::string, int> tagCount;
   std::vector<std::string> allTags;
 
-  for (const auto& modelData : getModels()) {
+  for (const auto& modelData : models) {
     std::vector<std::string> tags = model->getTagsForModel(modelData.id);
 
     for (const auto& tag : tags) {
