@@ -10,9 +10,12 @@
 struct ModelData {
   int id;
   std::string short_name;
-  std::string primary_file;
+  std::string path;
+  std::string primary_file_path;
   std::string override_info;
+
   std::map<std::string, std::string> properties;
+  std::vector<std::string> tags;
 };
 
 class Model {
@@ -23,17 +26,16 @@ class Model {
   bool createTable();
 
   // model CRUD interface
-  bool insertModel(int id, const std::string& shortName,
-                   const std::string& file = "",
-                   const std::string& overrides = "");  // Create
   bool insertModel(const std::string& filePath, const std::string& shortName,
-                   const std::string& primaryFile,
-                   const std::string& overrides);
+                   const std::string& path = "", const std::string& primaryFile = "",
+                   const std::string& overrides = "");
+  bool insertModel(int id, const std::string& shortName,
+                   const std::string& path = "", const std::string& primaryFile = "",
+                   const std::string& overrides = ""); 
   std::vector<ModelData> getModels();
   ModelData getModelById(int id);
-  bool updateModel(int id, const std::string& shortName,
-                   const std::string& file = "",
-                   const std::string& overrides = "");  // Update
+  bool updateModel(int id, const std::string& shortName, const std::string& path,
+                   const std::string& primaryFile, const std::string& overrides);
   bool deleteModel(int id);
 
   // tag CRUD + association interface

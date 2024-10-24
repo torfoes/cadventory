@@ -380,15 +380,6 @@ void LibraryWindow::loadTags() {
   tagsModel->setStringList(tags);
 }
 
-void displayModel(const ModelData& model) {
-  std::cout << ">>>Model: " << model.short_name << std::endl;
-  std::cout << "Primary file: " << model.primary_file << std::endl;
-  std::cout << "Override info: " << model.override_info << std::endl;
-  std::cout << "Properties: " << std::endl;
-  for (const auto& [key, value] : model.properties) {
-    std::cout << "  " << key << ": " << value << std::endl;
-  }
-}
 
 // void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
 // {

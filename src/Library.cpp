@@ -16,24 +16,6 @@ Library::Library(const char* _label, const char* _path)
       model(new Model("metadata.db")) {}
 
 void Library::createDatabase(QWidget* parent) {
-  // for (const std::string& filePath : getModels()) {
-  //   model->insertModel(fullPath+"/"+filePath, filePath, "primary_file",
-  //   "overrides");
-
-  //   // Split the file name into two halves and use them as tags
-  //   std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-  //   size_t mid = fileName.size() / 2;
-  //   int modelId = model->hashModel(fullPath + "/" + filePath);
-
-  //   model->addTagToModel(modelId, fileName.substr(0, mid));
-  //   model->addTagToModel(modelId, fileName.substr(mid));
-
-  //   std::string author = model->getProperty(modelId, "author");
-
-  //   model->insertProperty(modelId, "file_path", fullPath + "/" + filePath);
-  //   model->insertProperty(modelId, "library_name", shortName);
-  //   model->insertProperty(modelId, "author", fullPath+"/author/"+"kotda");
-  // }
 
   ProcessGFiles gFileProcessor;
   std::vector<std::string> allModels = getModels();
@@ -41,11 +23,9 @@ void Library::createDatabase(QWidget* parent) {
   int totalFiles = allModels.size();
   // gFileProcessor.executeMultiThreadedProcessing(getModels(), 4);
 
-  // Create and show the progress window
   ProgressWindow* progressWindow = new ProgressWindow(totalFiles, parent);
   progressWindow->show();
 
-  // Track the number of processed files
   int processedFiles = 0;
 
   for (const std::string& filePath : allModels) {
@@ -57,7 +37,6 @@ void Library::createDatabase(QWidget* parent) {
       model->insertProperties(
           modelId, gFileProcessor.processGFile(fullPath + "/" + filePath));
 
-      // Split the file name into two halves and use them as tags
       std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
       size_t mid = fileName.size() / 2;
       int modelId = model->hashModel(fullPath + "/" + filePath);
@@ -71,7 +50,6 @@ void Library::createDatabase(QWidget* parent) {
       model->insertProperty(modelId, "library_name", shortName);
       model->insertProperty(modelId, "author", fullPath + "/author/" + "kotda");
 
-      // Update the progress
       processedFiles++;
       progressWindow->updateProgress();
     }

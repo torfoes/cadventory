@@ -1,4 +1,3 @@
-
 #include "Model.h"
 
 #include <filesystem>
@@ -10,7 +9,7 @@ Model::Model(const std::string& path) : db(nullptr), dbPath(path) {
   if (sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
     std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
   } else {
-    // init on instantiation
+    // Initialize tables upon instantiation
     std::cout << "Opened database successfully" << std::endl;
     createTable();
   }
@@ -27,7 +26,8 @@ bool Model::createTable() {
         CREATE TABLE IF NOT EXISTS models (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             short_name TEXT NOT NULL,
-            primary_file TEXT,
+            path TEXT NOT NULL,
+            primary_file_path TEXT,
             override_info TEXT
         );
     )";
@@ -54,7 +54,6 @@ bool Model::createTable() {
             PRIMARY KEY (model_id, property_key),
             FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE
         );
-
     )";
 
   return executeSQL(sqlModels) && executeSQL(sqlTags) &&
@@ -62,49 +61,46 @@ bool Model::createTable() {
 }
 
 bool Model::insertModel(const std::string& filePath,
-                        const std::string& shortName,
+                        const std::string& shortName, const std::string& path,
                         const std::string& primaryFile,
                         const std::string& overrides) {
   int id = hashModel(filePath);
-  return insertModel(id, shortName, primaryFile, overrides);
+  return insertModel(id, shortName, path, primaryFile, overrides);
 }
 
 bool Model::insertModel(int id, const std::string& shortName,
-                        const std::string& primaryFile,
+                        const std::string& path, const std::string& primaryFile,
                         const std::string& overrides) {
   std::string sql =
-      "INSERT INTO models (id, short_name, primary_file, override_info) VALUES "
-      "(?, ?, ?, ?);";
-  // std::cout << "Inserting model: " << id << " " << shortName << " " <<
-  // primaryFile << " " << overrides;
+      "INSERT INTO models (id, short_name, path, primary_file_path, "
+      "override_info) "
+      "VALUES (?, ?, ?, ?, ?);";
 
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_int(stmt, 1, id);
     sqlite3_bind_text(stmt, 2, shortName.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, primaryFile.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 4, overrides.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, path.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, primaryFile.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, overrides.c_str(), -1, SQLITE_STATIC);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-      // std::cerr << " Insert model failed: " << sqlite3_errmsg(db) <<
-      // std::endl;
       sqlite3_finalize(stmt);
       return false;
     }
     sqlite3_finalize(stmt);
-    // std::cout << " Model inserted" << std::endl;
     return true;
   } else {
-    std::cout << " SQL error: " << sqlite3_errmsg(db) << std::endl;
+    std::cout << "SQL error: " << sqlite3_errmsg(db) << std::endl;
+    return false;
   }
-
-  return false;
 }
 
 std::vector<ModelData> Model::getModels() {
   std::vector<ModelData> models;
   std::string sql =
-      "SELECT id, short_name, primary_file, override_info FROM models;";
+      "SELECT id, short_name, path, primary_file_path, override_info FROM "
+      "models;";
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -112,7 +108,8 @@ std::vector<ModelData> Model::getModels() {
           {sqlite3_column_int(stmt, 0),
            reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
            reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
-           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))});
+           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)),
+           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4))});
     }
     sqlite3_finalize(stmt);
   } else {
@@ -123,10 +120,10 @@ std::vector<ModelData> Model::getModels() {
 
 ModelData Model::getModelById(int id) {
   std::string sql =
-      "SELECT id, short_name, primary_file, override_info FROM models WHERE id "
-      "= ?;";
+      "SELECT id, short_name, path, primary_file_path, override_info FROM "
+      "models WHERE id = ?;";
   sqlite3_stmt* stmt;
-  ModelData model = {0, "", "", ""};
+  ModelData model = {0, "", "", "", ""};
 
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_int(stmt, 1, id);
@@ -134,7 +131,8 @@ ModelData Model::getModelById(int id) {
       model = {sqlite3_column_int(stmt, 0),
                reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
                reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
-               reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))};
+               reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)),
+               reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4))};
     }
     sqlite3_finalize(stmt);
   } else {
@@ -145,17 +143,19 @@ ModelData Model::getModelById(int id) {
 }
 
 bool Model::updateModel(int id, const std::string& shortName,
-                        const std::string& primaryFile,
+                        const std::string& path, const std::string& primaryFile,
                         const std::string& overrides) {
   std::string sql =
-      "UPDATE models SET short_name = ?, primary_file = ?, override_info = ? "
+      "UPDATE models SET short_name = ?, path = ?, primary_file_path = ?, "
+      "override_info = ? "
       "WHERE id = ?;";
   sqlite3_stmt* stmt;
   if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
     sqlite3_bind_text(stmt, 1, shortName.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, primaryFile.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, overrides.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 4, id);
+    sqlite3_bind_text(stmt, 2, path.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, primaryFile.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, overrides.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 5, id);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
       std::cerr << "Update model failed: " << sqlite3_errmsg(db) << std::endl;
@@ -237,20 +237,17 @@ std::vector<std::string> Model::getTagsForModel(int modelId) {
   std::string sql =
       "SELECT name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE "
       "mt.model_id = ?;";
-  sqlite3_stmt* stmt = nullptr;  // Ensure stmt is initialized to nullptr
+  sqlite3_stmt* stmt = nullptr;
   int rc;
 
   rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
   if (rc == SQLITE_OK) {
-    // Bind the modelId to the first parameter (?)
     sqlite3_bind_int(stmt, 1, modelId);
 
-    // Fetch rows from the query result
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
       const char* tagText =
           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
 
-      // Ensure tagText is not NULL
       if (tagText) {
         tags.push_back(tagText);
       } else {
@@ -263,10 +260,8 @@ std::vector<std::string> Model::getTagsForModel(int modelId) {
                 << std::endl;
     }
 
-    // Finalize the statement to free up memory
     sqlite3_finalize(stmt);
   } else {
-    // Log the SQLite error message if prepare fails
     std::cerr << "Failed to retrieve tags: " << sqlite3_errmsg(db) << std::endl;
   }
 
@@ -491,7 +486,7 @@ bool Model::hasProperties(int modelId) {
     sqlite3_bind_int(stmt, 1, modelId);
 
     if (sqlite3_step(stmt) == SQLITE_ROW) {
-      hasProperties = true;  // Return true as soon as the first row is found
+      hasProperties = true;
     }
     sqlite3_finalize(stmt);
   } else {
@@ -506,7 +501,8 @@ void Model::printModel(int modelId) {
   ModelData model = getModelById(modelId);
   std::cout << "Model ID: " << model.id << std::endl;
   std::cout << "Short Name: " << model.short_name << std::endl;
-  std::cout << "Primary File: " << model.primary_file << std::endl;
+  std::cout << "Path: " << model.path << std::endl;
+  std::cout << "Primary File: " << model.primary_file_path << std::endl;
   std::cout << "Override Info: " << model.override_info << std::endl;
 
   std::map<std::string, std::string> properties = getProperties(modelId);
@@ -534,14 +530,8 @@ bool Model::executeSQL(const std::string& sql) {
 }
 
 int Model::hashModel(const std::string& modelDir) {
-  // std::cout << "--Trying to open file: " << modelDir << std::endl;
-  // if (!std::filesystem::exists(modelDir)) {
-  //   std::cerr << "File does not exist: " << modelDir << std::endl;
-  //   return 0;
-  // }
   std::ifstream file(modelDir);
   if (!file.is_open()) {
-    // throw std::runtime_error("Could not open file");
     std::cerr << "Could not open file: " << modelDir << std::endl;
     return 0;
   }

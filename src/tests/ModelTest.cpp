@@ -48,13 +48,13 @@ TEST_CASE("ModelOperations", "[Model]") {
     REQUIRE(modelId != -1);
 
     bool updateResult = model.updateModel(
-        modelId, "updatedModel", "new/path/to/cad/file", "{\"updated\":true}");
+        modelId, "updatedModel", "new/path/to/cad/file", "new/path/to/cad/file", "{\"updated\":true}");
     REQUIRE(updateResult == true);
 
     auto models = model.getModels();
     REQUIRE(models.size() == 1);
     REQUIRE(models.front().short_name == "updatedModel");
-    REQUIRE(models.front().primary_file == "new/path/to/cad/file");
+    REQUIRE(models.front().primary_file_path == "new/path/to/cad/file");
     REQUIRE(models.front().override_info == "{\"updated\":true}");
   }
 
