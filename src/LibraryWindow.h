@@ -35,9 +35,6 @@ class LibraryWindow : public QWidget {
   void onModelSelectionChanged(QListWidgetItem *current,
                                QListWidgetItem *previous);
   void generateReport();
-  void on_addTextInput_clicked();
-  // private slots:
-  // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
 
  private slots:
   void on_pushButton_clicked();
@@ -62,7 +59,6 @@ class LibraryWindow : public QWidget {
 
   std::vector<std::string> report;
 
-  // void AddItem(const QString& qstrFileName, const QString& qstrPic);
 };
 
 #endif /* LIBRARYWINDOW_H */

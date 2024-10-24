@@ -84,19 +84,6 @@
      <string>Select All</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="addTextInput">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>80</y>
-      <width>261</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add new Text thing</string>
-    </property>
-   </widget>
   </widget>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
