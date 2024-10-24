@@ -1,14 +1,12 @@
-// IndexingWorker.cpp
-
 #include "IndexingWorker.h"
 #include "ProcessGFiles.h"
 #include "Model.h"
-
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-IndexingWorker::IndexingWorker(Library* library) : library(library) {}
+IndexingWorker::IndexingWorker(Library* library, QObject* parent)
+    : QObject(parent), library(library) {}
 
 void IndexingWorker::process() {
     ProcessGFiles processor(library->model);
@@ -17,8 +15,13 @@ void IndexingWorker::process() {
         std::string fullFilePath = library->fullPath + "/" + filePath;
         int modelId = library->model->hashModel(fullFilePath);
 
-        if (!library->model->modelExists(modelId)) {
-            // Create a ModelData object
+        if (library->model->modelExists(modelId)) {
+            ModelData existingModel = library->model->getModelById(modelId);
+            if (!existingModel.thumbnail.empty()) {
+                continue;
+            }
+        } else {
+            // Model does not exist, create a new ModelData
             ModelData modelData;
             modelData.id = modelId;
             modelData.short_name = fs::path(filePath).stem().string();

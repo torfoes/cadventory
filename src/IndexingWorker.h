@@ -7,12 +7,15 @@
 class IndexingWorker : public QObject {
     Q_OBJECT
 public:
-    explicit IndexingWorker(Library* library);
+    explicit IndexingWorker(Library* library, QObject* parent = nullptr);
+
 public slots:
     void process();
+
 signals:
     void modelProcessed(int modelId);
     void finished();
+
 private:
     Library* library;
 };

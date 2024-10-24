@@ -1,14 +1,13 @@
-// Model.h
-
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <QAbstractListModel>
 #include <vector>
 #include <string>
 #include <mutex>
 #include <sqlite3.h>
 
-// structure to hold model data
+// ModelData structure
 struct ModelData {
     int id;
     std::string short_name;
@@ -19,29 +18,71 @@ struct ModelData {
     std::string author;
     std::string file_path;
     std::string library_name;
+    bool isSelected;
 };
 
-class Model {
+// Declare ModelData as a Qt metatype
+Q_DECLARE_METATYPE(ModelData)
+
+// New ObjectData structure
+struct ObjectData {
+    int object_id;
+    int model_id;
+    std::string name;
+    int parent_object_id; // -1 if top-level
+};
+
+class Model : public QAbstractListModel {
+    Q_OBJECT
+
 public:
-    Model(const std::string& libraryPath);
+    enum ModelRoles {
+        IdRole = Qt::UserRole + 1,
+        ShortNameRole,
+        PrimaryFileRole,
+        OverrideInfoRole,
+        TitleRole,
+        ThumbnailRole,
+        AuthorRole,
+        FilePathRole,
+        LibraryNameRole,
+        IsSelectedRole
+    };
+
+    explicit Model(const std::string& libraryPath, QObject* parent = nullptr);
     ~Model();
 
-    // Model CRUD operations
+    // override QAbstractListModel methods
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
+
+    // added methods for data modification and item flags
+    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
+
+    // CRUD operations for models
     bool insertModel(int id, const ModelData& modelData);
     bool updateModel(int id, const ModelData& modelData);
     bool deleteModel(int id);
     bool modelExists(int id);
 
     // Getters
-    std::vector<ModelData> getModels();
     ModelData getModelById(int id);
 
     // Utility methods
     int hashModel(const std::string& modelDir);
-    void printModel(int modelId);
-
-    // get the path to the hidden directory
     std::string getHiddenDirectoryPath() const;
+
+    // Update the model list from the database
+    void loadModelsFromDatabase();
+
+    // Methods for objects
+    int insertObject(const ObjectData& obj);
+    bool deleteObjectsForModel(int modelId);
+    std::vector<ObjectData> getObjectsForModel(int modelId);
+    void refreshModelData();
+
 
 private:
     // Database related
@@ -53,6 +94,9 @@ private:
 
     // Hidden directory path
     std::string hiddenDirPath;
+
+    // List of models
+    std::vector<ModelData> models;
 };
 
 #endif // MODEL_H

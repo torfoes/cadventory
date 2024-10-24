@@ -3,18 +3,19 @@
 #include "LibraryWindow.h"
 #include "IndexingWorker.h"
 #include "ProcessGFiles.h"
-#include "Model.h"
-#include "config.h"
+#include "MainWindow.h"
+// #include "AdvancedOptionsDialog.h"
 
-#include <QListWidgetItem>
-#include <QFileDialog>
-#include <QPdfWriter>
-#include <QPainter>
-#include <QPixmap>
-#include <QStyledItemDelegate>
 #include <QThread>
-#include <QMetaObject>
 #include <QMessageBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QListView>
+#include <QPushButton>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QLabel>
+
 
 #include <iostream>
 #include <string>
@@ -23,169 +24,209 @@
 
 namespace fs = std::filesystem;
 
-LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
-{
-    this->setFixedSize(QSize(876, 600));
+LibraryWindow::LibraryWindow(QWidget* parent)
+    : QWidget(parent),
+    library(nullptr),
+    mainWindow(nullptr),
+    model(nullptr),
+    availableModelsProxyModel(new ModelFilterProxyModel(this)),
+    selectedModelsProxyModel(new ModelFilterProxyModel(this)),
+    indexingThread(nullptr),
+    indexingWorker(nullptr),
+
+    modelCardDelegate(new ModelCardDelegate(this)) {
     ui.setupUi(this);
 
-    // Connect signals and slots
-    connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
-    connect(ui.generateReport, &QPushButton::pressed, this, &LibraryWindow::generateReport);
-    connect(ui.allLibraries, &QPushButton::clicked, this, &LibraryWindow::on_allLibraries_clicked);
-    connect(ui.listWidgetPage, &QListWidget::itemClicked, this, &LibraryWindow::on_listWidgetPage_itemClicked);
-    // connect(ui.generatePreviewButton, &QPushButton::clicked, this, &LibraryWindow::onGeneratePreviewClicked);
+    // Set up models and views
+    setupModelsAndViews();
+
+    // Set up connections
+    setupConnections();
 }
 
-LibraryWindow::~LibraryWindow()
-{
+LibraryWindow::~LibraryWindow() {
+    // clean up indexing thread
+    if (indexingThread) {
+        indexingThread->quit();
+        indexingThread->wait();
+        delete indexingWorker;
+        delete indexingThread;
+    }
 }
 
-void LibraryWindow::generateReport()
-{
-    // Existing implementation remains unchanged
-}
+void LibraryWindow::loadFromLibrary(Library* _library) {
+    library = _library;
+    setWindowTitle(library->name() + QString(" Library"));
+    ui.currentLibrary->setText(library->name());
 
-void LibraryWindow::loadFromLibrary(Library* _library)
-{
-    this->library = _library;
-    this->setWindowTitle(library->name() + QString(" Library"));
-    this->ui.currentLibrary->setText(library->name());
+    // Load models from the library
+    model = library->model;
 
-    // Start fresh
-    ui.listWidget->clear();
-    ui.listWidgetPage->clear();
+    // Set the source model for proxy models
+    availableModelsProxyModel->setSourceModel(model);
+    selectedModelsProxyModel->setSourceModel(model);
 
-    // Start background indexing
+    // Set initial filters
+    availableModelsProxyModel->setFilterRole(Model::IsSelectedRole);
+    availableModelsProxyModel->setFilterFixedString("0"); // Show unselected models
+
+    selectedModelsProxyModel->setFilterRole(Model::IsSelectedRole);
+    selectedModelsProxyModel->setFilterFixedString("1"); // Show selected models
+
     startIndexing();
-
-    // Set up the previews view
-    setupPreviewsView();
 }
 
-void LibraryWindow::startIndexing()
-{
-    IndexingWorker* worker = new IndexingWorker(library);
-    QThread* thread = new QThread;
+void LibraryWindow::startIndexing() {
+    // Create the indexing worker and thread
+    indexingThread = new QThread(this);
+    indexingWorker = new IndexingWorker(library);
 
-    worker->moveToThread(thread);
+    // Move the worker to the thread
+    indexingWorker->moveToThread(indexingThread);
 
-    connect(thread, &QThread::started, worker, &IndexingWorker::process);
-    connect(worker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
-    connect(worker, &IndexingWorker::finished, this, &LibraryWindow::onIndexingFinished);
-    connect(worker, &IndexingWorker::finished, thread, &QThread::quit);
-    connect(worker, &IndexingWorker::finished, worker, &IndexingWorker::deleteLater);
-    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    // Connect signals and slots
+    connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
+    connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
+    connect(indexingWorker, &IndexingWorker::finished, indexingThread, &QThread::quit);
+    connect(indexingWorker, &IndexingWorker::finished, indexingWorker, &IndexingWorker::deleteLater);
+    connect(indexingThread, &QThread::finished, indexingThread, &QThread::deleteLater);
 
-    thread->start();
+
+    // Start the indexing thread
+    indexingThread->start();
 }
 
-void LibraryWindow::onModelProcessed(int modelId)
-{
-    QMetaObject::invokeMethod(this, [this, modelId]() {
-        // Fetch model data
-        ModelData modelData = library->model->getModelById(modelId);
+void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
+    this->mainWindow = mainWindow;
+}
 
-        // Update the list widget
-        QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(modelData.short_name));
-        ui.listWidget->addItem(item);
+void LibraryWindow::setupModelsAndViews() {
+    // Configure available models view
+    ui.availableModelsView->setModel(availableModelsProxyModel);
+    ui.availableModelsView->setItemDelegate(modelCardDelegate);
+    ui.availableModelsView->setViewMode(QListView::IconMode);
+    ui.availableModelsView->setResizeMode(QListView::Adjust);
+    ui.availableModelsView->setSpacing(15);
+    ui.availableModelsView->setGridSize(QSize(220, 140));
+    ui.availableModelsView->setUniformItemSizes(true);
+    ui.availableModelsView->setSelectionMode(QAbstractItemView::NoSelection);
 
-        // Update previews
-        if (!modelData.thumbnail.empty()) {
-            QPixmap thumbnail;
-            thumbnail.loadFromData(reinterpret_cast<const uchar*>(modelData.thumbnail.data()), static_cast<uint>(modelData.thumbnail.size()), "PNG");
-            QListWidgetItem* previewItem = new QListWidgetItem(QIcon(thumbnail), QString::fromStdString(modelData.short_name));
-            ui.listWidgetPage->addItem(previewItem);
+    // Configure selected models view
+    ui.selectedModelsView->setModel(selectedModelsProxyModel);
+    ui.selectedModelsView->setItemDelegate(modelCardDelegate);
+    ui.selectedModelsView->setViewMode(QListView::IconMode);
+    ui.selectedModelsView->setResizeMode(QListView::Adjust);
+    ui.selectedModelsView->setSpacing(15);
+    ui.selectedModelsView->setGridSize(QSize(220, 140));
+    ui.selectedModelsView->setUniformItemSizes(true);
+    ui.selectedModelsView->setSelectionMode(QAbstractItemView::NoSelection);
+
+    // Populate search field combo box
+    ui.searchFieldComboBox->addItem("Short Name", QVariant(Model::ShortNameRole));
+    ui.searchFieldComboBox->addItem("Title", QVariant(Model::TitleRole));
+    ui.searchFieldComboBox->addItem("Author", QVariant(Model::AuthorRole));
+    // Add other fields as needed
+}
+
+void LibraryWindow::setupConnections() {
+    // Connect search input
+    connect(ui.searchLineEdit, &QLineEdit::textChanged, this, &LibraryWindow::onSearchTextChanged);
+    connect(ui.searchFieldComboBox, &QComboBox::currentTextChanged, this, &LibraryWindow::onSearchFieldChanged);
+
+    // Connect clicks on available models
+    connect(ui.availableModelsView, &QListView::clicked, this, &LibraryWindow::onAvailableModelClicked);
+
+    // Connect clicks on selected models
+    connect(ui.selectedModelsView, &QListView::clicked, this, &LibraryWindow::onSelectedModelClicked);
+
+    // Connect Generate Report button
+    connect(ui.generateReportButton, &QPushButton::clicked, this, &LibraryWindow::onGenerateReportButtonClicked);
+
+    // Connect settings clicked signal from delegate
+    connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
+    connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
+
+}
+
+void LibraryWindow::onSearchTextChanged(const QString& text) {
+    int role = ui.searchFieldComboBox->currentData().toInt();
+    availableModelsProxyModel->setFilterRole(role);
+    availableModelsProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    availableModelsProxyModel->setFilterFixedString(text);
+}
+
+void LibraryWindow::onSearchFieldChanged(const QString& field) {
+    Q_UNUSED(field);
+    // Update filter role based on selected field
+    int role = ui.searchFieldComboBox->currentData().toInt();
+    availableModelsProxyModel->setFilterRole(role);
+    // Re-apply filter
+    availableModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onAvailableModelClicked(const QModelIndex& index) {
+    // Toggle selection state
+    QModelIndex sourceIndex = availableModelsProxyModel->mapToSource(index);
+    bool isSelected = model->data(sourceIndex, Model::IsSelectedRole).toBool();
+    model->setData(sourceIndex, !isSelected, Model::IsSelectedRole);
+
+    // Update filters
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onSelectedModelClicked(const QModelIndex& index) {
+    // Toggle selection state
+    QModelIndex sourceIndex = selectedModelsProxyModel->mapToSource(index);
+    bool isSelected = model->data(sourceIndex, Model::IsSelectedRole).toBool();
+    model->setData(sourceIndex, !isSelected, Model::IsSelectedRole);
+
+    // Update filters
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onGenerateReportButtonClicked() {
+    // Gather selected models
+    QList<ModelData> selectedModels;
+    for (int row = 0; row < model->rowCount(); ++row) {
+        QModelIndex index = model->index(row);
+        if (model->data(index, Model::IsSelectedRole).toBool()) {
+            selectedModels.append(model->data(index, Qt::UserRole).value<ModelData>());
         }
-    }, Qt::QueuedConnection);
+    }
+
+    // Generate report using selectedModels
+    // Implement your report generation logic here
+    QMessageBox::information(this, "Report", QString("Generating report for %1 models.").arg(selectedModels.size()));
 }
 
-void LibraryWindow::onIndexingFinished()
-{
-    QMessageBox::information(this, "Indexing Complete", "All models have been indexed.");
+void LibraryWindow::onSettingsClicked(int modelId) {
+    // // Open settings dialog for the model
+    // ModelData modelData = model->getModelById(modelId);
+    // AdvancedOptionsDialog dialog(modelData, this);
+    // if (dialog.exec() == QDialog::Accepted) {
+    //     model->updateModel(modelId, dialog.getModelData());
+    // }
 }
 
-void LibraryWindow::on_allLibraries_clicked()
-{
+void LibraryWindow::onModelProcessed(int modelId) {
+    model->refreshModelData();
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onBackButtonClicked() {
+    // Hide the LibraryWindow
     this->hide();
-    main->show();
-}
 
-void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* /*previous*/)
-{
-    if (!current)
-        return; // Nothing selected
-
-    QString selectedModel = current->text();
-    std::string modelPath = library->fullPath + "/" + selectedModel.toStdString();
-    int modelId = library->model->hashModel(modelPath);
-
-    ModelData modelData = library->model->getModelById(modelId);
-
-    // Update UI elements to display model details
-    ui.modelTitleLabel->setText("Title: " + QString::fromStdString(modelData.title));
-    ui.modelAuthorLabel->setText("Author: " + QString::fromStdString(modelData.author));
-    ui.modelFilePathLabel->setText("File Path: " + QString::fromStdString(modelData.file_path));
-
-    // Display thumbnail if available
-    if (!modelData.thumbnail.empty()) {
-        QPixmap thumbnail;
-        thumbnail.loadFromData(reinterpret_cast<const uchar*>(modelData.thumbnail.data()), static_cast<uint>(modelData.thumbnail.size()), "PNG");
-        ui.modelThumbnailLabel->setPixmap(thumbnail.scaled(100, 100, Qt::KeepAspectRatio));
-    } else {
-        ui.modelThumbnailLabel->clear();
+    // Show the MainWindow
+    if (mainWindow) {
+        mainWindow->show();
     }
+
+    // Delete the LibraryWindow if it's no longer needed
+    this->deleteLater();
 }
 
-void LibraryWindow::setupPreviewsView()
-{
-    ui.listWidgetPage->setResizeMode(QListView::Adjust);
-    ui.listWidgetPage->setViewMode(QListView::IconMode);
-    ui.listWidgetPage->setWordWrap(true);
-    ui.listWidgetPage->setIconSize(QSize(72, 72));
-    ui.listWidgetPage->setGridSize(QSize(144, 108));
-    ui.listWidgetPage->setUniformItemSizes(true);
-    ui.listWidgetPage->setMovement(QListView::Static);
-    ui.listWidgetPage->setResizeMode(QListView::Adjust);
-    ui.listWidgetPage->setLayoutMode(QListView::Batched);
-    ui.listWidgetPage->setBatchSize(10);
 
-    QStyledItemDelegate* delegate = new QStyledItemDelegate(this);
-    ui.listWidgetPage->setItemDelegate(delegate);
-}
-
-void LibraryWindow::on_pushButton_clicked()
-{
-    report.clear();
-    for (int i = 0; i < ui.listWidgetPage->count(); ++i) {
-        QListWidgetItem* item = ui.listWidgetPage->item(i);
-        if (item->isSelected()) {
-            std::string modelPath = library->fullPath + "/" + item->text().toStdString();
-            report.push_back(modelPath);
-        }
-    }
-}
-
-void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem* item)
-{
-    std::string name = item->text().toStdString();
-    std::string modelPath = library->fullPath + "/" + name;
-
-    auto it = std::find(report.begin(), report.end(), modelPath);
-    if (it != report.end()) {
-        report.erase(it);
-        item->setSelected(false);
-    } else {
-        report.push_back(modelPath);
-        item->setSelected(true);
-    }
-}
-
-void LibraryWindow::onGeneratePreviewClicked()
-{
-    // Existing implementation remains unchanged
-}
-
-void LibraryWindow::setMainWindow(MainWindow* mainWindow)
-{
-    this->main = mainWindow;
-}

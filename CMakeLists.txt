@@ -88,6 +88,10 @@ set(SRCS
   src/Model.h
   src/ProcessGFiles.h
   src/IndexingWorker.h
+  src/ModelCardDelegate.h
+  src/ModelCardDelegate.cpp
+  src/ModelFilterProxyModel.h
+  src/ModelFilterProxyModel.cpp
 )
 set(LIBS
   Qt6::Core
@@ -95,7 +99,9 @@ set(LIBS
   Qt6::Gui
 )
 
-qt_add_executable(cadventory WIN32 ${SRCS})
+qt_add_executable(cadventory WIN32 ${SRCS}
+    src/ModelCardDelegate.h src/ModelCardDelegate.cpp
+    src/ModelFilterProxyModel.h src/ModelFilterProxyModel.cpp)
 
 
 # Note dependencies
