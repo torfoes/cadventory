@@ -100,6 +100,7 @@ bool Model::createTable() {
          executeSQL(sqlModelTags) && executeSQL(sqlModelProperties);
 }
 
+// CRUD Operations for Models
 bool Model::insertModel(const std::string& filePath,
                         const std::string& shortName, const std::string& path,
                         const std::string& primaryFile,

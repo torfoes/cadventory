@@ -17,10 +17,9 @@ Library::Library(const char* _label, const char* _path)
 
 void Library::createDatabase(QWidget* parent) {
   ProcessGFiles gFileProcessor;
-  std::vector<std::string> allModels = getModels();
+  std::vector<std::string> allModels = getModelFilePaths();
   std::map<std::string, std::string> results;
   int totalFiles = allModels.size();
-  // gFileProcessor.executeMultiThreadedProcessing(getModels(), 4);
 
   ProgressWindow* progressWindow = new ProgressWindow(totalFiles, parent);
   progressWindow->show();
@@ -71,10 +70,9 @@ size_t Library::indexFiles() {
   return index->indexed();
 }
 
-std::vector<std::string> Library::getModels() {
-  /* care about files with a .g extension */
+std::vector<std::string> Library::getModelFilePaths() {
   std::vector<std::string> modelSuffixes = {".g"};
-  std::set<std::string> uniqueFiles;  // using set to avoid duplicates
+  std::set<std::string> uniqueFiles;
 
   if (!index) {
     indexFiles();
@@ -82,42 +80,44 @@ std::vector<std::string> Library::getModels() {
 
   auto files = index->findFilesWithSuffixes(modelSuffixes);
   for (const std::string& file : files) {
-    // make path relative to fullPath
     std::string relativePath = file;
     if (file.size() >= fullPath.size() &&
         file.compare(0, fullPath.size(), fullPath) == 0) {
       relativePath = file.substr(fullPath.size());
       if (relativePath.size() > 0 &&
           (relativePath[0] == '/' || relativePath[0] == '\\')) {
-        // remove leading slash
         relativePath = relativePath.substr(1);
       }
     }
-
     uniqueFiles.insert(relativePath);
   }
 
-  std::vector<std::string> filePaths(uniqueFiles.begin(), uniqueFiles.end());
-
-  // for (const std::string& filePath : filePaths) {
-  //   model->insertModel(fullPath+"/"+filePath, filePath, "primary_file",
-  //   "overrides");
-  // }
-
-  return filePaths;
+  return std::vector<std::string>(uniqueFiles.begin(), uniqueFiles.end());
 }
 
-std::vector<std::string> Library::getModelsView() {
-  // Get all models
-  std::vector<std::string> models = getModels();
-  std::vector<std::string> filteredModels;
+std::vector<ModelData> Library::getModels() {
+  std::vector<ModelData> allModels = model->getModels();
+  std::vector<ModelData> libraryModels;
 
-  // Filter models that have all the selected tags
-  for (const std::string& modelPath : models) {
-    size_t modelId = model->hashModel(fullPath + "/" + modelPath);
+  for (const ModelData& modelData : allModels) {
+    int modelId = modelData.id;
+    std::string libraryName = model->getProperty(modelId, "library_name");
+    if (libraryName == shortName) {
+      libraryModels.push_back(modelData);
+    }
+  }
+
+  return libraryModels;
+}
+
+std::vector<ModelData> Library::getModelsView() {
+  std::vector<ModelData> models = getModels();
+  std::vector<ModelData> filteredModels;
+
+  for (const ModelData& modelData : models) {
+    int modelId = modelData.id;
     std::vector<std::string> modelTags = model->getTagsForModel(modelId);
 
-    // Check if modelTags contain all tags in tagsSelected
     bool hasAllTags =
         std::all_of(tagsSelected.begin(), tagsSelected.end(),
                     [&modelTags](const std::string& tag) {
@@ -126,47 +126,41 @@ std::vector<std::string> Library::getModelsView() {
                     });
 
     if (hasAllTags) {
-      filteredModels.push_back(modelPath);
+      filteredModels.push_back(modelData);
     }
   }
 
-  // Prepare for sorting
   struct ModelInfo {
-    std::string path;
+    ModelData modelData;
     bool hasProperty;
     std::string propertyValue;
   };
 
   std::vector<ModelInfo> modelsWithProperties;
-  for (const std::string& modelPath : filteredModels) {
-    size_t modelId = model->hashModel(fullPath + "/" + modelPath);
+  for (const ModelData& modelData : filteredModels) {
+    int modelId = modelData.id;
     std::string propertyValue = model->getProperty(modelId, propertySelected);
     bool hasProperty = !propertyValue.empty();
-    modelsWithProperties.push_back({modelPath, hasProperty, propertyValue});
+    modelsWithProperties.push_back({modelData, hasProperty, propertyValue});
   }
 
-  // Sort the models
   std::sort(modelsWithProperties.begin(), modelsWithProperties.end(),
             [this](const ModelInfo& a, const ModelInfo& b) {
               if (a.hasProperty && b.hasProperty) {
-                // Compare property values
                 if (ascending)
                   return a.propertyValue < b.propertyValue;
                 else
                   return a.propertyValue > b.propertyValue;
               } else if (a.hasProperty != b.hasProperty) {
-                // Models with the property come before those without
                 return a.hasProperty;
               } else {
-                // Both models lack the property; sort alphabetically by name
-                return a.path < b.path;
+                return a.modelData.short_name < b.modelData.short_name;
               }
             });
 
-  // Extract sorted model paths
-  std::vector<std::string> sortedModels;
+  std::vector<ModelData> sortedModels;
   for (const auto& modelInfo : modelsWithProperties) {
-    sortedModels.push_back(modelInfo.path);
+    sortedModels.push_back(modelInfo.modelData);
   }
 
   return sortedModels;
@@ -277,9 +271,8 @@ std::vector<std::string> Library::getTags() {
   std::unordered_map<std::string, int> tagCount;
   std::vector<std::string> allTags;
 
-  for (const auto& filePath : getModels()) {
-    size_t modelHash = model->hashModel(fullPath + "/" + filePath);
-    std::vector<std::string> tags = model->getTagsForModel(modelHash);
+  for (const auto& modelData : getModels()) {
+    std::vector<std::string> tags = model->getTagsForModel(modelData.id);
 
     for (const auto& tag : tags) {
       tagCount[tag]++;

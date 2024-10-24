@@ -57,7 +57,7 @@ class LibraryWindow : public QWidget {
   QStringListModel *currentTagsModel;
   QStringListModel *currentPropertiesModel;
 
-  std::vector<std::string> report;
+  std::vector<ModelData> report;
 
 };
 

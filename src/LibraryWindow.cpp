@@ -1,26 +1,18 @@
-
 #include "./LibraryWindow.h"
 
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QListWidgetItem>
+#include <QMessageBox>
 #include <QPainter>
 #include <QPdfWriter>
 #include <QPixmap>
+#include <QScreen>
 #include <QString>
 #include <QStringList>
 #include <QStringListModel>
 #include <QStyledItemDelegate>
-#include <QFileDialog>
-#include <QDesktopServices>
-#include <QMessageBox>
-#include <QScreen>
-
-
-#include <iostream>
-#include <string>
-#include <vector>
 #include <ctime>
 #include <filesystem>
 #include <iomanip>
@@ -34,26 +26,22 @@
 
 namespace fs = std::filesystem;
 
-LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
-{
+LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent) {
   this->setFixedSize(QSize(876, 600));
   ui.setupUi(this);
 
   // tagsWidget = new QListWidget(this);
 
   /* make Model selections update the tabs */
-  connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
-  connect(ui.generateReport, &QPushButton::pressed, this, &LibraryWindow::generateReport);
-
+  connect(ui.listWidget, &QListWidget::currentItemChanged, this,
+          &LibraryWindow::onModelSelectionChanged);
+  connect(ui.generateReport, &QPushButton::pressed, this,
+          &LibraryWindow::generateReport);
 }
 
+LibraryWindow::~LibraryWindow() {}
 
-LibraryWindow::~LibraryWindow()
-{
-}
-
-
-void LibraryWindow::generateReport(){
+void LibraryWindow::generateReport() {
   // get time
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
@@ -63,12 +51,12 @@ void LibraryWindow::generateReport(){
   QString temp_dir_1 = QFileDialog::getExistingDirectory(
       this, tr("Choose Directory to store Output"));
 
-  if(temp_dir_1.toStdString().length() != 0){
-
+  if (temp_dir_1.toStdString().length() != 0) {
     std::cout << "directory to save: " << temp_dir_1.toStdString() << std::endl;
-    std::string report_filepath = temp_dir_1.toStdString() + "/report_" + time + ".pdf";
+    std::string report_filepath =
+        temp_dir_1.toStdString() + "/report_" + time + ".pdf";
     QPdfWriter pdfWriter(QString::fromStdString(report_filepath));
-    
+
     // Set the resolution (optional)
     pdfWriter.setResolution(300);
 
@@ -81,14 +69,17 @@ void LibraryWindow::generateReport(){
     // Set a font for the text
     QFont font("Helvetica", 18);
     painter.setFont(font);
-    painter.drawText(750,200, "Cadventory");
+    painter.drawText(750, 200, "Cadventory");
     painter.setPen(QPen(Qt::black, 3));
     painter.drawLine(-200, 250, 2450, 250);
     painter.drawLine(-200, 3400, 2450, 3400);
     QFont font_two("Helvetica", 6);
     painter.setFont(font_two);
-    painter.drawText(300, 300, QString::fromStdString("Library: " + std::string(library->name())));
-    painter.drawText(300, 350, QString::fromStdString("Report Generated on: " + time));
+    painter.drawText(
+        300, 300,
+        QString::fromStdString("Library: " + std::string(library->name())));
+    painter.drawText(300, 350,
+                     QString::fromStdString("Report Generated on: " + time));
     // will need to adjust for windows, macos "local home" libraries
 
     std::string dir_slash = std::string(library->name()) + "/";
@@ -96,7 +87,7 @@ void LibraryWindow::generateReport(){
     int y = 400;
     painter.drawText(x, y, "Geometry");
 
-    y+=25;
+    y += 25;
 
     for (const auto& str : geometryModel->stringList()) {
       std::string cur_model = str.toStdString();
@@ -127,13 +118,16 @@ void LibraryWindow::generateReport(){
     painter.rotate(90);
 
     std::vector<std::string> err_vec;
-    for(auto str: report){
-      std::string fileName = str.substr(str.find_last_of("/\\") + 1);
+    for (const auto& modelData : report) {
+      std::string fileName = modelData.short_name;
+      std::string str = library->fullPath + "/" + modelData.path;
 
       std::cout << "model selected: " << fileName << std::endl;
-      
-      std::string path_gist_output = temp_dir_1.toStdString() + "/" + std::to_string(num_file)+".png";
-      std::string gist_command = "/home/anton/brlcad/build/bin/gist " + str + " -o " + path_gist_output;
+
+      std::string path_gist_output =
+          temp_dir_1.toStdString() + "/" + std::to_string(num_file) + ".png";
+      std::string gist_command = "/home/anton/brlcad/build/bin/gist " + str +
+                                 " -o " + path_gist_output;
 
       auto [output, error] = gFileProcessor.runCommand(gist_command);
       // End painting
@@ -146,7 +140,8 @@ void LibraryWindow::generateReport(){
       if (output.find("ERROR") == std::string::npos) {
         painter.drawPixmap(0, -2408, gist);
       } else {
-        std::string err = "model: " + fileName + "\nerror:\n" + output + "\ncommand: \n" + gist_command;
+        std::string err = "model: " + fileName + "\nerror:\n" + output +
+                          "\ncommand: \n" + gist_command;
         err_vec.push_back(err);
         painter.rotate(-90);
         painter.setFont(font);
@@ -156,37 +151,36 @@ void LibraryWindow::generateReport(){
         painter.rotate(90);
       }
       num_file++;
-  }
-    
+    }
+
     painter.end();
 
     std::cout << "Report Generated" << std::endl;
-    if(err_vec.size()){
-        // Convert std::vector<std::string> to QString
-        QString message;
-        for (const auto& str : err_vec) {
-            message += QString::fromStdString(str) + "\n";  // Append each string with a newline
-        }
-
-        // Create and show the popup
-        QMessageBox msgBox(this);
-        msgBox.setText("Errors:");
-        msgBox.setInformativeText(message);
-        msgBox.exec();
+    if (err_vec.size()) {
+      // Convert std::vector<std::string> to QString
+      QString message;
+      for (const auto& str : err_vec) {
+        message += QString::fromStdString(str) +
+                   "\n";  // Append each string with a newline
       }
-      QDesktopServices::openUrl(QUrl(temp_dir_1)); // open pdf after generation
 
-  }else{
+      // Create and show the popup
+      QMessageBox msgBox(this);
+      msgBox.setText("Errors:");
+      msgBox.setInformativeText(message);
+      msgBox.exec();
+    }
+    QDesktopServices::openUrl(QUrl(temp_dir_1));  // open pdf after generation
+
+  } else {
     QMessageBox msgBox(this);
     msgBox.setText("No Directory Found");
     QString message = "Please choose a directory to store your report.";
     msgBox.setInformativeText(message);
     msgBox.setStyleSheet("QLabel{min-width: 300px;}");
-    
+
     msgBox.exec();
   }
-
-  
 }
 
 void LibraryWindow::loadFromLibrary(Library* _library) {
@@ -199,8 +193,11 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 
   /* populate Models listing */
   auto modelDirs = library->getModels();
-  for (const auto& dir : modelDirs) {
-    QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(dir));
+  for (const auto& modelData : modelDirs) {
+    QString displayName = QString::fromStdString(modelData.short_name);
+    QListWidgetItem* item = new QListWidgetItem(displayName);
+    // Optionally store model ID in the item for later use
+    item->setData(Qt::UserRole, modelData.id);
     ui.listWidget->addItem(item);
   }
 
@@ -323,12 +320,10 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current,
                                             QListWidgetItem* /*previous*/) {
   if (!current) return;  // nada selected
 
-  QString selectedDir = current->text();
-  int modelId = library->model->hashModel(library->fullPath + "/" +
-                                          selectedDir.toStdString());
+  int modelId = current->data(Qt::UserRole).toInt();
 
   std::vector<std::string> modelTags = library->model->getTagsForModel(modelId);
-  std::cout << ">>Selected model: " << selectedDir.toStdString() << std::endl;
+  std::cout << ">>Selected model ID: " << modelId << std::endl;
 
   QStringList qModelTags;
   for (const auto& tag : modelTags) {
@@ -342,7 +337,6 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current,
   for (const auto& [key, value] : modelProperties) {
     qModelProperties << QString::fromStdString(key + ": " + value);
   }
-  // library->model->printModel(modelId);
   currentPropertiesModel->setStringList(qModelProperties);
 
   /* retrieve full lists */
@@ -380,7 +374,6 @@ void LibraryWindow::loadTags() {
   tagsModel->setStringList(tags);
 }
 
-
 // void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
 // {
 //     ui.listWidgetPage->
@@ -388,37 +381,38 @@ void LibraryWindow::loadTags() {
 
 void LibraryWindow::on_pushButton_clicked() {
   report = this->library->getModels();
-  for (std::string& path : report) {
-    path = library->fullPath + "/" + path;
+  for (auto& modelData : report) {
+    modelData.path = library->fullPath + "/" + modelData.path;
   }
 }
 
 void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem* item) {
   std::string name = item->text().toStdString();
 
-  int i = 0;
-  for (const auto& file : report) {
-    std::filesystem::path filePath(file);
+  auto it = std::find_if(
+      report.begin(), report.end(),
+      [&name](const ModelData& md) { return md.short_name == name; });
 
-    // Extracting the filename as a string
-    std::string filename = filePath.filename().string();
+  if (it != report.end()) {
+    report.erase(it);
 
-    if (name == filename) {
-      report.erase(report.begin() + i);
+    QFont font = item->font();
+    font.setBold(false);
+    item->setFont(font);
+    std::cout << name + " is unselected from report" << std::endl;
+
+  } else {
+    auto allModels = library->getModels();
+    auto modelIt = std::find_if(
+        allModels.begin(), allModels.end(),
+        [&name](const ModelData& md) { return md.short_name == name; });
+    if (modelIt != allModels.end()) {
+      report.push_back(*modelIt);
 
       QFont font = item->font();
-      font.setBold(false);
+      font.setBold(true);
       item->setFont(font);
-      std::cout << filename + " is unselected from report" << std::endl;
-
-      return;
+      std::cout << name + " is selected for report" << std::endl;
     }
-    i++;
   }
-  QFont font = item->font();
-  font.setBold(true);
-  item->setFont(font);
-  report.push_back(this->library->fullPath + "/" + name);
-  std::cout << this->library->fullPath + "/" + name << std::endl;
-  std::cout << name + " is selected for report" << std::endl;
 }
