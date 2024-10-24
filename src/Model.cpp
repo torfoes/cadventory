@@ -63,43 +63,56 @@ ModelData Model::mapRowToModelData(sqlite3_stmt* stmt) {
 
 bool Model::createTable() {
   std::string sqlModels = R"(
-        CREATE TABLE IF NOT EXISTS models (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            short_name TEXT NOT NULL,
-            path TEXT NOT NULL,
-            primary_file_path TEXT,
-            library TEXT NOT NULL
-            override_info TEXT
-        );
-    )";
-  std::string sqlTags = R"(
-        CREATE TABLE IF NOT EXISTS tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE
-        );
-    )";
-  std::string sqlModelTags = R"(
-        CREATE TABLE IF NOT EXISTS model_tags (
-            model_id INTEGER NOT NULL,
-            tag_id INTEGER NOT NULL,
-            PRIMARY KEY (model_id, tag_id),
-            FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE,
-            FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-        );
-    )";
-  std::string sqlModelProperties = R"(
-        CREATE TABLE IF NOT EXISTS model_properties (
-            model_id INTEGER NOT NULL,
-            property_key TEXT NOT NULL,
-            property_value TEXT,
-            PRIMARY KEY (model_id, property_key),
-            FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE
-        );
-    )";
+      CREATE TABLE IF NOT EXISTS models (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          short_name TEXT NOT NULL,
+          path TEXT NOT NULL,
+          primary_file_path TEXT,
+          override_info TEXT,
+          library TEXT NOT NULL
+      );
+  )";
 
-  return executeSQL(sqlModels) && executeSQL(sqlTags) &&
-         executeSQL(sqlModelTags) && executeSQL(sqlModelProperties);
+  std::string sqlTags = R"(
+      CREATE TABLE IF NOT EXISTS tags (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE
+      );
+  )";
+
+  std::string sqlModelTags = R"(
+      CREATE TABLE IF NOT EXISTS model_tags (
+          model_id INTEGER NOT NULL,
+          tag_id INTEGER NOT NULL,
+          PRIMARY KEY (model_id, tag_id),
+          FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE,
+          FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+      );
+  )";
+
+  std::string sqlModelProperties = R"(
+      CREATE TABLE IF NOT EXISTS model_properties (
+          model_id INTEGER NOT NULL,
+          property_key TEXT NOT NULL,
+          property_value TEXT,
+          PRIMARY KEY (model_id, property_key),
+          FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE
+      );
+  )";
+
+  bool success = true;
+  success &= executeSQL(sqlModels);
+  success &= executeSQL(sqlTags);
+  success &= executeSQL(sqlModelTags);
+  success &= executeSQL(sqlModelProperties);
+
+  if (!success) {
+    std::cerr << "Failed to create one or more tables." << std::endl;
+  }
+
+  return success;
 }
+
 
 // CRUD Operations for Models
 bool Model::insertModel(const std::string& filePath,

@@ -56,6 +56,7 @@ void Library::createDatabase(QWidget* parent) {
   progressWindow->close();
 
   // Emit a signal when the database creation is finished
+  std::cout << "Emitting signal for database creation finished" << std::endl;
   emit databaseCreationFinished();
 }
 
@@ -96,7 +97,7 @@ std::vector<std::string> Library::getModelFilePaths() {
   return ret;
 }
 
-// gets the models from the database in this library
+// gets the models from the database in this
 std::vector<ModelData> Library::getModels() {
   std::vector<ModelData> allModels = model->getModels();
   std::cout << "Total number of models: " << allModels.size() << std::endl;

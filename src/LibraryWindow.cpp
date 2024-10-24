@@ -324,7 +324,8 @@ void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current,
   int modelId = current->data(Qt::UserRole).toInt();
 
   std::vector<std::string> modelTags = library->model->getTagsForModel(modelId);
-  std::cout << ">>Selected model ID: " << modelId << std::endl;
+  std::cout << ">>Selected model name: "
+            << library->model->getModelById(modelId).short_name << std::endl;
 
   QStringList qModelTags;
   for (const auto& tag : modelTags) {

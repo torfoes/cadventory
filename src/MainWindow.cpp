@@ -29,11 +29,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
             << "  defaults delete org.brlcad.CADventory" << std::endl;
   std::cout << "To reset via app, run with --no-gui option." << std::endl;
 
-  size_t loaded = loadState();
-  if (loaded) {
-    std::cout << "Loaded " << loaded << " previously registered libraries"
-              << std::endl;
-  }
+  // size_t loaded = loadState();
+  // if (loaded) {
+  //   std::cout << "Loaded " << loaded << " previously registered libraries"
+  //             << std::endl;
+  // }
 
   QString home = QDir::homePath();
   addLibrary("Local Home", home.toStdString().c_str());
