@@ -40,8 +40,7 @@ class Library : public QObject {  // Inherit from QObject
   void setFullPath(std::string path);
 
   
-
-  Model* model;
+  std::vector<ModelData> models;
   std::string fullPath;
 
  signals:

@@ -193,6 +193,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 
   /* populate Models listing */
   auto modelDirs = library->getModels();
+  std::cout << "Model Dirs length: " << modelDirs.size() << std::endl;
   for (const auto& modelData : modelDirs) {
     QString displayName = QString::fromStdString(modelData.short_name);
     QListWidgetItem* item = new QListWidgetItem(displayName);
@@ -256,7 +257,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
     // Check if the string ends with ".g"
     if (path.endsWith(".g", Qt::CaseInsensitive)) {
       QString filename = QFileInfo(path).fileName();
-      std::cout << filename.toStdString() << std::endl;
+      // std::cout << filename.toStdString() << std::endl;
       // QString filepath = ":/build/previews/"+filename;
 
       QString filepath = QString::fromStdString(root_folder);
@@ -264,7 +265,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
       filepath.append(filename);
       filepath.chop(2);
       filepath.append(".png");
-      std::cout << filepath.toStdString() << std::endl;
+      // std::cout << filepath.toStdString() << std::endl;
       // Print the filename without the extension
 
       QListWidgetItem* item = new QListWidgetItem(QIcon(filepath), filename);

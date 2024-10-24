@@ -91,12 +91,14 @@ std::vector<std::string> Library::getModelFilePaths() {
     }
     uniqueFiles.insert(relativePath);
   }
-
-  return std::vector<std::string>(uniqueFiles.begin(), uniqueFiles.end());
+  std::vector<std::string> ret = std::vector<std::string>(uniqueFiles.begin(), uniqueFiles.end());
+  std::cout << "Number of unique model files: " << uniqueFiles.size() << std::endl;
+  return ret;
 }
 
 std::vector<ModelData> Library::getModels() {
   std::vector<ModelData> allModels = model->getModels();
+  std::cout << "Total number of models: " << allModels.size() << std::endl;
   std::vector<ModelData> libraryModels;
 
   for (const ModelData& modelData : allModels) {
