@@ -96,6 +96,7 @@ std::vector<std::string> Library::getModelFilePaths() {
   return ret;
 }
 
+// gets the models from the database in this library
 std::vector<ModelData> Library::getModels() {
   std::vector<ModelData> allModels = model->getModels();
   std::cout << "Total number of models: " << allModels.size() << std::endl;
@@ -291,4 +292,8 @@ std::vector<std::string> Library::getTags() {
             });
 
   return allTags;
+}
+
+void Library::setModels() {
+  models = getModels();
 }

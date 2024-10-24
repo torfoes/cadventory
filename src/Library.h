@@ -36,10 +36,10 @@ class Library : public QObject {  // Inherit from QObject
   void setPropertySelected(std::string property);
   void setAscending(bool ascending);
 
-  void setModel(Model* model);
+  void setModels();
   void setFullPath(std::string path);
-
   
+  Model* model;
   std::vector<ModelData> models;
   std::string fullPath;
 

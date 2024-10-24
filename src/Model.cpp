@@ -57,10 +57,10 @@ ModelData Model::mapRowToModelData(sqlite3_stmt* stmt) {
           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
           reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)),
-          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4))};
+          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)),
+          reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5))};
 }
 
-// Table Creation
 bool Model::createTable() {
   std::string sqlModels = R"(
         CREATE TABLE IF NOT EXISTS models (
@@ -68,6 +68,7 @@ bool Model::createTable() {
             short_name TEXT NOT NULL,
             path TEXT NOT NULL,
             primary_file_path TEXT,
+            library TEXT NOT NULL
             override_info TEXT
         );
     )";
@@ -104,18 +105,20 @@ bool Model::createTable() {
 bool Model::insertModel(const std::string& filePath,
                         const std::string& shortName, const std::string& path,
                         const std::string& primaryFile,
-                        const std::string& overrides) {
+                        const std::string& overrides,
+                        const std::string& library) {
   int id = hashModel(filePath);
-  return insertModel(id, shortName, path, primaryFile, overrides);
+  return insertModel(id, shortName, path, primaryFile, overrides, library);
 }
 
 bool Model::insertModel(int id, const std::string& shortName,
                         const std::string& path, const std::string& primaryFile,
-                        const std::string& overrides) {
+                        const std::string& overrides,
+                        const std::string& library) {
   std::string sql =
       "INSERT INTO models (id, short_name, path, primary_file_path, "
-      "override_info) "
-      "VALUES (?, ?, ?, ?, ?);";
+      "override_info, library) "
+      "VALUES (?, ?, ?, ?, ?, ?);";
 
   sqlite3_stmt* stmt = prepareStatement(sql);
   if (!stmt) return false;
@@ -125,14 +128,17 @@ bool Model::insertModel(int id, const std::string& shortName,
   sqlite3_bind_text(stmt, 3, path.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_text(stmt, 4, primaryFile.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_text(stmt, 5, overrides.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 6, library.c_str(), -1, SQLITE_STATIC);
 
   return executePreparedStatement(stmt);
 }
 
+// gets the models from the database
 std::vector<ModelData> Model::getModels() {
   std::vector<ModelData> models;
   std::string sql =
-      "SELECT id, short_name, path, primary_file_path, override_info FROM "
+      "SELECT id, short_name, path, primary_file_path, override_info, library "
+      "FROM "
       "models;";
   sqlite3_stmt* stmt = prepareStatement(sql);
   if (!stmt) return models;
@@ -146,13 +152,14 @@ std::vector<ModelData> Model::getModels() {
 
 ModelData Model::getModelById(int id) {
   std::string sql =
-      "SELECT id, short_name, path, primary_file_path, override_info FROM "
+      "SELECT id, short_name, path, primary_file_path, override_info, library "
+      "FROM "
       "models WHERE id = ?;";
   sqlite3_stmt* stmt = prepareStatement(sql);
-  if (!stmt) return {0, "", "", "", ""};
+  if (!stmt) return {0, "", "", "", "", ""};
 
   sqlite3_bind_int(stmt, 1, id);
-  ModelData model = {0, "", "", "", ""};
+  ModelData model = {0, "", "", "", "", ""};
 
   if (sqlite3_step(stmt) == SQLITE_ROW) {
     model = mapRowToModelData(stmt);
@@ -163,10 +170,11 @@ ModelData Model::getModelById(int id) {
 
 bool Model::updateModel(int id, const std::string& shortName,
                         const std::string& path, const std::string& primaryFile,
-                        const std::string& overrides) {
+                        const std::string& overrides,
+                        const std::string& library) {
   std::string sql =
       "UPDATE models SET short_name = ?, path = ?, primary_file_path = ?, "
-      "override_info = ? "
+      "override_info = ?, library = ? "
       "WHERE id = ?;";
   sqlite3_stmt* stmt = prepareStatement(sql);
   if (!stmt) return false;
@@ -175,7 +183,8 @@ bool Model::updateModel(int id, const std::string& shortName,
   sqlite3_bind_text(stmt, 2, path.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_text(stmt, 3, primaryFile.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_text(stmt, 4, overrides.c_str(), -1, SQLITE_STATIC);
-  sqlite3_bind_int(stmt, 5, id);
+  sqlite3_bind_text(stmt, 5, library.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_int(stmt, 6, id);
 
   return executePreparedStatement(stmt);
 }
@@ -369,6 +378,7 @@ void Model::printModel(int modelId) {
   std::cout << "Short Name: " << model.short_name << std::endl;
   std::cout << "Path: " << model.path << std::endl;
   std::cout << "Primary File: " << model.primary_file_path << std::endl;
+  std::cout << "Library: " << model.library << std::endl;
   std::cout << "Override Info: " << model.override_info << std::endl;
 
   std::map<std::string, std::string> properties = getProperties(modelId);

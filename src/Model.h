@@ -13,6 +13,7 @@ struct ModelData {
   std::string short_name;
   std::string path;
   std::string primary_file_path;
+  std::string library;
   std::string override_info;
 };
 
@@ -30,16 +31,19 @@ class Model {
   bool insertModel(const std::string& filePath, const std::string& shortName,
                    const std::string& path = "",
                    const std::string& primaryFile = "",
-                   const std::string& overrides = "");
+                   const std::string& overrides = "",
+                   const std::string& library = "");
   bool insertModel(int id, const std::string& shortName,
                    const std::string& path = "",
                    const std::string& primaryFile = "",
-                   const std::string& overrides = "");
+                   const std::string& overrides = "",
+                   const std::string& library = "");
   std::vector<ModelData> getModels();
+  
   ModelData getModelById(int id);
   bool updateModel(int id, const std::string& shortName,
                    const std::string& path, const std::string& primaryFile,
-                   const std::string& overrides);
+                   const std::string& overrides, const std::string& library);
   bool deleteModel(int id);
 
   // Tag operations

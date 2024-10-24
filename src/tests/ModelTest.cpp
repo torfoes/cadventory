@@ -48,7 +48,7 @@ TEST_CASE("ModelOperations", "[Model]") {
     REQUIRE(modelId != -1);
 
     bool updateResult = model.updateModel(
-        modelId, "updatedModel", "new/path/to/cad/file", "new/path/to/cad/file", "{\"updated\":true}");
+        modelId, "updatedModel", "new/path/to/cad/file", "new/path/to/cad/file", "library", "{\"updated\":true}");
     REQUIRE(updateResult == true);
 
     auto models = model.getModels();

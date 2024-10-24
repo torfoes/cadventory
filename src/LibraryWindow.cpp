@@ -192,9 +192,9 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
   ui.listWidget->clear();
 
   /* populate Models listing */
-  auto modelDirs = library->getModels();
-  std::cout << "Model Dirs length: " << modelDirs.size() << std::endl;
-  for (const auto& modelData : modelDirs) {
+  library->setModels();
+  std::cout << "Model Dirs length: " << library->models.size() << std::endl;
+  for (const auto& modelData : library->models) {
     QString displayName = QString::fromStdString(modelData.short_name);
     QListWidgetItem* item = new QListWidgetItem(displayName);
     // Optionally store model ID in the item for later use
