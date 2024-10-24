@@ -16,7 +16,6 @@ Library::Library(const char* _label, const char* _path)
       model(new Model("metadata.db")) {}
 
 void Library::createDatabase(QWidget* parent) {
-
   ProcessGFiles gFileProcessor;
   std::vector<std::string> allModels = getModels();
   std::map<std::string, std::string> results;

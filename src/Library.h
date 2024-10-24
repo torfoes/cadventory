@@ -22,17 +22,23 @@ class Library : public QObject {  // Inherit from QObject
   const char* path();
 
   void createDatabase(QWidget* parent);
-  std::vector<std::string> getModels();
-  std::vector<std::string> getModelsView();
+  std::vector<std::string> getModels(); // all models
+  std::vector<std::string> getModelsView(); // models filtered and sorted
   std::vector<std::string> getGeometry();
   std::vector<std::string> getImages();
   std::vector<std::string> getDocuments();
+
   std::vector<std::string> getData();
   std::vector<std::string> getTags();
 
   void setTagsSelected(std::vector<std::string> tags);
   void setPropertySelected(std::string property);
   void setAscending(bool ascending);
+
+  void setModel(Model* model);
+  void setFullPath(std::string path);
+
+  
 
   Model* model;
   std::string fullPath;
