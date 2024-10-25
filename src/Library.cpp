@@ -6,6 +6,7 @@
 #include <set>
 
 #include "./Model.h"
+#include "Model.h"
 #include "./ProcessGFiles.h"
 #include "ProgressWindow.h"
 
@@ -29,15 +30,24 @@ void Library::createDatabase(QWidget* parent) {
   for (const std::string& filePath : allModels) {
     int modelId = model->hashModel(fullPath + "/" + filePath);
     if (!model->hasProperties(modelId)) {
-      model->insertModel(fullPath + "/" + filePath, "short_name", filePath, "primary_file"
-                         "overrides", "library");
+      ModelData data{.id = modelId,
+                     .short_name = filePath,
+                     .path = fullPath + "/" + filePath,
+                     .primary_file_path = "",
+                     .library = shortName,
+                     .override_info = ""};
+
+      // model->insertModel(fullPath + "/" + filePath, "short_name", filePath,
+      //                    "primary_file"
+      //                    "overrides",
+      //                    shortName);
+      model->insertModel(data);
 
       model->insertProperties(
           modelId, gFileProcessor.processGFile(fullPath + "/" + filePath));
 
       std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
       size_t mid = fileName.size() / 2;
-      int modelId = model->hashModel(fullPath + "/" + filePath);
 
       model->addTagToModel(modelId, fileName.substr(0, mid));
       model->addTagToModel(modelId, fileName.substr(mid));

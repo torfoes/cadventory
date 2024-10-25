@@ -28,16 +28,17 @@ class Model {
   bool createTable();
 
   // CRUD operations for models
-  bool insertModel(const std::string& filePath, const std::string& shortName,
-                   const std::string& path = "",
-                   const std::string& primaryFile = "",
-                   const std::string& overrides = "",
-                   const std::string& library = "");
-  bool insertModel(int id, const std::string& shortName,
-                   const std::string& path = "",
-                   const std::string& primaryFile = "",
-                   const std::string& overrides = "",
-                   const std::string& library = "");
+  bool insertModel(ModelData modelData);
+  // bool insertModel(const std::string& filePath, const std::string& shortName,
+  //                  const std::string& path = "",
+  //                  const std::string& primaryFile = "",
+  //                  const std::string& overrides = "",
+  //                  const std::string& library = "");
+  // bool insertModel(int id, const std::string& shortName,
+  //                  const std::string& path = "",
+  //                  const std::string& primaryFile = "",
+  //                  const std::string& overrides = "",
+  //                  const std::string& library = "");
   std::vector<ModelData> getModels();
   
   ModelData getModelById(int id);
