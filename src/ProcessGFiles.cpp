@@ -211,6 +211,26 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         // Parse and validate tops elements
         std::vector<std::string> tops = parseTopsOutput(tops_result);
 
+        // insert tops objects into database
+        model->deleteObjectsForModel(modelId);
+        for (const auto& objName : tops) {
+            ObjectData objectData;
+            objectData.object_id = -1;
+            objectData.model_id = modelId;
+            objectData.name = objName;
+            objectData.parent_object_id = -1;
+            objectData.is_selected = true;
+
+            int objectId = model->insertObject(objectData);
+
+            if (objectId == -1) {
+                std::cerr << "Failed to insert object: " << objName << std::endl;
+            } else {
+                std::cout << "Inserted object '" << objName << "' with ID " << objectId << std::endl;
+            }
+        }
+
+
         // Determine the object to raytrace
         std::vector<std::string> objects_to_try = {"all", "all.g", model_short_name, model_short_name + ".g", model_short_name + ".c"};
         objects_to_try.insert(objects_to_try.end(), tops.begin(), tops.end());
