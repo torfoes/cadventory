@@ -6,30 +6,27 @@
 
 class ModelCardDelegate : public QStyledItemDelegate {
     Q_OBJECT
-
 public:
     explicit ModelCardDelegate(QObject* parent = nullptr);
 
-    // Override paint and sizeHint
     void paint(QPainter* painter, const QStyleOptionViewItem& option,
                const QModelIndex& index) const override;
+
     QSize sizeHint(const QStyleOptionViewItem& option,
                    const QModelIndex& index) const override;
 
-    // Handle interactions
     bool editorEvent(QEvent* event, QAbstractItemModel* model,
                      const QStyleOptionViewItem& option, const QModelIndex& index) override;
 
 signals:
-    void settingsClicked(int modelId);
+    void settingsClicked(int modelId) const;
 
 private:
-    // Helper methods for component rectangles
+    // Helper methods to calculate component rectangles
     QRect previewRect(const QStyleOptionViewItem& option) const;
     QRect textRect(const QStyleOptionViewItem& option) const;
     QRect settingsIconRect(const QStyleOptionViewItem& option) const;
 
-    // Cache the settings icon
     QPixmap settingsIcon;
 };
 

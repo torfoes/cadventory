@@ -117,29 +117,36 @@ void LibraryWindow::setupModelsAndViews() {
     // Configure available models view
     ui.availableModelsView->setModel(availableModelsProxyModel);
     ui.availableModelsView->setItemDelegate(modelCardDelegate);
-    ui.availableModelsView->setViewMode(QListView::IconMode);
+    ui.availableModelsView->setViewMode(QListView::ListMode);
+    ui.availableModelsView->setFlow(QListView::TopToBottom);
+    ui.availableModelsView->setWrapping(false);
     ui.availableModelsView->setResizeMode(QListView::Adjust);
-    ui.availableModelsView->setSpacing(15);
-    ui.availableModelsView->setGridSize(QSize(220, 140));
+    ui.availableModelsView->setSpacing(0);
     ui.availableModelsView->setUniformItemSizes(true);
     ui.availableModelsView->setSelectionMode(QAbstractItemView::NoSelection);
+    ui.availableModelsView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // Configure selected models view
+    QSize itemSize = modelCardDelegate->sizeHint(QStyleOptionViewItem(), QModelIndex());
+    ui.availableModelsView->setGridSize(QSize(0, itemSize.height()));
+
     ui.selectedModelsView->setModel(selectedModelsProxyModel);
     ui.selectedModelsView->setItemDelegate(modelCardDelegate);
-    ui.selectedModelsView->setViewMode(QListView::IconMode);
+    ui.selectedModelsView->setViewMode(QListView::ListMode);
+    ui.selectedModelsView->setFlow(QListView::TopToBottom);
+    ui.selectedModelsView->setWrapping(false);
     ui.selectedModelsView->setResizeMode(QListView::Adjust);
-    ui.selectedModelsView->setSpacing(15);
-    ui.selectedModelsView->setGridSize(QSize(220, 140));
+    ui.selectedModelsView->setSpacing(0);
     ui.selectedModelsView->setUniformItemSizes(true);
     ui.selectedModelsView->setSelectionMode(QAbstractItemView::NoSelection);
+    ui.selectedModelsView->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+    // set grid size for selected models view
+    ui.selectedModelsView->setGridSize(QSize(1, itemSize.height()));
 
     // Populate search field combo box
-    ui.searchFieldComboBox->addItem("Short Name", QVariant(Model::ShortNameRole));
-    ui.searchFieldComboBox->addItem("Title", QVariant(Model::TitleRole));
-    ui.searchFieldComboBox->addItem("Author", QVariant(Model::AuthorRole));
     // Add other fields as needed
 }
+
 
 void LibraryWindow::setupConnections() {
     // Connect search input
@@ -215,13 +222,11 @@ void LibraryWindow::onGenerateReportButtonClicked() {
 }
 
 void LibraryWindow::onSettingsClicked(int modelId) {
-    // // Open settings dialog for the model
-    // ModelData modelData = model->getModelById(modelId);
-    // AdvancedOptionsDialog dialog(modelData, this);
-    // if (dialog.exec() == QDialog::Accepted) {
-    //     model->updateModel(modelId, dialog.getModelData());
-    // }
+    // Handle settings button click
+    qDebug() << "Settings button clicked for model ID:" << modelId;
+    // Implement settings dialog or other actions here
 }
+
 
 void LibraryWindow::onModelProcessed(int modelId) {
     model->refreshModelData();

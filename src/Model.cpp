@@ -16,14 +16,14 @@ namespace fs = std::filesystem;
 Model::Model(const std::string& libraryPath, QObject* parent)
     : QAbstractListModel(parent), db(nullptr)
 {
-    // Create a hidden directory inside the library path
+    // create a hidden directory inside the library path
     fs::path hiddenDir = fs::path(libraryPath) / ".cadventory";
     hiddenDirPath = hiddenDir.string();
     if (!fs::exists(hiddenDir)) {
         fs::create_directory(hiddenDir);
     }
 
-    // Set the database path inside the hidden directory
+    // set the database path inside the hidden directory
     dbPath = (hiddenDir / "metadata.db").string();
 
     if (sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
@@ -32,7 +32,6 @@ Model::Model(const std::string& libraryPath, QObject* parent)
         std::cout << "Opened database at " << dbPath << " successfully" << std::endl;
         createTables();
 
-        // Load models from the database into the 'models' vector
         loadModelsFromDatabase();
     }
 }
@@ -65,10 +64,12 @@ bool Model::createTables() {
             model_id INTEGER NOT NULL,
             name TEXT NOT NULL,
             parent_object_id INTEGER,
+            is_selected INTEGER DEFAULT 0,
             FOREIGN KEY(model_id) REFERENCES models(id),
             FOREIGN KEY(parent_object_id) REFERENCES objects(object_id)
         );
     )";
+
 
     return executeSQL(sqlModels) && executeSQL(sqlObjects);
 }
@@ -433,12 +434,11 @@ Qt::ItemFlags Model::flags(const QModelIndex& index) const {
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-// New methods for objects
 
 int Model::insertObject(const ObjectData& obj) {
     std::string sql = R"(
-        INSERT INTO objects (model_id, name, parent_object_id)
-        VALUES (?, ?, ?);
+        INSERT INTO objects (model_id, name, parent_object_id, is_selected)
+        VALUES (?, ?, ?, ?);
     )";
 
     sqlite3_stmt* stmt;
@@ -451,11 +451,14 @@ int Model::insertObject(const ObjectData& obj) {
 
     sqlite3_bind_int(stmt, 1, obj.model_id);
     sqlite3_bind_text(stmt, 2, obj.name.c_str(), -1, SQLITE_STATIC);
+
     if (obj.parent_object_id != -1) {
         sqlite3_bind_int(stmt, 3, obj.parent_object_id);
     } else {
         sqlite3_bind_null(stmt, 3);
     }
+
+    sqlite3_bind_int(stmt, 4, obj.is_selected ? 1 : 0);
 
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         std::cerr << "Insert object failed: " << sqlite3_errmsg(db) << std::endl;
@@ -463,20 +466,19 @@ int Model::insertObject(const ObjectData& obj) {
         return -1;
     }
 
-    int objectId = static_cast<int>(sqlite3_last_insert_rowid(db));
-
+    int object_id = static_cast<int>(sqlite3_last_insert_rowid(db));
     sqlite3_finalize(stmt);
-
-    return objectId;
+    return object_id;
 }
 
-bool Model::deleteObjectsForModel(int modelId) {
+
+bool Model::deleteObjectsForModel(int model_id) {
     std::string sql = "DELETE FROM objects WHERE model_id = ?;";
     sqlite3_stmt* stmt;
     std::lock_guard<std::mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, modelId);
+        sqlite3_bind_int(stmt, 1, model_id);
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             std::cerr << "Delete objects failed: " << sqlite3_errmsg(db) << std::endl;
@@ -491,10 +493,11 @@ bool Model::deleteObjectsForModel(int modelId) {
     }
 }
 
-std::vector<ObjectData> Model::getObjectsForModel(int modelId) {
+
+std::vector<ObjectData> Model::getObjectsForModel(int model_id) {
     std::vector<ObjectData> objects;
     std::string sql = R"(
-        SELECT object_id, model_id, name, parent_object_id
+        SELECT object_id, model_id, name, parent_object_id, is_selected
         FROM objects
         WHERE model_id = ?;
     )";
@@ -503,7 +506,7 @@ std::vector<ObjectData> Model::getObjectsForModel(int modelId) {
     std::lock_guard<std::mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, modelId);
+        sqlite3_bind_int(stmt, 1, model_id);
 
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             ObjectData obj;
@@ -517,6 +520,7 @@ std::vector<ObjectData> Model::getObjectsForModel(int modelId) {
                 obj.parent_object_id = -1;
             }
 
+            obj.is_selected = sqlite3_column_int(stmt, 4) != 0;
             objects.push_back(obj);
         }
         sqlite3_finalize(stmt);
@@ -526,3 +530,74 @@ std::vector<ObjectData> Model::getObjectsForModel(int modelId) {
 
     return objects;
 }
+
+
+bool Model::setObjectData(int object_id, const QVariant& value, int role) {
+    if (role == IsSelectedRole) {
+        bool is_selected = value.toBool();
+        return updateObjectSelection(object_id, is_selected);
+    }
+    return false;
+}
+
+bool Model::updateObjectSelection(int object_id, bool is_selected) {
+    std::string sql = "UPDATE objects SET is_selected = ? WHERE object_id = ?;";
+
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "SQL error in updateObjectSelection: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_int(stmt, 1, is_selected ? 1 : 0);
+    sqlite3_bind_int(stmt, 2, object_id);
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cerr << "Update object selection failed: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    sqlite3_finalize(stmt);
+    return true;
+}
+
+
+bool Model::updateObject(const ObjectData& obj) {
+    std::string sql = R"(
+        UPDATE objects SET
+            name = ?,
+            parent_object_id = ?,
+            is_selected = ?
+        WHERE object_id = ?;
+    )";
+
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "SQL error in updateObject: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_text(stmt, 1, obj.name.c_str(), -1, SQLITE_STATIC);
+    if (obj.parent_object_id != -1) {
+        sqlite3_bind_int(stmt, 2, obj.parent_object_id);
+    } else {
+        sqlite3_bind_null(stmt, 2);
+    }
+    sqlite3_bind_int(stmt, 3, obj.is_selected ? 1 : 0);
+    sqlite3_bind_int(stmt, 4, obj.object_id);
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cerr << "Update object failed: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    sqlite3_finalize(stmt);
+    return true;
+}
+

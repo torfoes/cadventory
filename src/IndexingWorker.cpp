@@ -11,7 +11,7 @@ IndexingWorker::IndexingWorker(Library* library, QObject* parent)
 
 void IndexingWorker::stop() {
     qDebug() << "IndexingWorker::stop() called";
-    m_stopRequested.store(true);
+    m_stopRequested.store(true); // Set the stop flag to true in a thread-safe manner
 }
 
 void IndexingWorker::process() {
@@ -19,7 +19,7 @@ void IndexingWorker::process() {
     ProcessGFiles processor(library->model);
 
     for (const auto& filePath : library->getModels()) {
-        // check if a stop has been requested
+        // Check if a stop has been requested
         if (m_stopRequested.load()) {
             qDebug() << "IndexingWorker::process() stopping due to stop request";
             break;

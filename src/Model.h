@@ -24,12 +24,13 @@ struct ModelData {
 // Declare ModelData as a Qt metatype
 Q_DECLARE_METATYPE(ModelData)
 
-// New ObjectData structure
+// ObjectData structure
 struct ObjectData {
     int object_id;
     int model_id;
     std::string name;
-    int parent_object_id; // -1 if top-level
+    int parent_object_id;
+    bool is_selected;
 };
 
 class Model : public QAbstractListModel {
@@ -72,6 +73,8 @@ public:
 
     // Utility methods
     int hashModel(const std::string& modelDir);
+    void refreshModelData();
+
     std::string getHiddenDirectoryPath() const;
 
     // Update the model list from the database
@@ -79,9 +82,11 @@ public:
 
     // Methods for objects
     int insertObject(const ObjectData& obj);
-    bool deleteObjectsForModel(int modelId);
-    std::vector<ObjectData> getObjectsForModel(int modelId);
-    void refreshModelData();
+    bool updateObject(const ObjectData& obj);
+    bool deleteObjectsForModel(int model_id);
+    std::vector<ObjectData> getObjectsForModel(int model_id);
+    bool setObjectData(int object_id, const QVariant& value, int role);
+    bool updateObjectSelection(int object_id, bool is_selected);
 
 
 private:
@@ -92,10 +97,8 @@ private:
     std::string dbPath;
     std::mutex db_mutex;
 
-    // Hidden directory path
     std::string hiddenDirPath;
 
-    // List of models
     std::vector<ModelData> models;
 };
 
