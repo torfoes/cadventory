@@ -74,7 +74,6 @@ bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
 
         // Handle selection (if not already handled by the view)
         if (option.rect.contains(pos)) {
-            // Toggle selection
             bool isSelected = index.data(Qt::CheckStateRole).toBool();
             model->setData(index, !isSelected, Qt::CheckStateRole);
             return true;

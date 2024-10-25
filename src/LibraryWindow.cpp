@@ -45,14 +45,29 @@ LibraryWindow::LibraryWindow(QWidget* parent)
 }
 
 LibraryWindow::~LibraryWindow() {
-    // clean up indexing thread
-    if (indexingThread) {
-        indexingThread->quit();
+    qDebug() << "LibraryWindow destructor called";
+
+    // Ensure the indexing thread is stopped if it wasn't already
+    if (indexingThread && indexingThread->isRunning()) {
+        qDebug() << "Waiting for indexingThread to finish in destructor";
         indexingThread->wait();
+        qDebug() << "indexingThread finished in destructor";
+    }
+
+    // Delete indexingWorker and indexingThread if they exist
+    if (indexingWorker) {
         delete indexingWorker;
+        indexingWorker = nullptr;
+        qDebug() << "indexingWorker deleted in destructor";
+    }
+
+    if (indexingThread) {
         delete indexingThread;
+        indexingThread = nullptr;
+        qDebug() << "indexingThread deleted in destructor";
     }
 }
+
 
 void LibraryWindow::loadFromLibrary(Library* _library) {
     library = _library;
@@ -78,7 +93,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
-    indexingThread = new QThread(this);
+    indexingThread = new QThread(this); // Parent is LibraryWindow
     indexingWorker = new IndexingWorker(library);
 
     // Move the worker to the thread
@@ -87,14 +102,12 @@ void LibraryWindow::startIndexing() {
     // Connect signals and slots
     connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
     connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
-    connect(indexingWorker, &IndexingWorker::finished, indexingThread, &QThread::quit);
-    connect(indexingWorker, &IndexingWorker::finished, indexingWorker, &IndexingWorker::deleteLater);
-    connect(indexingThread, &QThread::finished, indexingThread, &QThread::deleteLater);
-
 
     // Start the indexing thread
     indexingThread->start();
 }
+
+
 
 void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
     this->mainWindow = mainWindow;
@@ -144,7 +157,7 @@ void LibraryWindow::setupConnections() {
 
     // Connect settings clicked signal from delegate
     connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
-    connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
+    // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
 
 }
 
@@ -215,18 +228,27 @@ void LibraryWindow::onModelProcessed(int modelId) {
     availableModelsProxyModel->invalidate();
     selectedModelsProxyModel->invalidate();
 }
+void LibraryWindow::on_backButton_clicked() {
+    qDebug() << "Back button clicked";
 
-void LibraryWindow::onBackButtonClicked() {
+    if (indexingWorker) {
+        qDebug() << "Requesting indexingWorker to stop";
+        indexingWorker->stop();
+        qDebug() << "indexingWorker->stop() called";
+    } else {
+        qDebug() << "indexingWorker is null or already deleted";
+    }
+
     // Hide the LibraryWindow
     this->hide();
+    qDebug() << "LibraryWindow hidden";
 
     // Show the MainWindow
     if (mainWindow) {
         mainWindow->show();
+        qDebug() << "MainWindow shown";
+    } else {
+        qDebug() << "mainWindow is null";
     }
 
-    // Delete the LibraryWindow if it's no longer needed
-    this->deleteLater();
 }
-
-

@@ -11,6 +11,11 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+    // Clear settings (for development/testing purposes)
+    // QSettings settings;
+    // settings.clear();
+
+
     this->setFixedSize(QSize(876, 600));
     ui.setupUi(this);
 
@@ -26,9 +31,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
               << "  defaults delete org.brlcad.CADventory" << std::endl;
     std::cout << "To reset via app, run with --no-gui option." << std::endl;
 
-    // Connect the "Add Library" button
-    connect(ui.addLibraryButton, &QPushButton::released, this, &MainWindow::on_addLibraryButton_clicked);
-
     // Load previously saved libraries
     size_t loaded = loadState();
     if (loaded) {
@@ -39,8 +41,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     addLibrary("Local Home", home.toStdString().c_str());
     std::cout << "Loaded local home [" << home.toStdString().c_str() << "] library" << std::endl;
 
-    // Connect the default home dir button
-    connect(ui.homeLibraryButton, &QPushButton::released, this, &MainWindow::openLibrary);
 }
 
 MainWindow::~MainWindow()
@@ -53,6 +53,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::addLibrary(const char* label, const char* path)
 {
+    for (Library* lib : libraries) {
+        if (QString(lib->name()) == QString(label) && QString(lib->path()) == QString(path)) {
+            std::cout << "Library [" << label << "] already exists, skipping add." << std::endl;
+            return;
+        }
+    }
+
     std::cout << "Adding library [" << label << "] => " << path << std::endl;
 
     Library* newlib = new Library(label, path);
@@ -65,6 +72,7 @@ void MainWindow::addLibrary(const char* label, const char* path)
     // Add a button for the new library
     addLibraryButton(label, path);
 }
+
 
 void MainWindow::openLibrary()
 {
@@ -198,6 +206,10 @@ size_t MainWindow::loadState()
         settings.setArrayIndex(i);
         QString name = settings.value("name").toString();
         QString path = settings.value("path").toString();
+
+        if (name == "Local Home") {
+            continue;
+        }
         addLibrary(name.toStdString().c_str(), path.toStdString().c_str());
     }
     settings.endArray();
@@ -207,7 +219,6 @@ size_t MainWindow::loadState()
 
 void MainWindow::on_homeLibraryButton_clicked()
 {
-    // Simulate the button click to open the home library
     QPushButton* button = ui.homeLibraryButton;
     if (button) {
         openLibrary();

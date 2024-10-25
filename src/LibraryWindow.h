@@ -32,19 +32,13 @@ public:
     void setMainWindow(MainWindow* mainWindow);
 
 private slots:
-    // Slot for when the search text changes
     void onSearchTextChanged(const QString& text);
-    // Slot for when the search field changes
     void onSearchFieldChanged(const QString& field);
-    // Slot for when a model card is clicked in the available models view
     void onAvailableModelClicked(const QModelIndex& index);
-    // Slot for when a model card is clicked in the selected models view
     void onSelectedModelClicked(const QModelIndex& index);
-    // Slot for when the Generate Report button is clicked
     void onGenerateReportButtonClicked();
-    void onBackButtonClicked();
+    void on_backButton_clicked();
 
-    // Slot for when settings are clicked in the model card
     void onSettingsClicked(int modelId);
 
     void startIndexing();
