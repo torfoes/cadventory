@@ -113,7 +113,6 @@ bool Model::createTable() {
   return success;
 }
 
-
 // CRUD Operations for Models
 bool Model::insertModel(ModelData modelData) {
   std::string sql =
@@ -127,10 +126,12 @@ bool Model::insertModel(ModelData modelData) {
   sqlite3_bind_int(stmt, 1, modelData.id);
   sqlite3_bind_text(stmt, 2, modelData.short_name.c_str(), -1, SQLITE_STATIC);
   sqlite3_bind_text(stmt, 3, modelData.path.c_str(), -1, SQLITE_STATIC);
-  sqlite3_bind_text(stmt, 4, modelData.primary_file_path.c_str(), -1, SQLITE_STATIC);
-  sqlite3_bind_text(stmt, 5, modelData.override_info.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 4, modelData.primary_file_path.c_str(), -1,
+                    SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 5, modelData.override_info.c_str(), -1,
+                    SQLITE_STATIC);
   sqlite3_bind_text(stmt, 6, modelData.library.c_str(), -1, SQLITE_STATIC);
-  
+
   return executePreparedStatement(stmt);
 }
 
@@ -143,6 +144,23 @@ std::vector<ModelData> Model::getModels() {
       "models;";
   sqlite3_stmt* stmt = prepareStatement(sql);
   if (!stmt) return models;
+
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    models.push_back(mapRowToModelData(stmt));
+  }
+  sqlite3_finalize(stmt);
+  return models;
+}
+
+std::vector<ModelData> Model::getModelsInLibrary(const std::string& library) {
+  std::vector<ModelData> models;
+  std::string sql =
+      "SELECT id, short_name, path, primary_file_path, override_info, library "
+      "FROM models WHERE library = ?;";
+  sqlite3_stmt* stmt = prepareStatement(sql);
+  if (!stmt) return models;
+
+  sqlite3_bind_text(stmt, 1, library.c_str(), -1, SQLITE_STATIC);
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     models.push_back(mapRowToModelData(stmt));

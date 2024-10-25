@@ -6,8 +6,8 @@
 #include <set>
 
 #include "./Model.h"
-#include "Model.h"
 #include "./ProcessGFiles.h"
+#include "Model.h"
 #include "ProgressWindow.h"
 
 Library::Library(const char* _label, const char* _path)
@@ -107,19 +107,7 @@ std::vector<std::string> Library::getModelFilePaths() {
 
 // gets the models from the database in this
 std::vector<ModelData> Library::getModels() {
-  std::vector<ModelData> allModels = model->getModels();
-  std::cout << "Total number of models: " << allModels.size() << std::endl;
-  std::vector<ModelData> libraryModels;
-
-  for (const ModelData& modelData : allModels) {
-    int modelId = modelData.id;
-    std::string libraryName = model->getProperty(modelId, "library_name");
-    if (libraryName == shortName) {
-      libraryModels.push_back(modelData);
-    }
-  }
-
-  return libraryModels;
+  return model->getModelsInLibrary(shortName);
 }
 
 std::vector<ModelData> Library::getModelsView() {
