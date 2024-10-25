@@ -115,21 +115,6 @@ bool Model::createTable() {
 
 
 // CRUD Operations for Models
-
-// bool Model::insertModel(const std::string& filePath,
-//                         const std::string& shortName, const std::string& path,
-//                         const std::string& primaryFile,
-//                         const std::string& overrides,
-//                         const std::string& library) {
-//   int id = hashModel(filePath);
-//   return insertModel(id, shortName, path, primaryFile, overrides, library);
-// }
-
-// bool Model::insertModel(int id, const std::string& shortName,
-//                         const std::string& path, const std::string& primaryFile,
-//                         const std::string& overrides,
-//                         const std::string& library) {
-
 bool Model::insertModel(ModelData modelData) {
   std::string sql =
       "INSERT INTO models (id, short_name, path, primary_file_path, "

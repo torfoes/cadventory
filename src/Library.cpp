@@ -37,10 +37,6 @@ void Library::createDatabase(QWidget* parent) {
                      .library = shortName,
                      .override_info = ""};
 
-      // model->insertModel(fullPath + "/" + filePath, "short_name", filePath,
-      //                    "primary_file"
-      //                    "overrides",
-      //                    shortName);
       model->insertModel(data);
 
       model->insertProperties(
