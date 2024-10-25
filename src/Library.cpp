@@ -29,8 +29,8 @@ void Library::createDatabase(QWidget* parent) {
   for (const std::string& filePath : allModels) {
     int modelId = model->hashModel(fullPath + "/" + filePath);
     if (!model->hasProperties(modelId)) {
-      model->insertModel(fullPath + "/" + filePath, filePath, "primary_file",
-                         "overrides");
+      model->insertModel(fullPath + "/" + filePath, "short_name", filePath, "primary_file"
+                         "overrides", "library");
 
       model->insertProperties(
           modelId, gFileProcessor.processGFile(fullPath + "/" + filePath));
@@ -92,8 +92,10 @@ std::vector<std::string> Library::getModelFilePaths() {
     }
     uniqueFiles.insert(relativePath);
   }
-  std::vector<std::string> ret = std::vector<std::string>(uniqueFiles.begin(), uniqueFiles.end());
-  std::cout << "Number of unique model files: " << uniqueFiles.size() << std::endl;
+  std::vector<std::string> ret =
+      std::vector<std::string>(uniqueFiles.begin(), uniqueFiles.end());
+  std::cout << "Number of unique model files: " << uniqueFiles.size()
+            << std::endl;
   return ret;
 }
 
@@ -294,6 +296,4 @@ std::vector<std::string> Library::getTags() {
   return allTags;
 }
 
-void Library::setModels() {
-  models = getModels();
-}
+void Library::setModels() { models = getModels(); }
