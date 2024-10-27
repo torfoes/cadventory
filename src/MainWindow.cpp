@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QSettings>
 #include <QMessageBox>
+#include <QMenuBar>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -40,6 +41,23 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QString home = QDir::homePath();
     addLibrary("Local Home", home.toStdString().c_str());
     std::cout << "Loaded local home [" << home.toStdString().c_str() << "] library" << std::endl;
+
+    fileMenu = new QMenu(tr("&File"),this);
+    editMenu = new QMenu(tr("&Edit"),this);
+    viewMenu = new QMenu(tr("&View"),this);
+    windowMenu = new QMenu(tr("&Window"),this);
+    helpMenu = new QMenu(tr("&Help"),this);
+
+    //reload = new QAction(tr("&Reload"),this);
+
+    //editMenu->addAction(reload);
+    //editMenu->removeAction();
+
+    menuBar()->addMenu(fileMenu);
+    menuBar()->addMenu(editMenu);
+    menuBar()->addMenu(viewMenu);
+    menuBar()->addMenu(windowMenu);
+    menuBar()->addMenu(helpMenu);
 
 }
 

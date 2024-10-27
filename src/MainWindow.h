@@ -24,6 +24,12 @@ public:
 
     void addLibrary(const char* label = nullptr, const char* path = nullptr);
     void openLibrary();
+    QMenu * fileMenu;
+    QMenu * editMenu;
+    QMenu * viewMenu;
+    QMenu * windowMenu;
+    QMenu * helpMenu;
+
 
 public slots:
     void updateStatusLabel(const char* status);
@@ -41,6 +47,7 @@ protected:
 private:
     Ui::MainWindow ui;
     std::vector<Library*> libraries;
+
 };
 
 #endif /* MAINWINDOW_H */
