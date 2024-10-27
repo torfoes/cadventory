@@ -17,16 +17,16 @@ public:
     bool editorEvent(QEvent* event, QAbstractItemModel* model,
                      const QStyleOptionViewItem& option, const QModelIndex& index) override;
 
+    // Helper methods to calculate component rectangles
+    QRect iconRect(const QStyleOptionViewItem& option) const;
+
 signals:
-    void geometryBrowserClicked(int modelId);  // Signal for the red rectangle
+    void geometryBrowserClicked(int modelId);
 
 private:
-    // Helper methods to calculate component rectangles
     QRect previewRect(const QStyleOptionViewItem& option) const;
     QRect textRect(const QStyleOptionViewItem& option) const;
-    QRect redRectangleRect(const QStyleOptionViewItem& option) const;
 
-    // No need for settingsIcon since we're using a red rectangle
 };
 
 #endif // MODELCARDDELEGATE_H

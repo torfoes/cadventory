@@ -4,6 +4,7 @@
 #include "IndexingWorker.h"
 #include "ProcessGFiles.h"
 #include "MainWindow.h"
+#include "GeometryBrowserDialog.h"
 // #include "AdvancedOptionsDialog.h"
 
 #include <QThread>
@@ -166,6 +167,9 @@ void LibraryWindow::setupConnections() {
     // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
 
+    connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
+            this, &LibraryWindow::onGeometryBrowserClicked);
+
 }
 
 void LibraryWindow::onSearchTextChanged(const QString& text) {
@@ -256,4 +260,13 @@ void LibraryWindow::on_backButton_clicked() {
         qDebug() << "mainWindow is null";
     }
 
+}
+
+
+void LibraryWindow::onGeometryBrowserClicked(int modelId) {
+    qDebug() << "Geometry browser clicked for model ID:" << modelId;
+
+    // Create and show the geometry browser dialog
+    GeometryBrowserDialog* dialog = new GeometryBrowserDialog(modelId, model, this);
+    dialog->exec();
 }
