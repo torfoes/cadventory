@@ -4,6 +4,7 @@
 #include "Model.h"
 #include <QRegularExpression>
 
+
 ModelFilterProxyModel::ModelFilterProxyModel(QObject* parent)
     : QSortFilterProxyModel(parent) {
 }
