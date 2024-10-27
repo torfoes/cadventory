@@ -43,53 +43,7 @@ size_t Library::indexFiles()
 
 void Library::loadDatabase()
 {
-    // Instantiate ProcessGFiles with the model pointer
-    ProcessGFiles gFileProcessor(model);
 
-    // Get the list of models (i.e., .g files)
-    std::vector<std::string> models = getModels();
-
-    // Define the previews folder inside the hidden directory
-    std::string previews_folder = model->getHiddenDirectoryPath() + "/previews";
-
-    // Create the previews folder if it doesn't exist
-    fs::create_directories(previews_folder);
-
-    // Process each model
-    for (const std::string& filePath : models) {
-        std::string fullFilePath = fullPath + "/" + filePath;
-        int modelId = model->hashModel(fullFilePath);
-
-        if (!model->modelExists(modelId)) {
-            ModelData modelData;
-            modelData.id = modelId;
-            modelData.short_name = fs::path(filePath).stem().string();
-            modelData.primary_file = filePath;
-            modelData.override_info = "";
-            modelData.title = "";
-            modelData.author = "Unknown";
-            modelData.file_path = fullFilePath;
-            modelData.library_name = shortName;
-
-            // Insert the model into the database
-            model->insertModel(modelId, modelData);
-
-            // Process the .g file to extract metadata and generate thumbnails
-            gFileProcessor.processGFile(fullFilePath, previews_folder);
-
-            // Update the model with additional information after processing
-            // For example, update the title and thumbnail if they were extracted
-            ModelData updatedModelData = model->getModelById(modelId);
-
-            // If the title was extracted during processing, update it
-            if (updatedModelData.title.empty()) {
-                updatedModelData.title = modelData.short_name;
-            }
-
-            // Update the model in the database
-            model->updateModel(modelId, updatedModelData);
-        }
-    }
 }
 
 std::vector<std::string> Library::getModels()

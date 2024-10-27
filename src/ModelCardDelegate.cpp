@@ -4,11 +4,12 @@
 #include <QApplication>
 #include <QMouseEvent>
 #include <QStyle>
-#include <QIcon>
+
+#include <iostream>
 
 ModelCardDelegate::ModelCardDelegate(QObject* parent)
     : QStyledItemDelegate(parent) {
-    settingsIcon = QIcon(":/assets/icons/settings_icon.png").pixmap(24, 24);
+    // No need to load settings icon; we'll use a red rectangle
 }
 
 void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
@@ -20,29 +21,29 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     QString shortName = index.data(Model::ShortNameRole).toString();
     QString title = index.data(Model::TitleRole).toString();
     QString author = index.data(Model::AuthorRole).toString();
-    int modelId = index.data(Model::IdRole).toInt();
 
-    // draw background
+    // Draw background
     if (option.state & QStyle::State_Selected) {
         painter->fillRect(option.rect, option.palette.highlight());
     } else {
         painter->fillRect(option.rect, option.palette.window());
     }
 
-    // calculate rectangles
+    // Calculate rectangles
     QRect previewR = previewRect(option);
     QRect textR = textRect(option);
-    QRect settingsR = settingsIconRect(option);
+    QRect redRectR = redRectangleRect(option);  // For the red rectangle
 
+    // Draw thumbnail or placeholder
     if (!thumbnail.isNull()) {
         painter->drawPixmap(previewR, thumbnail.scaled(previewR.size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
     } else {
-        // placeholder if no thumbnail
+        // Placeholder if no thumbnail
         painter->fillRect(previewR, Qt::lightGray);
         painter->drawText(previewR, Qt::AlignCenter, "No Image");
     }
 
-    // text
+    // Draw text
     painter->setPen(option.palette.text().color());
     QFont boldFont = option.font;
     boldFont.setBold(true);
@@ -53,8 +54,10 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     painter->drawText(textR.adjusted(0, 20, 0, 0), Qt::AlignLeft | Qt::AlignTop, title);
     painter->drawText(textR.adjusted(0, 40, 0, 0), Qt::AlignLeft | Qt::AlignTop, author);
 
-    // Draw settings icon
-    painter->drawPixmap(settingsR.topLeft(), settingsIcon);
+    // Draw red rectangle (acting as an icon)
+    painter->setBrush(Qt::red);
+    painter->setPen(Qt::NoPen);
+    painter->drawRect(redRectR);
 
     painter->restore();
 }
@@ -72,19 +75,21 @@ bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
         QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
         QPoint pos = mouseEvent->pos();
 
-        // Check if the settings icon area was clicked
-        if (settingsIconRect(option).contains(pos)) {
+        // Check if the red rectangle area was clicked
+        if (redRectangleRect(option).contains(pos)) {
             int modelId = index.data(Model::IdRole).toInt();
-            emit settingsClicked(modelId);
-            return true;
+            std::cout << modelId;
+            emit geometryBrowserClicked(modelId);
+            return true;  // Event handled, do not pass to base class
         }
 
-        // handle selection
+        // Allow selection for other areas
         if (option.rect.contains(pos)) {
-            return true;
+            return QStyledItemDelegate::editorEvent(event, model, option, index);
         }
     }
 
+    // Default processing for other events
     return QStyledItemDelegate::editorEvent(event, model, option, index);
 }
 
@@ -99,15 +104,14 @@ QRect ModelCardDelegate::textRect(const QStyleOptionViewItem& option) const {
     int margin = 10;
     int imageSize = option.rect.height() - 2 * margin;
     int textX = option.rect.left() + margin + imageSize + margin;
-    int textWidth = option.rect.width() - imageSize - 3 * margin - settingsIcon.width();
+    int textWidth = option.rect.width() - imageSize - 4 * margin - 24;  // Adjusted for red rectangle
     return QRect(textX, option.rect.top() + margin, textWidth, option.rect.height() - 2 * margin);
 }
 
-QRect ModelCardDelegate::settingsIconRect(const QStyleOptionViewItem& option) const {
+QRect ModelCardDelegate::redRectangleRect(const QStyleOptionViewItem& option) const {
     int margin = 10;
-    int iconSize = 24;
-    int x = option.rect.right() - margin - iconSize;
+    int rectSize = 24;
+    int x = option.rect.right() - margin - rectSize;
     int y = option.rect.top() + margin;
-    return QRect(x, y, iconSize, iconSize);
+    return QRect(x, y, rectSize, rectSize);
 }
-

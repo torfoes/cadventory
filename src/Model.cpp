@@ -420,12 +420,34 @@ bool Model::setData(const QModelIndex& index, const QVariant& value, int role) {
 
     if (role == IsSelectedRole) {
         modelData.isSelected = value.toBool();
+
+        // Update the database
+        std::string sql = "UPDATE models SET is_selected = ? WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        std::lock_guard<std::mutex> lock(db_mutex);
+
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, modelData.isSelected ? 1 : 0);
+            sqlite3_bind_int(stmt, 2, modelData.id);
+
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                std::cerr << "Failed to update isSelected in database: " << sqlite3_errmsg(db) << std::endl;
+                sqlite3_finalize(stmt);
+                return false;
+            }
+            sqlite3_finalize(stmt);
+        } else {
+            std::cerr << "SQL error in setData when updating isSelected: " << sqlite3_errmsg(db) << std::endl;
+            return false;
+        }
+
         emit dataChanged(index, index, {IsSelectedRole});
         return true;
     }
 
     return false;
 }
+
 
 Qt::ItemFlags Model::flags(const QModelIndex& index) const {
     if (!index.isValid())

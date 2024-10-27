@@ -171,7 +171,7 @@ void LibraryWindow::setupConnections() {
     connect(ui.generateReportButton, &QPushButton::clicked, this, &LibraryWindow::onGenerateReportButtonClicked);
 
     // Connect settings clicked signal from delegate
-    connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
+    // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
     connect(reload,&QAction::triggered,this,&LibraryWindow::reloadLibrary);
 
