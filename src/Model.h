@@ -1,60 +1,106 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <QAbstractListModel>
 #include <vector>
 #include <string>
-#include <map>
+#include <mutex>
 #include <sqlite3.h>
 
-
+// ModelData structure
 struct ModelData {
     int id;
     std::string short_name;
     std::string primary_file;
     std::string override_info;
-    std::map<std::string, std::string> properties;
+    std::string title;
+    std::vector<char> thumbnail;
+    std::string author;
+    std::string file_path;
+    std::string library_name;
+    bool isSelected;
 };
 
+// Declare ModelData as a Qt metatype
+Q_DECLARE_METATYPE(ModelData)
 
-class Model {
+// ObjectData structure
+struct ObjectData {
+    int object_id;
+    int model_id;
+    std::string name;
+    int parent_object_id;
+    bool is_selected;
+};
+
+class Model : public QAbstractListModel {
+    Q_OBJECT
+
 public:
-  Model(const std::string& path);
-  ~Model();
+    enum ModelRoles {
+        IdRole = Qt::UserRole + 1,
+        ShortNameRole,
+        PrimaryFileRole,
+        OverrideInfoRole,
+        TitleRole,
+        ThumbnailRole,
+        AuthorRole,
+        FilePathRole,
+        LibraryNameRole,
+        IsSelectedRole
+    };
 
-  bool createTable();
+    explicit Model(const std::string& libraryPath, QObject* parent = nullptr);
+    ~Model();
 
-  // model CRUD interface
-  bool insertModel(int id, const std::string& shortName, const std::string& file = "", const std::string& overrides = ""); // Create
-  bool insertModel(const std::string& filePath, const std::string& shortName, const std::string& primaryFile, const std::string& overrides);
-  std::vector<ModelData> getModels();
-  ModelData getModelById(int id);
-  bool updateModel(int id, const std::string& shortName, const std::string& file = "", const std::string& overrides = ""); // Update
-  bool deleteModel(int id);
+    // override QAbstractListModel methods
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
-  // tag CRUD + association interface
-  bool addTagToModel(int modelId, const std::string& tagName);
-  std::vector<std::string> getTagsForModel(int modelId);
-  bool removeTagFromModel(int modelId, const std::string& tagName);
+    // added methods for data modification and item flags
+    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-  // properties
-  bool insertProperty(int modelId, const std::string& key, const std::string& value);
-  bool insertProperties(int modelId, const std::map<std::string, std::string>& properties);
-  std::string getProperty(int modelId, const std::string& key); 
-  std::map<std::string, std::string> getProperties(int modelId);
-  bool updateProperty(int modelId, const std::string& key, const std::string& value);
-  bool deleteProperty(int modelId, const std::string& key);
-  bool hasProperties(int modelId); 
+    // CRUD operations for models
+    bool insertModel(int id, const ModelData& modelData);
+    bool updateModel(int id, const ModelData& modelData);
+    bool deleteModel(int id);
+    bool modelExists(int id);
 
-  int hashModel(const std::string& modelDir);
-  void printModel(int modelId);
-  std::string dbPath;
+    // Getters
+    ModelData getModelById(int id);
+
+    // Utility methods
+    int hashModel(const std::string& modelDir);
+    void refreshModelData();
+
+    std::string getHiddenDirectoryPath() const;
+
+    // Update the model list from the database
+    void loadModelsFromDatabase();
+
+    // Methods for objects
+    int insertObject(const ObjectData& obj);
+    bool updateObject(const ObjectData& obj);
+    bool deleteObjectsForModel(int model_id);
+    std::vector<ObjectData> getObjectsForModel(int model_id);
+    bool setObjectData(int object_id, const QVariant& value, int role);
+    bool updateObjectSelection(int object_id, bool is_selected);
+    ObjectData getObjectById(int object_id);
+
+
 private:
-  sqlite3* db;
+    // Database related
+    bool createTables();
+    bool executeSQL(const std::string& sql);
+    sqlite3* db;
+    std::string dbPath;
+    std::mutex db_mutex;
 
-  bool executeSQL(const std::string& sql);
-  static int callback(void* data, int argc, char** argv, char** azColName);
-  
+    std::string hiddenDirPath;
+
+    std::vector<ModelData> models;
 };
-
 
 #endif // MODEL_H

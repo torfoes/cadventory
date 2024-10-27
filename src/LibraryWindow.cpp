@@ -1,263 +1,272 @@
+// LibraryWindow.cpp
 
-#include "./LibraryWindow.h"
-#include "./Model.h"
+#include "LibraryWindow.h"
+#include "IndexingWorker.h"
+#include "ProcessGFiles.h"
+#include "MainWindow.h"
+#include "GeometryBrowserDialog.h"
+// #include "AdvancedOptionsDialog.h"
 
-#include <QStringListModel>
-#include <QListWidgetItem>
-#include <QStringList>
-#include <QString>
-#include <QFileInfo>
-
-#include <QStyledItemDelegate>
-
+#include <QThread>
+#include <QMessageBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QListView>
+#include <QPushButton>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QLabel>
 
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
+LibraryWindow::LibraryWindow(QWidget* parent)
+    : QWidget(parent),
+    library(nullptr),
+    mainWindow(nullptr),
+    model(nullptr),
+    availableModelsProxyModel(new ModelFilterProxyModel(this)),
+    selectedModelsProxyModel(new ModelFilterProxyModel(this)),
+    indexingThread(nullptr),
+    indexingWorker(nullptr),
 
-QStringList list;
+    modelCardDelegate(new ModelCardDelegate(this)) {
+    ui.setupUi(this);
 
+    // Set up models and views
+    setupModelsAndViews();
 
-
-
-
-LibraryWindow::LibraryWindow(QWidget* parent) : QWidget(parent)
-{
-  this->setFixedSize(QSize(876, 600));
-  ui.setupUi(this);
-
-
-
-
-  //tagsWidget = new QListWidget(this);
-
-  /* make Model selections update the tabs */
-  connect(ui.listWidget, &QListWidget::currentItemChanged, this, &LibraryWindow::onModelSelectionChanged);
-
+    // Set up connections
+    setupConnections();
 }
 
-LibraryWindow::~LibraryWindow()
-{
-}
+LibraryWindow::~LibraryWindow() {
+    qDebug() << "LibraryWindow destructor called";
 
-void LibraryWindow::loadFromLibrary(Library* _library)
-{
-  this->library = _library;
-  this->setWindowTitle(library->name() + QString(" Library"));
-  this->ui.currentLibrary->setText(library->name());
-
-  /* start fresh */
-  ui.listWidget->clear();
-
-  /* populate Models listing */
-  auto modelDirs = library->getModels();
-  for (const auto& dir : modelDirs) {
-    QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(dir));
-    ui.listWidget->addItem(item);
-  }
-
-  /* prepare MVC x for our list views */
-  auto populateModel = [this](QStringListModel* listModel, const std::vector<std::string>& fullPaths) {
-    QStringList list;
-    std::string base = std::string(library->path()) + "/";
-    for (const auto& fullPath : fullPaths) {
-      std::string relativePath = fullPath.substr(base.length());
-      list << QString::fromStdString(relativePath);
+    // Ensure the indexing thread is stopped if it wasn't already
+    if (indexingThread && indexingThread->isRunning()) {
+        qDebug() << "Waiting for indexingThread to finish in destructor";
+        indexingThread->wait();
+        qDebug() << "indexingThread finished in destructor";
     }
-    listModel->setStringList(list);
-  };
 
-  geometryModel = new QStringListModel(this);
-  imagesModel = new QStringListModel(this);
-  documentsModel = new QStringListModel(this);
-  dataModel = new QStringListModel(this);
-  tagsModel = new QStringListModel(this);
-  currentTagsModel = new QStringListModel(this);
-  currentPropertiesModel = new QStringListModel(this);
+    // Delete indexingWorker and indexingThread if they exist
+    if (indexingWorker) {
+        delete indexingWorker;
+        indexingWorker = nullptr;
+        qDebug() << "indexingWorker deleted in destructor";
+    }
 
-  /* populate the MVC models */
-  populateModel(geometryModel, library->getGeometry());
-  populateModel(imagesModel, library->getImages());
-  populateModel(documentsModel, library->getDocuments());
-  populateModel(dataModel, library->getData());
-
-  /* wire the MVC models to the list views */
-  ui.geometryListView->setModel(geometryModel);
-  ui.imagesListView->setModel(imagesModel);
-  ui.documentsListView->setModel(documentsModel);
-  ui.dataListView->setModel(dataModel);
-  
-  std::cout << "Setting tags model" << std::endl;
-  ui.tagsListView->setModel(tagsModel);
-  std::cout << "Seting current tags model" << std::endl;
-  ui.currentTagsListView->setModel(currentTagsModel);
-  std::cout << "Setting current properties model" << std::endl;
-  ui.currentPropertiesListView->setModel(currentPropertiesModel);
-  std::cout << "Set current properties model" << std::endl;
-
-  /* load tags */
-  std::cout << "Calling display tags for library: " << library->name() << std::endl;
-  loadTags();
-  std::cout << "Called display tags for library: " << library->name() << std::endl;
-
-
-   list = geometryModel->stringList();
-
-
-   std::string root_folder = fs::current_path().string()+"/previews/";  // Get the current root folder of the project
-
-   for (const QString &path : list) {
-       // Check if the string ends with ".g"
-       if (path.endsWith(".g", Qt::CaseInsensitive)) {
-           // Optional: Extract only the filename from the path
-           QString filename = QFileInfo(path).fileName();
-           std::cout << filename.toStdString() << std::endl;
-           //QString filepath = ":/build/previews/"+filename;
-
-           QString filepath = QString::fromStdString(root_folder);
-
-           filepath.append(filename);
-           filepath.chop(2);
-           filepath.append(".png");
-           std::cout << filepath.toStdString() << std::endl;
-           // Print the filename without the extension
-
-           QListWidgetItem *item = new QListWidgetItem(QIcon(filepath), filename);
-QList<QSize> availableSizes = item->icon().availableSizes();
-
-           if (availableSizes.isEmpty()){
-            delete item;
-           }
-           else{
-            ui.listWidgetPage->addItem(item);
-           }
-
-       }
-
-   }
-
-
-
-
-
-   ui.listWidgetPage->setResizeMode(QListView::Adjust);
-   ui.listWidgetPage->setViewMode(QListView::IconMode);
-
-   ui.listWidgetPage->setWordWrap(true);
-
-   ui.listWidgetPage->setIconSize(QSize(72, 72));
-   ui.listWidgetPage->setGridSize(QSize(144, 108));
-   ui.listWidgetPage->setUniformItemSizes(true);
-   ui.listWidgetPage->setMovement(QListView::Static);
-   ui.listWidgetPage->setResizeMode(QListView::Adjust);
-   ui.listWidgetPage->setLayoutMode(QListView::Batched);
-   ui.listWidgetPage->setBatchSize(10);
-
-   QStyledItemDelegate *delegate = new QStyledItemDelegate(this);
-   ui.listWidgetPage->setItemDelegate(delegate);
+    if (indexingThread) {
+        delete indexingThread;
+        indexingThread = nullptr;
+        qDebug() << "indexingThread deleted in destructor";
+    }
 }
 
-void
-LibraryWindow::on_allLibraries_clicked()
-{
+
+void LibraryWindow::loadFromLibrary(Library* _library) {
+    library = _library;
+    setWindowTitle(library->name() + QString(" Library"));
+    ui.currentLibrary->setText(library->name());
+
+    // Load models from the library
+    model = library->model;
+
+    // Set the source model for proxy models
+    availableModelsProxyModel->setSourceModel(model);
+    selectedModelsProxyModel->setSourceModel(model);
+
+    // Set initial filters
+    availableModelsProxyModel->setFilterRole(Model::IsSelectedRole);
+    availableModelsProxyModel->setFilterFixedString("0"); // Show unselected models
+
+    selectedModelsProxyModel->setFilterRole(Model::IsSelectedRole);
+    selectedModelsProxyModel->setFilterFixedString("1"); // Show selected models
+
+    startIndexing();
+}
+
+void LibraryWindow::startIndexing() {
+    // Create the indexing worker and thread
+    indexingThread = new QThread(this); // Parent is LibraryWindow
+    indexingWorker = new IndexingWorker(library);
+
+    // Move the worker to the thread
+    indexingWorker->moveToThread(indexingThread);
+
+    // Connect signals and slots
+    connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
+    connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
+
+    // Start the indexing thread
+    indexingThread->start();
+}
+
+
+
+void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
+    this->mainWindow = mainWindow;
+}
+
+void LibraryWindow::setupModelsAndViews() {
+    // Configure available models view
+    ui.availableModelsView->setModel(availableModelsProxyModel);
+    ui.availableModelsView->setItemDelegate(modelCardDelegate);
+    ui.availableModelsView->setViewMode(QListView::ListMode);
+    ui.availableModelsView->setFlow(QListView::TopToBottom);
+    ui.availableModelsView->setWrapping(false);
+    ui.availableModelsView->setResizeMode(QListView::Adjust);
+    ui.availableModelsView->setSpacing(0);
+    ui.availableModelsView->setUniformItemSizes(true);
+    ui.availableModelsView->setSelectionMode(QAbstractItemView::NoSelection);
+    ui.availableModelsView->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+    QSize itemSize = modelCardDelegate->sizeHint(QStyleOptionViewItem(), QModelIndex());
+    ui.availableModelsView->setGridSize(QSize(0, itemSize.height()));
+
+    ui.selectedModelsView->setModel(selectedModelsProxyModel);
+    ui.selectedModelsView->setItemDelegate(modelCardDelegate);
+    ui.selectedModelsView->setViewMode(QListView::ListMode);
+    ui.selectedModelsView->setFlow(QListView::TopToBottom);
+    ui.selectedModelsView->setWrapping(false);
+    ui.selectedModelsView->setResizeMode(QListView::Adjust);
+    ui.selectedModelsView->setSpacing(0);
+    ui.selectedModelsView->setUniformItemSizes(true);
+    ui.selectedModelsView->setSelectionMode(QAbstractItemView::NoSelection);
+    ui.selectedModelsView->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+    // set grid size for selected models view
+    ui.selectedModelsView->setGridSize(QSize(1, itemSize.height()));
+
+    // Populate search field combo box
+    // Add other fields as needed
+}
+
+
+void LibraryWindow::setupConnections() {
+    // Connect search input
+    connect(ui.searchLineEdit, &QLineEdit::textChanged, this, &LibraryWindow::onSearchTextChanged);
+    connect(ui.searchFieldComboBox, &QComboBox::currentTextChanged, this, &LibraryWindow::onSearchFieldChanged);
+
+    // Connect clicks on available models
+    connect(ui.availableModelsView, &QListView::clicked, this, &LibraryWindow::onAvailableModelClicked);
+
+    // Connect clicks on selected models
+    connect(ui.selectedModelsView, &QListView::clicked, this, &LibraryWindow::onSelectedModelClicked);
+
+    // Connect Generate Report button
+    connect(ui.generateReportButton, &QPushButton::clicked, this, &LibraryWindow::onGenerateReportButtonClicked);
+
+    // Connect settings clicked signal from delegate
+    // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
+    // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
+
+    connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
+            this, &LibraryWindow::onGeometryBrowserClicked);
+
+}
+
+void LibraryWindow::onSearchTextChanged(const QString& text) {
+    int role = ui.searchFieldComboBox->currentData().toInt();
+    availableModelsProxyModel->setFilterRole(role);
+    availableModelsProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    availableModelsProxyModel->setFilterFixedString(text);
+}
+
+void LibraryWindow::onSearchFieldChanged(const QString& field) {
+    Q_UNUSED(field);
+    // Update filter role based on selected field
+    int role = ui.searchFieldComboBox->currentData().toInt();
+    availableModelsProxyModel->setFilterRole(role);
+    // Re-apply filter
+    availableModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onAvailableModelClicked(const QModelIndex& index) {
+    // Toggle selection state
+    QModelIndex sourceIndex = availableModelsProxyModel->mapToSource(index);
+    bool isSelected = model->data(sourceIndex, Model::IsSelectedRole).toBool();
+    model->setData(sourceIndex, !isSelected, Model::IsSelectedRole);
+
+    // Update filters
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onSelectedModelClicked(const QModelIndex& index) {
+    // Toggle selection state
+    QModelIndex sourceIndex = selectedModelsProxyModel->mapToSource(index);
+    bool isSelected = model->data(sourceIndex, Model::IsSelectedRole).toBool();
+    model->setData(sourceIndex, !isSelected, Model::IsSelectedRole);
+
+    // Update filters
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+
+void LibraryWindow::onGenerateReportButtonClicked() {
+    // Gather selected models
+    QList<ModelData> selectedModels;
+    for (int row = 0; row < model->rowCount(); ++row) {
+        QModelIndex index = model->index(row);
+        if (model->data(index, Model::IsSelectedRole).toBool()) {
+            selectedModels.append(model->data(index, Qt::UserRole).value<ModelData>());
+        }
+    }
+
+    // Generate report using selectedModels
+    // Implement your report generation logic here
+    QMessageBox::information(this, "Report", QString("Generating report for %1 models.").arg(selectedModels.size()));
+}
+
+void LibraryWindow::onSettingsClicked(int modelId) {
+    // Handle settings button click
+    qDebug() << "Settings button clicked for model ID:" << modelId;
+    // Implement settings dialog or other actions here
+}
+
+
+void LibraryWindow::onModelProcessed(int modelId) {
+    model->refreshModelData();
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+void LibraryWindow::on_backButton_clicked() {
+    qDebug() << "Back button clicked";
+
+    if (indexingWorker) {
+        qDebug() << "Requesting indexingWorker to stop";
+        indexingWorker->stop();
+        qDebug() << "indexingWorker->stop() called";
+    } else {
+        qDebug() << "indexingWorker is null or already deleted";
+    }
+
+    // Hide the LibraryWindow
     this->hide();
-    main->show();
-}
+    qDebug() << "LibraryWindow hidden";
 
-
-void LibraryWindow::updateListModelForDirectory(QStringListModel* listModel, const std::vector<std::string>& allItems, const std::string& directory)
-{
-  QStringList filteredItems;
-  std::string base = library->path() + (directory == "." ? "" : "/" + directory);
-  for (const auto& item : allItems) {
-    if (item.find(base) == 0) { // item starts with base path
-      std::string relativePath = item.substr(base.length() + 1); // +1 to skip leading slash
-      filteredItems << QString::fromStdString(relativePath);
+    // Show the MainWindow
+    if (mainWindow) {
+        mainWindow->show();
+        qDebug() << "MainWindow shown";
+    } else {
+        qDebug() << "mainWindow is null";
     }
-  }
-  listModel->setStringList(filteredItems);
-}
-
-void LibraryWindow::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* /*previous*/)
-{
-  if (!current)
-    return; // nada selected
-
-  QString selectedDir = current->text();
-  int modelId = library->model->hashModel(library->fullPath+"/"+selectedDir.toStdString());
-
-  std::vector<std::string> modelTags = library->model->getTagsForModel(modelId);
-  std::cout << ">>Selected model: " << selectedDir.toStdString() << std::endl;
-
-  QStringList qModelTags;
-  for (const auto& tag : modelTags) {
-    qModelTags << QString::fromStdString(tag);
-  }
-  currentTagsModel->setStringList(qModelTags);
-
-  QStringList qModelProperties;
-  std::map<std::string, std::string> modelProperties = library->model->getProperties(modelId);
-  for (const auto& [key, value] : modelProperties) {
-      qModelProperties << QString::fromStdString(key + ": " + value);
-  }
-  library->model->printModel(modelId);
-  currentPropertiesModel->setStringList(qModelProperties);
-
-  /* retrieve full lists */
-  // std::vector<std::string> allGeometry = library->getGeometry();
-  // std::vector<std::string> allImages = library->getImages();
-  // std::vector<std::string> allDocuments = library->getDocuments();
-  // std::vector<std::string> allData = library->getData();
-
-  /* filter and update the models for each category */
-  // std::cout << "Updating models for directory: " << selectedDir.toStdString() << std::endl;
-  // updateListModelForDirectory(geometryModel, allGeometry, selectedDir.toStdString());
-  // std::cout << "Updated geometry model" << std::endl;
-  // updateListModelForDirectory(imagesModel, allImages, selectedDir.toStdString());
-  // std::cout << "Updated images model" << std::endl;
-  // updateListModelForDirectory(documentsModel, allDocuments, selectedDir.toStdString());
-  // std::cout << "Updated documents model" << std::endl;
-  // updateListModelForDirectory(dataModel, allData, selectedDir.toStdString());
-  // std::cout << "Updated data model" << std::endl;
-}
-
-// loads all tags from models from a directory ordered by prevalence
-void LibraryWindow::loadTags()
-{
-  std::cout << "Displaying tags for library: " << library->name() << std::endl;
-  
-  std::vector<std::string> sortedTags = library->getTags();
-  for (const auto& tag : sortedTags) {
-    std::cout << tag << " ";
-  }
-  std::cout << std::endl;
-  QStringList tags;
-  for (const auto& tag : sortedTags) {
-    tags << QString::fromStdString(tag);
-  }
-  std::cout << "Setting tags model" << std::endl;
-  tagsModel->setStringList(tags);
-}
-
-void displayModel(const ModelData& model)
-{
-  std::cout << ">>>Model: " << model.short_name << std::endl;
-  std::cout << "Primary file: " << model.primary_file << std::endl;
-  std::cout << "Override info: " << model.override_info << std::endl;
-  std::cout << "Properties: " << std::endl;
-  for (const auto& [key, value] : model.properties) {
-    std::cout << "  " << key << ": " << value << std::endl;
-  }
-  
 
 }
 
-// void LibraryWindow::on_listWidgetPage_itemClicked(QListWidgetItem *item)
-// {
-//     ui.listWidgetPage->
-// }
 
+void LibraryWindow::onGeometryBrowserClicked(int modelId) {
+    qDebug() << "Geometry browser clicked for model ID:" << modelId;
+
+    // Create and show the geometry browser dialog
+    GeometryBrowserDialog* dialog = new GeometryBrowserDialog(modelId, model, this);
+    dialog->exec();
+}

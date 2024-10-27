@@ -1,3 +1,5 @@
+# CMakeLists.txt
+
 cmake_minimum_required(VERSION 3.25)
 
 project(CADventory VERSION 0.1.0 LANGUAGES CXX)
@@ -7,133 +9,164 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
 qt_standard_project_setup()
 
-# flag adjustments Qt requires
+# Flag adjustments for Qt requirements
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /permissive-")
 endif()
 
-# support sqlite built from external or against system
+# Support SQLite built from external or against system
 if (DEFINED CADVENTORY_USE_SQLITE)
   find_package(SQLite3 REQUIRED)
-  set (SQLITE_LIBRARY sqlite3)
+  set(SQLITE_LIBRARY sqlite3)
 else()
   include(cmake/sqlite.cmake)
-  set (SQLITE_LIBRARY sqlite_static)
+  set(SQLITE_LIBRARY sqlite_static)
 endif()
 
-# import the static library that was built
+# Import the static library that was built
 add_library(sqlite_static IMPORTED STATIC GLOBAL)
 add_dependencies(sqlite_static sqlite)
 set_target_properties(sqlite_static PROPERTIES
   IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
 )
 
-# all warnings for compliance
+# All warnings for compliance
 if (MSVC)
   add_compile_options(/W4)
 else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-# build CADventory
+# --- Begin BRL-CAD Configuration ---
+
+set(BRLCAD_DIR "" CACHE PATH "Path to BRL-CAD installation directory")
+
+if(BRLCAD_DIR)
+  set(MGED_EXECUTABLE "${BRLCAD_DIR}/bin/mged")
+  set(RT_EXECUTABLE "${BRLCAD_DIR}/bin/rt")
+  set(GIST_EXECUTABLE "${BRLCAD_DIR}/bin/gist")
+else()
+  find_program(MGED_EXECUTABLE mged)
+  find_program(RT_EXECUTABLE rt)
+  find_program(GIST_EXECUTABLE gist)
+endif()
+
+if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
+  message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+)
+
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+
+# --- End BRL-CAD Configuration ---
+
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_DIR})
-set (SRCS
+set(SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
   src/MainWindow.cpp
   src/SplashDialog.cpp
   src/Model.cpp
+  src/Library.cpp
+  src/LibraryWindow.cpp
+  src/ProcessGFiles.cpp
+  src/IndexingWorker.cpp
   src/librarywindow.ui
   src/main.cpp
   src/mainwindow.ui
   src/splash.ui
-  src/Library.cpp
-  src/LibraryWindow.cpp
-  src/ProcessGFiles.cpp
   src/LibraryWindow.h
   src/MainWindow.h
-
   src/Library.h
+  src/Model.h
+  src/ProcessGFiles.h
+  src/IndexingWorker.h
+  src/ModelCardDelegate.h
+  src/ModelCardDelegate.cpp
+  src/ModelFilterProxyModel.h
+  src/ModelFilterProxyModel.cpp
 )
-set (LIBS
+set(LIBS
   Qt6::Core
   Qt6::Widgets
   Qt6::Gui
 )
+
 qt_add_executable(cadventory WIN32 ${SRCS}
+    src/ModelCardDelegate.h src/ModelCardDelegate.cpp
+    src/ModelFilterProxyModel.h src/ModelFilterProxyModel.cpp
+    src/GeometryBrowserDialog.h src/GeometryBrowserDialog.cpp)
 
 
-
-)
-
-# note dependencies
+# Note dependencies
 add_dependencies(cadventory sqlite_static)
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BUILD_DIR}/sqlite/install/include)
-target_link_libraries(cadventory PRIVATE ${LIBS} ${SQLITE_LIBRARY}
-)
+target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sqlite/install/include)
+target_link_libraries(cadventory PRIVATE ${LIBS} ${SQLITE_LIBRARY})
 
-# deployment on Windows needs DLLs copied
+# Deployment on Windows needs DLLs copied
 install(TARGETS cadventory
   BUNDLE  DESTINATION .
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES splash.png
-  # eventually should go to DATADIR
+  # Eventually should go to DATADIR
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES doc/CADventory.docx
   DESTINATION ${CMAKE_INSTALL_DOCDIR}
 )
 
-
-# windows insanely wants DLLs in same folder as the app so set it up
+# Windows wants DLLs in the same folder as the app
 if(WIN32)
+  # Function to copy Qt DLLs for a given target
+  function(copy_qt_dlls target)
+    foreach(qt_module IN ITEMS ${LIBS})
+      if(CMAKE_BUILD_TYPE MATCHES "Debug")
+        get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_DEBUG)
+      else()
+        get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_RELEASE)
+      endif()
 
-  # function to copy Qt DLLs for a given target
-  function (copy_qt_dlls target)
-    foreach (qt_module IN ITEMS ${LIBS})
-      if (CMAKE_BUILD_TYPE MATCHES "Debug")
-	get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_DEBUG)
-      else ()
-	get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_RELEASE)
-      endif ()
-
-      if (lib_location)
+      if(lib_location)
         message("Copying DLLs from ${lib_location} after compile completes.")
 
-        # assume DLL is in dir relative to the .lib file
+        # Assume DLL is in dir relative to the .lib file
         get_filename_component(lib_dir ${lib_location} DIRECTORY)
         get_filename_component(lib_name ${lib_location} NAME_WE)
 
-	# remove 'lib' prefix if present
-        string(REGEX REPLACE "^lib" "" dll_name ${lib_name}) 
+        # Remove 'lib' prefix if present
+        string(REGEX REPLACE "^lib" "" dll_name ${lib_name})
         set(dll_path "${lib_dir}/../bin/${dll_name}.dll")
 
-        # copy DLL to the target output build dir
+        # Copy DLL to the target output build dir
         add_custom_command(TARGET ${target} POST_BUILD
           COMMAND ${CMAKE_COMMAND} -E copy_if_different "${dll_path}" $<TARGET_FILE_DIR:${target}>
           COMMENT "Copying ${dll_path} to $<TARGET_FILE_DIR:${target}>"
         )
 
-        # copy DLL to the install dir
+        # Copy DLL to the install dir
         install(FILES ${dll_path}
           DESTINATION $<TARGET_FILE_DIR:${target}>
         )
-      else ()
+      else()
         message(WARNING "DLL for ${qt_module} not found.")
-      endif ()
-    endforeach ()
-  endfunction ()
+      endif()
+    endforeach()
+  endfunction()
 
   # Call the function to copy the Qt DLLs for your target
   copy_qt_dlls(cadventory)
-endif ()
+endif()
 
-# also copy Qt plugins.  probably a better way, but this will do the trick for now.
+# Also copy Qt plugins
 if(WIN32)
   set(QT_PLUGINS_DIR "${Qt6_DIR}/../../../plugins")
   set(QT_REQUIRED_PLUGINS platforms imageformats)
@@ -142,22 +175,20 @@ if(WIN32)
     set(PLUGIN_SRC_DIR "${QT_PLUGINS_DIR}/${plugin}")
     set(PLUGIN_DST_DIR "$<TARGET_FILE_DIR:cadventory>/${plugin}")
 
-    # copy the plugin directory to the build dir
+    # Copy the plugin directory to the build dir
     add_custom_command(TARGET cadventory POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUGIN_DST_DIR}
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${PLUGIN_SRC_DIR} ${PLUGIN_DST_DIR}
       COMMENT "Copying Qt plugin: ${plugin}\n"
     )
 
-    # install plugin directory to the install dir
+    # Install plugin directory to the install dir
     install(DIRECTORY ${PLUGIN_DST_DIR}
       DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
   endforeach()
 endif()
 
-
-# testing
+# Testing
 enable_testing()
 add_subdirectory(src/tests)
-

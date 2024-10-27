@@ -1,26 +1,35 @@
-#ifndef PROCESS_G_FILES_H
-#define PROCESS_G_FILES_H
+#ifndef PROCESSGFILES_H
+#define PROCESSGFILES_H
 
 #include <string>
 #include <vector>
-#include <filesystem>
-#include <mutex>
 #include <queue>
-#include <thread>
-#include <sqlite3.h>
-#include <utility>
-#include <map>
+#include <mutex>
+#include <filesystem>
+
+#include "Model.h"
 
 class ProcessGFiles {
 public:
-    ProcessGFiles();
-    std::map<std::string, std::string> processGFile(const std::filesystem::path& file_path);
-    std::map<std::string, std::string> executeMultiThreadedProcessing(const std::vector<std::string>& allGeometry, int num_workers = 4);
+    explicit ProcessGFiles(Model* model);
+
+    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
 
 private:
-    std::string dbPath;
-    std::pair<std::string, std::string> runCommand(const std::string& command);
-    void gFileWorker(std::queue<std::filesystem::path>& file_queue);
+    // Helper methods
+    bool isModelProcessed(int modelId);
+    void extractTitle(ModelData& modelData, const std::string& file_path);
+    void extractObjects(ModelData& modelData, const std::string& file_path);
+    void generateThumbnail(ModelData& modelData, const std::string& file_path, const std::string& previews_folder);
+
+    // Command execution helpers
+    std::tuple<std::string, std::string, int> runCommand(const std::string& command, int timeout_seconds = 10);
+    std::vector<std::string> parseTopsOutput(const std::string& tops_output);
+    std::vector<std::string> parseLtOutput(const std::string& lt_output);
+    bool validateObject(const std::string& file_path, const std::string& object_name);
+
+    Model* model;
+    std::mutex db_mutex;
 };
 
-#endif // PROCESS_G_FILES_H
+#endif // PROCESSGFILES_H

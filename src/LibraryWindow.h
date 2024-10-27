@@ -1,65 +1,71 @@
 #ifndef LIBRARYWINDOW_H
 #define LIBRARYWINDOW_H
 
-#include <map>
-#include <string>
-#include <vector>
-
 #include <QWidget>
-#include <QObject>
-#include <QListWidgetItem>
-#include <QStringListModel>
-#include <QString>
+#include <QListView>
+#include <QPushButton>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QSortFilterProxyModel>
+#include <QThread>
 
-#include "./ui_librarywindow.h"
-#include "MainWindow.h"
+#include "ui_LibraryWindow.h"
+#include "Library.h"
+#include "Model.h"
+#include "ModelCardDelegate.h"
+#include "ModelFilterProxyModel.h"
+#include "IndexingWorker.h"
 
+class MainWindow;
 
-#include "./Library.h"
-#include "./Model.h"
-
-
-class LibraryWindow : public QWidget
-{
-  Q_OBJECT
+class LibraryWindow : public QWidget {
+    Q_OBJECT
 
 public:
-  explicit LibraryWindow(QWidget* parent = nullptr);
-  ~LibraryWindow();
+    explicit LibraryWindow(QWidget* parent = nullptr);
+    ~LibraryWindow();
 
-  void loadFromLibrary(Library *library);
-  void loadTags();
+    void loadFromLibrary(Library* _library);
+    void setMainWindow(MainWindow* mainWindow);
 
-protected:
-  void updateListModelForDirectory(QStringListModel* model, const std::vector<std::string>& allItems, const std::string& directory);
 
-public slots:
-  void on_allLibraries_clicked();
-  void onModelSelectionChanged(QListWidgetItem *current, QListWidgetItem *previous);
+private slots:
+    void onSearchTextChanged(const QString& text);
+    void onSearchFieldChanged(const QString& field);
+    void onAvailableModelClicked(const QModelIndex& index);
+    void onSelectedModelClicked(const QModelIndex& index);
+    void onGenerateReportButtonClicked();
+    void on_backButton_clicked();
 
-  // private slots:
-  // void on_listWidgetPage_itemClicked(QListWidgetItem *item);
+    void onSettingsClicked(int modelId);
+    void onGeometryBrowserClicked(int modelId);
 
-  private:
-  Ui::LibraryWindow ui;
-  Library* library;
-  Model* model;
+    void startIndexing();
+    void onModelProcessed(int modelId);
 
-  MainWindow* main;
+private:
+    void setupModelsAndViews();
+    void setupConnections();
 
-  QStringListModel *geometryModel;
-  QStringListModel *imagesModel;
-  QStringListModel *documentsModel;
-  QStringListModel *dataModel;
+    Ui::LibraryWindow ui;
+    Library* library;
+    MainWindow* mainWindow;
 
-  QStringListModel *tagsModel;
-  QListWidget *tagsWidget;
-  QStringListModel *currentTagsModel;
-  QStringListModel *currentPropertiesModel;
+    Model* model;
 
-  //void AddItem(const QString& qstrFileName, const QString& qstrPic);
+    // Proxy models
+    ModelFilterProxyModel* availableModelsProxyModel;
+    ModelFilterProxyModel* selectedModelsProxyModel;
 
+    // Delegates
+    ModelCardDelegate* modelCardDelegate;
+
+    // Selected models list
+    QList<int> selectedModelIds;
+
+    // Indexing worker and thread
+    QThread* indexingThread;
+    IndexingWorker* indexingWorker;
 };
 
-
-#endif /* LIBRARYWINDOW_H */
+#endif // LIBRARYWINDOW_H

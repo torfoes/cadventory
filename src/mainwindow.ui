@@ -61,7 +61,7 @@
     </property>
     <layout class="QGridLayout" name="gridLayout">
      <property name="sizeConstraint">
-      <enum>QLayout::SetDefaultConstraint</enum>
+      <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
      </property>
      <property name="topMargin">
       <number>1</number>
@@ -161,7 +161,7 @@
      <x>0</x>
      <y>0</y>
      <width>876</width>
-     <height>24</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuCADventory_0_1_0">
