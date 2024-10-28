@@ -82,15 +82,13 @@ bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
         QRect itemRect = option.rect;
         QPoint itemPos = pos - itemRect.topLeft();
 
-        // Check if the red rectangle area was clicked
         if (iconRect(option).contains(pos)) {
             int modelId = index.data(Model::IdRole).toInt();
-            // std::cout << "Red rectangle clicked, Model ID: " << modelId << std::endl;
             emit geometryBrowserClicked(modelId);
 
-            // Accept the event and prevent further processing
+            // accept the event and prevent further processing
             event->accept();
-            return true;  // Event handled
+            return true;
         }
     }
 
