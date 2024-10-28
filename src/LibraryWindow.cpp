@@ -210,20 +210,61 @@ void LibraryWindow::onSelectedModelClicked(const QModelIndex& index) {
     selectedModelsProxyModel->invalidate();
 }
 
+
 void LibraryWindow::onGenerateReportButtonClicked() {
-    // Gather selected models
-    QList<ModelData> selectedModels;
-    for (int row = 0; row < model->rowCount(); ++row) {
-        QModelIndex index = model->index(row);
-        if (model->data(index, Model::IsSelectedRole).toBool()) {
-            selectedModels.append(model->data(index, Qt::UserRole).value<ModelData>());
-        }
+    std::vector<ModelData> selectedModels = model->getSelectedModels();
+
+    if (selectedModels.empty()) {
+        QMessageBox::information(this, "Report", "No models selected for the report.");
+        return;
     }
 
-    // Generate report using selectedModels
-    // Implement your report generation logic here
-    QMessageBox::information(this, "Report", QString("Generating report for %1 models.").arg(selectedModels.size()));
+    // Iterate through each selected model
+    for (const auto& modelData : selectedModels) {
+        std::cout << "==============================\n";
+        std::cout << "Model ID: " << modelData.id << "\n";
+        std::cout << "Short Name: " << modelData.short_name << "\n";
+        std::cout << "Primary File: " << modelData.primary_file << "\n";
+        std::cout << "Override Info: " << modelData.override_info << "\n";
+        std::cout << "Title: " << modelData.title << "\n";
+        std::cout << "Author: " << modelData.author << "\n";
+        std::cout << "File Path: " << modelData.file_path << "\n";
+        std::cout << "Library Name: " << modelData.library_name << "\n";
+        std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No") << "\n";
+
+        // log thumbnail information
+        if (!modelData.thumbnail.empty()) {
+            std::cout << "Thumbnail Size: " << modelData.thumbnail.size() << " bytes\n";
+        } else {
+            std::cout << "Thumbnail: None\n";
+        }
+
+        // retrieve associated objects for the current model
+        std::vector<ObjectData> associatedObjects = model->getObjectsForModel(modelData.id);
+
+        if (associatedObjects.empty()) {
+            std::cout << "No associated objects for this model.\n";
+        } else {
+            std::cout << "Associated Objects (" << associatedObjects.size() << "):\n";
+
+            for (const auto& obj : associatedObjects) {
+                std::cout << "  -------------------------\n";
+                std::cout << "  Object ID: " << obj.object_id << "\n";
+                std::cout << "  Name: " << obj.name << "\n";
+                std::cout << "  Parent Object ID: "
+                          << (obj.parent_object_id != -1 ? std::to_string(obj.parent_object_id) : "None")
+                          << "\n";
+                std::cout << "  Is Selected: " << (obj.is_selected ? "Yes" : "No") << "\n";
+            }
+            std::cout << "  -------------------------\n";
+        }
+
+        std::cout << "==============================\n\n";
+    }
+
+    QMessageBox::information(this, "Report", "Report has been logged to the console.");
 }
+
 
 void LibraryWindow::onSettingsClicked(int modelId) {
     // Handle settings button click
