@@ -69,6 +69,7 @@ qt_add_executable(cadventory WIN32 ${SRCS}
 
 
 
+
 )
 
 # note dependencies

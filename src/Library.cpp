@@ -33,7 +33,7 @@ void Library::createDatabase(QWidget* parent) {
       ModelData data{.id = modelId,
                      .short_name = filePath,
                      .path = fullPath + "/" + filePath,
-                     .primary_file_path = "",
+                     .primary_file_path = filePath,
                      .library = shortName,
                      .override_info = ""};
 
