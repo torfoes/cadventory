@@ -9,7 +9,7 @@
 #include <QSortFilterProxyModel>
 #include <QThread>
 
-#include "ui_LibraryWindow.h"
+#include "ui_librarywindow.h"
 #include "Library.h"
 #include "Model.h"
 #include "ModelCardDelegate.h"
