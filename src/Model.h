@@ -89,6 +89,12 @@ public:
     bool updateObjectSelection(int object_id, bool is_selected);
     ObjectData getObjectById(int object_id);
 
+    // Retrieve all selected models
+    std::vector<ModelData> getSelectedModels();
+
+    // Retrieve selected objects for a given model ID
+    std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
+
 
 private:
     // Database related
