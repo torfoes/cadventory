@@ -89,6 +89,7 @@ public:
     std::vector<ObjectData> getObjectsForModel(int model_id);
     bool setObjectData(int object_id, const QVariant& value, int role);
     bool updateObjectSelection(int object_id, bool is_selected);
+    ObjectData getObjectById(int object_id);
 
 
 private:

@@ -4,6 +4,7 @@
 #include "IndexingWorker.h"
 #include "ProcessGFiles.h"
 #include "MainWindow.h"
+#include "GeometryBrowserDialog.h"
 // #include "AdvancedOptionsDialog.h"
 
 #include <QThread>
@@ -175,6 +176,11 @@ void LibraryWindow::setupConnections() {
     // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
 
+<<<<<<< HEAD
+=======
+    connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
+            this, &LibraryWindow::onGeometryBrowserClicked);
+>>>>>>> 80a9badffdc758a9a9c2e381f2fb43c33d2728e8
 
 }
 
@@ -269,6 +275,7 @@ void LibraryWindow::on_backButton_clicked() {
 
 }
 
+
 void LibraryWindow::reloadLibrary() {
 
     namespace fs = std::filesystem;
@@ -300,5 +307,11 @@ void LibraryWindow::reloadLibrary() {
 
 
 
+void LibraryWindow::onGeometryBrowserClicked(int modelId) {
+    qDebug() << "Geometry browser clicked for model ID:" << modelId;
+
+    // Create and show the geometry browser dialog
+    GeometryBrowserDialog* dialog = new GeometryBrowserDialog(modelId, model, this);
+    dialog->exec();
 
 }

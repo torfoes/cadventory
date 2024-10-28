@@ -623,3 +623,59 @@ bool Model::updateObject(const ObjectData& obj) {
     return true;
 }
 
+
+ObjectData Model::getObjectById(int object_id) {
+    ObjectData obj;
+    std::string sql = R"(
+        SELECT object_id, model_id, name, parent_object_id, is_selected
+        FROM objects
+        WHERE object_id = ?;
+    )";
+
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int(stmt, 1, object_id);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            obj.object_id = sqlite3_column_int(stmt, 0);
+            obj.model_id = sqlite3_column_int(stmt, 1);
+            obj.name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+
+            if (sqlite3_column_type(stmt, 3) != SQLITE_NULL) {
+                obj.parent_object_id = sqlite3_column_int(stmt, 3);
+            } else {
+                obj.parent_object_id = -1;
+            }
+
+            obj.is_selected = sqlite3_column_int(stmt, 4) != 0;
+        } else {
+            // Handle the case where the object is not found
+            std::cerr << "Object with ID " << object_id << " not found." << std::endl;
+        }
+
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "SQL error in getObjectById: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return obj;
+}
+
+bool Model::deleteTables() {
+    std::string sqlDeleteModels = "DROP TABLE IF EXISTS models;";
+    std::string sqlDeleteObjects = "DROP TABLE IF EXISTS objects;";
+
+    // Execute SQL commands to delete tables
+    return executeSQL(sqlDeleteModels) && executeSQL(sqlDeleteObjects);
+}
+
+void Model::resetDatabase() {
+    if (deleteTables()) {  // Delete existing tables
+        createTables();    // Recreate tables
+        refreshModelData(); // Optional: Load initial data if necessary
+    } else {
+        std::cerr << "Failed to delete tables." << std::endl;
+    }
+}

@@ -143,6 +143,7 @@ void ProcessGFiles::extractObjects(ModelData& modelData, const std::string& file
 
             int objectId = model->insertObject(objectData);
 
+
             if (objectId != -1) {
                 std::cout << "Inserted object '" << child_object << "' with ID " << objectId << std::endl;
                 int child_depth = current_depth + 1;

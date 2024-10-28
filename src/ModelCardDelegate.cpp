@@ -32,7 +32,9 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     // Calculate rectangles
     QRect previewR = previewRect(option);
     QRect textR = textRect(option);
-    QRect redRectR = redRectangleRect(option);  // For the red rectangle
+    QRect iconR = iconRect(option);  // For the icon
+
+    QRect redRectR = iconRect(option);  // For the red rectangle
 
     // Draw thumbnail or placeholder
     if (!thumbnail.isNull()) {
@@ -57,7 +59,9 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     // Draw red rectangle (acting as an icon)
     painter->setBrush(Qt::red);
     painter->setPen(Qt::NoPen);
-    painter->drawRect(redRectR);
+
+    QIcon icon = QApplication::style()->standardIcon(QStyle::SP_DialogOpenButton);
+    icon.paint(painter, iconR, Qt::AlignCenter, QIcon::Normal, QIcon::On);
 
     painter->restore();
 }
@@ -71,27 +75,29 @@ QSize ModelCardDelegate::sizeHint(const QStyleOptionViewItem& option,
 
 bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
                                     const QStyleOptionViewItem& option, const QModelIndex& index) {
-    if (event->type() == QEvent::MouseButtonRelease) {
+    if (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseButtonPress) {
         QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
         QPoint pos = mouseEvent->pos();
 
-        // Check if the red rectangle area was clicked
-        if (redRectangleRect(option).contains(pos)) {
-            int modelId = index.data(Model::IdRole).toInt();
-            std::cout << modelId;
-            emit geometryBrowserClicked(modelId);
-            return true;  // Event handled, do not pass to base class
-        }
+        QRect itemRect = option.rect;
+        QPoint itemPos = pos - itemRect.topLeft();
 
-        // Allow selection for other areas
-        if (option.rect.contains(pos)) {
-            return QStyledItemDelegate::editorEvent(event, model, option, index);
+        // Check if the red rectangle area was clicked
+        if (iconRect(option).contains(pos)) {
+            int modelId = index.data(Model::IdRole).toInt();
+            // std::cout << "Red rectangle clicked, Model ID: " << modelId << std::endl;
+            emit geometryBrowserClicked(modelId);
+
+            // Accept the event and prevent further processing
+            event->accept();
+            return true;  // Event handled
         }
     }
 
-    // Default processing for other events
+    // For other areas, allow default processing
     return QStyledItemDelegate::editorEvent(event, model, option, index);
 }
+
 
 // Helper methods to calculate component rectangles
 QRect ModelCardDelegate::previewRect(const QStyleOptionViewItem& option) const {
@@ -108,10 +114,10 @@ QRect ModelCardDelegate::textRect(const QStyleOptionViewItem& option) const {
     return QRect(textX, option.rect.top() + margin, textWidth, option.rect.height() - 2 * margin);
 }
 
-QRect ModelCardDelegate::redRectangleRect(const QStyleOptionViewItem& option) const {
+QRect ModelCardDelegate::iconRect(const QStyleOptionViewItem& option) const {
     int margin = 10;
-    int rectSize = 24;
-    int x = option.rect.right() - margin - rectSize;
-    int y = option.rect.top() + margin;
-    return QRect(x, y, rectSize, rectSize);
+    int iconSize = 24;
+    int x = option.rect.right() - margin - iconSize;
+    int y = option.rect.top() + margin;  // Position at the top-right corner
+    return QRect(x, y, iconSize, iconSize);
 }

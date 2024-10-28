@@ -1,5 +1,3 @@
-// LibraryWindow.h
-
 #ifndef LIBRARYWINDOW_H
 #define LIBRARYWINDOW_H
 
@@ -9,15 +7,14 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QSortFilterProxyModel>
-
 #include <QThread>
-#include "IndexingWorker.h"
 
 #include "ui_LibraryWindow.h"
 #include "Library.h"
 #include "Model.h"
 #include "ModelCardDelegate.h"
 #include "ModelFilterProxyModel.h"
+#include "IndexingWorker.h"
 
 class MainWindow;
 
@@ -34,6 +31,7 @@ public:
     MainWindow* mainWindow;
     QAction *reload;
 
+
 private slots:
     void onSearchTextChanged(const QString& text);
     void onSearchFieldChanged(const QString& field);
@@ -43,6 +41,7 @@ private slots:
     void on_backButton_clicked();
 
     void onSettingsClicked(int modelId);
+    void onGeometryBrowserClicked(int modelId);
 
     void startIndexing();
     void onModelProcessed(int modelId);
