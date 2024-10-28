@@ -118,6 +118,7 @@ void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
     reload = new QAction(tr("&Reload"),this);
 
     this->mainWindow->editMenu->addAction(reload);
+    connect(reload,&QAction::triggered,this,&LibraryWindow::reloadLibrary);
 
 }
 
@@ -173,7 +174,7 @@ void LibraryWindow::setupConnections() {
     // Connect settings clicked signal from delegate
     // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
-    connect(reload,&QAction::triggered,this,&LibraryWindow::reloadLibrary);
+
 
 }
 

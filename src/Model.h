@@ -67,6 +67,8 @@ public:
     bool updateModel(int id, const ModelData& modelData);
     bool deleteModel(int id);
     bool modelExists(int id);
+    bool deleteDatabase();
+    void resetDatabase();
 
     // Getters
     ModelData getModelById(int id);
