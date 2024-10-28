@@ -119,3 +119,68 @@
 
 //   setupTestDB(testDB);
 // }
+
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch_test_macros.hpp>
+#include "Model.h"
+#include <filesystem>
+
+// Setup helper function
+void setupTestDB(const std::string& path) {
+    if (std::filesystem::exists(path)) {
+        std::filesystem::remove(path);
+    }
+}
+
+TEST_CASE("Model Operations", "[Model]") {
+    std::string testDB = "test_models.db";
+    setupTestDB(testDB);
+    Model model(testDB);
+
+    SECTION("Insert and verify model") {
+        ModelData newModel {1, "TestModel", "./path/to/cad/file", "{}", "Test Title", {}, "Author", "/file/path", "Library", true};
+        REQUIRE(model.insertModel(newModel.id, newModel) == true);
+
+        auto fetchedModel = model.getModelById(newModel.id);
+        REQUIRE(fetchedModel.short_name == "TestModel");
+        REQUIRE(fetchedModel.file_path == "/file/path");
+        REQUIRE(fetchedModel.library_name == "Library");
+    }
+
+    SECTION("Update model attributes") {
+        ModelData updatedModel {1, "UpdatedModel", "./new/path", "{\"updated\":true}", "Updated Title", {}, "New Author", "/new/file/path", "NewLibrary", false};
+        REQUIRE(model.insertModel(updatedModel.id, updatedModel) == true);
+
+        updatedModel.short_name = "ModifiedModel";
+        REQUIRE(model.updateModel(updatedModel.id, updatedModel) == true);
+
+        auto fetchedModel = model.getModelById(updatedModel.id);
+        REQUIRE(fetchedModel.short_name == "ModifiedModel");
+    }
+
+    SECTION("Delete model") {
+        ModelData deleteModel {2, "DeleteModel", "./delete/path", "{}", "Delete Title", {}, "Delete Author", "/delete/file/path", "DeleteLibrary", false};
+        REQUIRE(model.insertModel(deleteModel.id, deleteModel) == true);
+        REQUIRE(model.modelExists(deleteModel.id) == true);
+
+        REQUIRE(model.deleteModel(deleteModel.id) == true);
+        REQUIRE(model.modelExists(deleteModel.id) == false);
+    }
+
+    SECTION("Add and retrieve objects for model") {
+        ModelData objModel {3, "ObjModel", "./obj/path", "{}", "Obj Title", {}, "Obj Author", "/obj/file/path", "ObjLibrary", false};
+        REQUIRE(model.insertModel(objModel.id, objModel) == true);
+
+        ObjectData obj1 {0, objModel.id, "Object1", -1, false};
+        int obj1_id = model.insertObject(obj1);
+        REQUIRE(obj1_id != -1);
+
+        auto objects = model.getObjectsForModel(objModel.id);
+        REQUIRE(objects.size() == 1);
+        REQUIRE(objects[0].name == "Object1");
+    }
+
+    // Cleanup
+    setupTestDB(testDB);
+}
+
