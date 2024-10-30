@@ -56,6 +56,7 @@ class Model {
 
   // Utility methods
   void printModel(int modelId);
+  void printModel(ModelData model);
   int hashModel(const std::string& modelDir);
 
   // Database path

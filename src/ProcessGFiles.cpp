@@ -120,7 +120,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(
 
     // Extract title using updated runCommand
     string title_command =
-        "/home/anton/brlcad/build/bin/mged -c " + file_path.string() + " title";
+        "mged -c " + file_path.string() + " title";
     auto title_result = runCommand(title_command);
     string title =
         !title_result.first.empty() ? title_result.first : title_result.second;
@@ -129,7 +129,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(
 
     // Get tops level objects
     string tops_command =
-        "/home/anton/brlcad/build/bin/mged -c " + file_path.string() + " tops";
+        "mged -c " + file_path.string() + " tops";
     auto tops_result = runCommand(tops_command);
     string tops_output =
         !tops_result.first.empty() ? tops_result.first : tops_result.second;
@@ -160,7 +160,7 @@ std::map<std::string, std::string> ProcessGFiles::processGFile(
 
     // Define the PNG file path in the previews folder
     string png_file = previews_folder + "/" + model_short_name + ".png";
-    string rt_command_template = "/home/anton/brlcad/build/bin/rt -s2048 -o " +
+    string rt_command_template = "rt -s2048 -o " +
                                  png_file + " " + file_path.string() + " ";
 
     bool raytrace_successful = false;

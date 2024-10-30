@@ -413,6 +413,17 @@ void Model::printModel(int modelId) {
   }
 }
 
+void Model::printModel(ModelData model) {
+  std::cout << " >> "<< std::endl;
+  std::cout << "Model ID: " << model.id << std::endl;
+  std::cout << "Short Name: " << model.short_name << std::endl;
+  std::cout << "Path: " << model.path << std::endl;
+  std::cout << "Primary File: " << model.primary_file_path << std::endl;
+  std::cout << "Library: " << model.library << std::endl;
+  std::cout << "Override Info: " << model.override_info << std::endl;
+  std::cout << " << "<< std::endl;
+}
+
 int Model::hashModel(const std::string& modelDir) {
   std::ifstream file(modelDir);
   if (!file.is_open()) {

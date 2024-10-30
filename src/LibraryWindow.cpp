@@ -187,34 +187,37 @@ void LibraryWindow::generateReport() {
       std::string str = modelData.path;
       std::cout << "path: " << modelData.primary_file_path << std::endl;
       std::cout << "model selected: " << fileName << std::endl;
+      std::cout << "PRINTING WHOLE MODEL"<< std::endl;
+      model->printModel(modelData);
+      std::cout << "PRINTED WHOLE MODEL"<< std::endl;
       QString progress_bar_label = "Processing model: " + QString::fromStdString(fileName);
       // gist_progress.setLabelText(progress_bar_label);
       std::string path_gist_output =
           temp_dir_1.toStdString() + "/" + std::to_string(num_file) + ".png";
-      std::string gist_command = "/home/anton/brlcad/build/bin/gist " + str +
+      std::string gist_command = "gist " + str +
                                  " -o " + path_gist_output;
 
-      // auto [output, error] = gFileProcessor.runCommand(gist_command);
+      auto [output, error] = gFileProcessor.runCommand(gist_command);
       // End painting
-      // std::cout << "std output: " << output << std::endl;
-      // std::string png =
-      //     temp_dir_1.toStdString() + "/" + std::to_string(num_file) + ".png";
-      // QString png_qstr = QString::fromStdString(png);
-      // QPixmap gist(png_qstr);
-      // bool status_newpage = pdfWriter.newPage();
-      // if (output.find("ERROR") == std::string::npos) {
-      //   painter.drawPixmap(0, -2408, gist);
-      // } else {
-      //   std::string err = "model: " + fileName + "\nerror:\n" + output +
-      //                     "\ncommand: \n" + gist_command;
-      //   err_vec.push_back(err);
-      //   painter.rotate(-90);
-      //   painter.setFont(font);
-      //   painter.drawText(100, 100, QString::fromStdString(str));
-      //   painter.setFont(font_two);
-      //   painter.drawText(100, 150, QString::fromStdString(output));
-      //   painter.rotate(90);
-      // }
+      std::cout << "std output: " << output << std::endl;
+      std::string png =
+          temp_dir_1.toStdString() + "/" + std::to_string(num_file) + ".png";
+      QString png_qstr = QString::fromStdString(png);
+      QPixmap gist(png_qstr);
+      bool status_newpage = pdfWriter.newPage();
+      if (output.find("ERROR") == std::string::npos) {
+        painter.drawPixmap(0, -2408, gist);
+      } else {
+        std::string err = "model: " + fileName + "\nerror:\n" + output +
+                          "\ncommand: \n" + gist_command;
+        err_vec.push_back(err);
+        painter.rotate(-90);
+        painter.setFont(font);
+        painter.drawText(100, 100, QString::fromStdString(str));
+        painter.setFont(font_two);
+        painter.drawText(100, 150, QString::fromStdString(output));
+        painter.rotate(90);
+      }
       num_file++;
     }
 
