@@ -74,6 +74,7 @@ public:
     // Utility methods
     int hashModel(const std::string& modelDir);
     void refreshModelData();
+    void printModel(const ModelData& modelData);
 
     std::string getHiddenDirectoryPath() const;
 
@@ -104,8 +105,6 @@ public:
     // Simplifying executions
     sqlite3_stmt* prepareStatement(const std::string& sql);
     bool Model::executePreparedStatement(sqlite3_stmt* stmt);
-
-
 
 private:
     // Database related

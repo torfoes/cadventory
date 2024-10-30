@@ -188,6 +188,12 @@ void LibraryWindow::onSearchFieldChanged(const QString& field) {
     availableModelsProxyModel->invalidate();
 }
 
+void LibraryWindow:onAvailableModelRightClicked(const QModelIndex& index) {
+    // Handle right click on available model
+    qDebug() << "Right clicked on available model";
+    // open crud window
+}
+
 void LibraryWindow::onAvailableModelClicked(const QModelIndex& index) {
     // Toggle selection state
     QModelIndex sourceIndex = availableModelsProxyModel->mapToSource(index);
@@ -222,22 +228,7 @@ void LibraryWindow::onGenerateReportButtonClicked() {
     // Iterate through each selected model
     for (const auto& modelData : selectedModels) {
         std::cout << "==============================\n";
-        std::cout << "Model ID: " << modelData.id << "\n";
-        std::cout << "Short Name: " << modelData.short_name << "\n";
-        std::cout << "Primary File: " << modelData.primary_file << "\n";
-        std::cout << "Override Info: " << modelData.override_info << "\n";
-        std::cout << "Title: " << modelData.title << "\n";
-        std::cout << "Author: " << modelData.author << "\n";
-        std::cout << "File Path: " << modelData.file_path << "\n";
-        std::cout << "Library Name: " << modelData.library_name << "\n";
-        std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No") << "\n";
-
-        // log thumbnail information
-        if (!modelData.thumbnail.empty()) {
-            std::cout << "Thumbnail Size: " << modelData.thumbnail.size() << " bytes\n";
-        } else {
-            std::cout << "Thumbnail: None\n";
-        }
+        model->printModel(modelData);
 
         // retrieve associated objects for the current model
         std::vector<ObjectData> associatedObjects = model->getObjectsForModel(modelData.id);

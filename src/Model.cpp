@@ -439,6 +439,19 @@ int Model::hashModel(const std::string& modelDir) {
   return static_cast<int>(hasher(fileContents));
 }
 
+void Model::printModel(const ModelData& modelData) {
+    std::cout << "Model ID: " << modelData.id << std::endl;
+    std::cout << "Short Name: " << modelData.short_name << std::endl;
+    std::cout << "Primary File: " << modelData.primary_file << std::endl;
+    std::cout << "Override Info: " << modelData.override_info << std::endl;
+    std::cout << "Title: " << modelData.title << std::endl;
+    std::cout << "Author: " << modelData.author << std::endl;
+    std::cout << "File Path: " << modelData.file_path << std::endl;
+    std::cout << "Library Name: " << modelData.library_name << std::endl;
+    std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No") << std::endl;
+    std::cout << "Thumbnail Size: " << modelData.thumbnail.size() << " bytes" << std::endl;
+}
+
 std::string Model::getHiddenDirectoryPath() const { return hiddenDirPath; }
 
 bool Model::executeSQL(const std::string& sql) {
