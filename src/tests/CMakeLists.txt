@@ -30,6 +30,13 @@ endif()
 
 # Add the ModelTest executable
 add_executable(ModelTest ModelTest.cpp ../Model.cpp)
+add_executable(LibraryTest
+    LibraryTest.cpp
+    ../Library.cpp
+    ../Model.cpp
+    ../FilesystemIndexer.cpp
+)
+
 
 # Link the test executable against the necessary libraries
 target_link_libraries(ModelTest PRIVATE
@@ -39,8 +46,20 @@ target_link_libraries(ModelTest PRIVATE
     ${SQLITE_LIBRARY}
 )
 
+target_link_libraries(LibraryTest PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Gui
+    ${SQLITE_LIBRARY}
+)
+
 # Include directories for SQLite (if necessary)
 target_include_directories(ModelTest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    ${CMAKE_CURRENT_BINARY_DIR}/../..
+)
+
+target_include_directories(LibraryTest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../..
     ${CMAKE_CURRENT_BINARY_DIR}/../..
 )
@@ -81,5 +100,6 @@ target_include_directories(FilesystemIndexerPerfTest PRIVATE
 
 # Register each test with CTest
 add_test(NAME ModelTests COMMAND ModelTest)
+add_test(NAME LibraryTests COMMAND LibraryTest)
 add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
 add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
