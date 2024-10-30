@@ -95,6 +95,17 @@ public:
     // Retrieve selected objects for a given model ID
     std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
 
+    // Tag operations
+    bool addTagToModel(int modelId, const std::string& tagName);
+    int getTagId(const std::string& tagName);
+    std::vector<std::string> getTagsForModel(int modelId);
+    bool Model::removeTagFromModel(int modelId, const std::string& tagName);
+
+    // Simplifying executions
+    sqlite3_stmt* prepareStatement(const std::string& sql);
+    bool Model::executePreparedStatement(sqlite3_stmt* stmt);
+
+
 
 private:
     // Database related
