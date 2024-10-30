@@ -27,6 +27,7 @@ private:
     std::vector<std::string> parseTopsOutput(const std::string& tops_output);
     std::vector<std::string> parseLtOutput(const std::string& lt_output);
     bool validateObject(const std::string& file_path, const std::string& object_name);
+    std::vector<std::string> splitStringByWhitespace(const std::string &input);
 
     Model* model;
     std::mutex db_mutex;

@@ -62,7 +62,7 @@ void ProcessGFiles::extractObjects(ModelData& modelData, const std::string& file
     std::cout << "tops command return code: " << tops_return_code << std::endl;
 
     // Parse the tops output
-    std::vector<std::string> tops_elements = parseTopsOutput(tops_result);
+    std::vector<std::string> tops_elements = splitStringByWhitespace(tops_result); // changed from parseTopsObject to splitStringByWhitespace
     std::cout << "Parsed top-level elements: ";
     for (const auto& elem : tops_elements) {
         std::cout << elem << " ";
@@ -312,6 +312,19 @@ std::vector<std::string> ProcessGFiles::parseLtOutput(const std::string& lt_outp
         searchStart = match.suffix().first;
     }
     return components;
+}
+
+// Function to split a string by whitespace
+std::vector<std::string> ProcessGFiles::splitStringByWhitespace(const std::string &input) {
+    std::istringstream stream(input);
+    std::vector<std::string> tokens;
+    std::string token;
+
+    while (stream >> token) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
 }
 
 bool ProcessGFiles::validateObject(const std::string& file_path, const std::string& object_name) {
