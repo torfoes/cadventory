@@ -440,16 +440,18 @@ int Model::hashModel(const std::string& modelDir) {
 }
 
 void Model::printModel(const ModelData& modelData) {
-    std::cout << "Model ID: " << modelData.id << std::endl;
-    std::cout << "Short Name: " << modelData.short_name << std::endl;
-    std::cout << "Primary File: " << modelData.primary_file << std::endl;
-    std::cout << "Override Info: " << modelData.override_info << std::endl;
-    std::cout << "Title: " << modelData.title << std::endl;
-    std::cout << "Author: " << modelData.author << std::endl;
-    std::cout << "File Path: " << modelData.file_path << std::endl;
-    std::cout << "Library Name: " << modelData.library_name << std::endl;
-    std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No") << std::endl;
-    std::cout << "Thumbnail Size: " << modelData.thumbnail.size() << " bytes" << std::endl;
+  std::cout << "Model ID: " << modelData.id << std::endl;
+  std::cout << "Short Name: " << modelData.short_name << std::endl;
+  std::cout << "Primary File: " << modelData.primary_file << std::endl;
+  std::cout << "Override Info: " << modelData.override_info << std::endl;
+  std::cout << "Title: " << modelData.title << std::endl;
+  std::cout << "Author: " << modelData.author << std::endl;
+  std::cout << "File Path: " << modelData.file_path << std::endl;
+  std::cout << "Library Name: " << modelData.library_name << std::endl;
+  std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No")
+            << std::endl;
+  std::cout << "Thumbnail Size: " << modelData.thumbnail.size() << " bytes"
+            << std::endl;
 }
 
 std::string Model::getHiddenDirectoryPath() const { return hiddenDirPath; }
@@ -811,6 +813,22 @@ int Model::getTagId(const std::string& tagName) {
   }
   sqlite3_finalize(stmt);
   return tagId;
+}
+
+std::vector<std::string> Model::getAllTags() {
+  std::vector<std::string> tags;
+  std::string sql = "SELECT name FROM tags;";
+  sqlite3_stmt* stmt = prepareStatement(sql);
+  if (!stmt) return tags;
+
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    const char* tagText = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+    if (tagText) {
+      tags.push_back(tagText);
+    }
+  }
+  sqlite3_finalize(stmt);
+  return tags;
 }
 
 std::vector<std::string> Model::getTagsForModel(int modelId) {

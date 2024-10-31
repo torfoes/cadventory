@@ -70,6 +70,14 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp",
-    "*.in": "cpp"
+    "*.in": "cpp",
+    "qvariant": "cpp",
+    "qapplication": "cpp",
+    "qpushbutton": "cpp",
+    "qwidget": "cpp",
+    "qvboxlayout": "cpp",
+    "qlabel": "cpp",
+    "qlistview": "cpp",
+    "qhboxlayout": "cpp"
   }
 }

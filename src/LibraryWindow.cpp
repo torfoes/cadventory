@@ -5,6 +5,7 @@
 #include "ProcessGFiles.h"
 #include "MainWindow.h"
 #include "GeometryBrowserDialog.h"
+#include "ModelView.h"
 // #include "AdvancedOptionsDialog.h"
 
 #include <QThread>
@@ -170,6 +171,9 @@ void LibraryWindow::setupConnections() {
     connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
             this, &LibraryWindow::onGeometryBrowserClicked);
 
+    connect(modelCardDelegate, &ModelCardDelegate::modelViewClicked,
+            this, &LibraryWindow::onModelViewClicked);
+
 }
 
 void LibraryWindow::onSearchTextChanged(const QString& text) {
@@ -188,11 +192,7 @@ void LibraryWindow::onSearchFieldChanged(const QString& field) {
     availableModelsProxyModel->invalidate();
 }
 
-void LibraryWindow:onAvailableModelRightClicked(const QModelIndex& index) {
-    // Handle right click on available model
-    qDebug() << "Right clicked on available model";
-    // open crud window
-}
+
 
 void LibraryWindow::onAvailableModelClicked(const QModelIndex& index) {
     // Toggle selection state
@@ -294,6 +294,12 @@ void LibraryWindow::on_backButton_clicked() {
 
 }
 
+void LibraryWindow::onModelViewClicked(int modelId) {
+    qDebug() << "Model view clicked for model ID:" << modelId;
+    ModelView* modelView = new ModelView(modelId, model, this);
+    modelView->exec();
+
+}
 
 void LibraryWindow::onGeometryBrowserClicked(int modelId) {
     qDebug() << "Geometry browser clicked for model ID:" << modelId;

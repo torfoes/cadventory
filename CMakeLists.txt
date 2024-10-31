@@ -67,6 +67,8 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # --- End BRL-CAD Configuration ---
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_DIR})
 set(SRCS
   src/CADventory.cpp
@@ -92,6 +94,9 @@ set(SRCS
   src/ModelCardDelegate.cpp
   src/ModelFilterProxyModel.h
   src/ModelFilterProxyModel.cpp
+  src/modelview.ui
+  src/ModelView.cpp
+  src/ModelView.h
 )
 set(LIBS
   Qt6::Core
@@ -103,7 +108,8 @@ qt_add_executable(cadventory WIN32 ${SRCS}
     src/ModelCardDelegate.h src/ModelCardDelegate.cpp
     src/ModelFilterProxyModel.h src/ModelFilterProxyModel.cpp
     src/GeometryBrowserDialog.h src/GeometryBrowserDialog.cpp
-    src/modelcrud.h src/modelcrud.cpp src/modelcrud.ui)
+    src/ModelView.h src/ModelView.cpp
+    )
 
 
 # Note dependencies

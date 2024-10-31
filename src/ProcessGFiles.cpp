@@ -229,7 +229,7 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         modelData.short_name = model_short_name;
         modelData.primary_file = file_path.filename().string();
         modelData.file_path = file_path.string();
-        modelData.library_name = "";
+        modelData.library_name = "non library";
         modelData.isSelected = false;
 
         // Insert the model

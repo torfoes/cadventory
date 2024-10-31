@@ -18,6 +18,7 @@ struct ModelData {
     std::string author;
     std::string file_path;
     std::string library_name;
+    std::vector<std::string> tags;
     bool isSelected;
 };
 
@@ -99,12 +100,13 @@ public:
     // Tag operations
     bool addTagToModel(int modelId, const std::string& tagName);
     int getTagId(const std::string& tagName);
+    std::vector<std::string> getAllTags();
     std::vector<std::string> getTagsForModel(int modelId);
-    bool Model::removeTagFromModel(int modelId, const std::string& tagName);
+    bool removeTagFromModel(int modelId, const std::string& tagName);
 
     // Simplifying executions
     sqlite3_stmt* prepareStatement(const std::string& sql);
-    bool Model::executePreparedStatement(sqlite3_stmt* stmt);
+    bool executePreparedStatement(sqlite3_stmt* stmt);
 
 private:
     // Database related
