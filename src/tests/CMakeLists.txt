@@ -62,8 +62,6 @@ target_include_directories(ModelTest PRIVATE
     ${CMAKE_BINARY_DIR}/src
 )
 
-# Repeat similar steps for LibraryTest and other tests
-# ...
 
 # Add the MainWindowTest executable
 add_executable(MainWindowTest
@@ -81,6 +79,7 @@ add_executable(MainWindowTest
     ../librarywindow.ui
     ../mainwindow.ui
     ../reportgenerationwindow.ui
+    ../ModelFilterProxyModel.cpp
 )
 
 # Link the Main Window GUI test executable against the necessary libraries
