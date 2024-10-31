@@ -17,16 +17,13 @@
 #include <queue>
 #include <set>
 #include <regex>
+#include <QFileInfo>
+#include <QProcess>
+
 
 namespace fs = std::filesystem;
 
 ProcessGFiles::ProcessGFiles(Model* model) : model(model) {
-}
-
-bool ProcessGFiles::isModelProcessed(int modelId) {
-    ModelData existingModel = model->getModelById(modelId);
-    // Check if the model exists and has a thumbnail (or any other criteria)
-    return existingModel.id == modelId && !existingModel.thumbnail.empty();
 }
 
 void ProcessGFiles::extractTitle(ModelData& modelData, const std::string& file_path) {
@@ -177,7 +174,9 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         std::string model_short_name = file_path.stem().string();
         int modelId = model->hashModel(file_path.string());
 
-        if (isModelProcessed(modelId)) {
+        ModelData existingModel = model->getModelById(modelId);
+
+        if (existingModel.id == modelId && existingModel.is_processed) {
             std::cout << "Model already processed: " << model_short_name << "\n";
             return;
         }
@@ -327,3 +326,56 @@ bool ProcessGFiles::validateObject(const std::string& file_path, const std::stri
 
     return return_code == 0;
 }
+
+#include <iostream> // Ensure this is included for logging
+
+std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath) {
+    // log the function entry and input parameters
+    std::cout << "generateGistReport called with:" << std::endl;
+    std::cout << "  inputFilePath: " << inputFilePath << std::endl;
+    std::cout << "  outputFilePath: " << outputFilePath << std::endl;
+
+    // check if input file exists
+    QFileInfo inputFile(QString::fromStdString(inputFilePath));
+    if (!inputFile.exists()) {
+        std::cerr << "Input file does not exist: " << inputFilePath << std::endl;
+        return {false, "Input file does not exist: " + inputFilePath};
+    } else {
+        std::cout << "Confirmed input file exists." << std::endl;
+    }
+
+    // construct the gist command
+    std::string gistCommand = std::string(GIST_EXECUTABLE_PATH) + " \"" +
+                              inputFilePath + "\" -o \"" + outputFilePath + "\"";
+    std::cout << "Constructed gistCommand: " << gistCommand << std::endl;
+
+    // execute the command
+    auto [stdoutStr, stderrStr, returnCode] = runCommand(gistCommand, 120);
+
+    // log command execution results
+    std::cout << "Command execution completed with returnCode: " << returnCode << std::endl;
+    std::cout << "Standard Output:" << std::endl << stdoutStr << std::endl;
+    std::cout << "Standard Error:" << std::endl << stderrStr << std::endl;
+
+    // check for command execution errors
+    if (returnCode != 0) {
+        std::cerr << "Gist command failed with code " << returnCode << std::endl;
+        std::string errorMsg = stderrStr.empty() ? stdoutStr : stderrStr;
+        return {false, "Gist command failed with code " + std::to_string(returnCode) + ": " + errorMsg};
+    } else {
+        std::cout << "Gist command executed successfully." << std::endl;
+    }
+
+    // check if the output file was generated
+    QFileInfo outputFile(QString::fromStdString(outputFilePath));
+    if (!outputFile.exists()) {
+        std::cerr << "Output file not generated: " << outputFilePath << std::endl;
+        return {false, "Failed to generate output file: " + outputFilePath};
+    } else {
+        std::cout << "Confirmed output file was generated successfully." << std::endl;
+    }
+
+    std::cout << "Gist report generation completed successfully for file: " << inputFilePath << std::endl;
+    return {true, ""};
+}
+
