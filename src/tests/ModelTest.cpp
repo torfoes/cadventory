@@ -119,7 +119,6 @@
 
 //   setupTestDB(testDB);
 // }
-
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 #include "Model.h"
@@ -159,18 +158,18 @@ TEST_CASE("Model Operations", "[Model]") {
     }
 
     SECTION("Insert and verify model") {
-        ModelData newModel {1, "TestModel", "./path/to/cad/file", "{}", "Test Title", {}, "Author", "/file/path", "Library", true};
+        ModelData newModel {1, "TestModel", "./path/to/cad/file", "{}", "Test Title", {}, "Author", "/file/path", "Library", true, false};
         REQUIRE(model.insertModel(newModel.id, newModel) == true);
 
         auto fetchedModel = model.getModelById(newModel.id);
         REQUIRE(fetchedModel.short_name == "TestModel");
         REQUIRE(fetchedModel.file_path == "/file/path");
         REQUIRE(fetchedModel.library_name == "Library");
-        REQUIRE(fetchedModel.isSelected == true);
+        REQUIRE(fetchedModel.is_selected == true);
     }
 
     SECTION("Update model attributes") {
-        ModelData updatedModel {1, "UpdatedModel", "./new/path", "{\"updated\":true}", "Updated Title", {}, "New Author", "/new/file/path", "NewLibrary", false};
+        ModelData updatedModel {1, "UpdatedModel", "./new/path", "{\"updated\":true}", "Updated Title", {}, "New Author", "/new/file/path", "NewLibrary", false, false};
         REQUIRE(model.insertModel(updatedModel.id, updatedModel) == true);
 
         updatedModel.short_name = "ModifiedModel";
@@ -180,11 +179,11 @@ TEST_CASE("Model Operations", "[Model]") {
         auto fetchedModel = model.getModelById(updatedModel.id);
         REQUIRE(fetchedModel.short_name == "ModifiedModel");
         REQUIRE(fetchedModel.library_name == "ModifiedLibrary");
-        REQUIRE(fetchedModel.isSelected == false);
+        REQUIRE(fetchedModel.is_selected == false);
     }
 
     SECTION("Delete model") {
-        ModelData deleteModel {2, "DeleteModel", "./delete/path", "{}", "Delete Title", {}, "Delete Author", "/delete/file/path", "DeleteLibrary", false};
+        ModelData deleteModel {2, "DeleteModel", "./delete/path", "{}", "Delete Title", {}, "Delete Author", "/delete/file/path", "DeleteLibrary", false, false};
         REQUIRE(model.insertModel(deleteModel.id, deleteModel) == true);
         REQUIRE(model.modelExists(deleteModel.id) == true);
 
@@ -193,7 +192,7 @@ TEST_CASE("Model Operations", "[Model]") {
     }
 
     SECTION("Add and retrieve objects for model") {
-        ModelData objModel {3, "ObjModel", "./obj/path", "{}", "Obj Title", {}, "Obj Author", "/obj/file/path", "ObjLibrary", false};
+        ModelData objModel {3, "ObjModel", "./obj/path", "{}", "Obj Title", {}, "Obj Author", "/obj/file/path", "ObjLibrary", false, false};
         REQUIRE(model.insertModel(objModel.id, objModel) == true);
 
         ObjectData obj1 {0, objModel.id, "Object1", -1, false};
@@ -213,7 +212,7 @@ TEST_CASE("Model Operations", "[Model]") {
     }
 
     SECTION("Update and select objects") {
-        ModelData objModel {4, "UpdateObjModel", "./update/path", "{}", "Update Obj Title", {}, "Update Obj Author", "/update/file/path", "UpdateLibrary", false};
+        ModelData objModel {4, "UpdateObjModel", "./update/path", "{}", "Update Obj Title", {}, "Update Obj Author", "/update/file/path", "UpdateLibrary", false, false};
         REQUIRE(model.insertModel(objModel.id, objModel) == true);
 
         ObjectData obj {0, objModel.id, "SelectableObject", -1, false};
@@ -226,7 +225,7 @@ TEST_CASE("Model Operations", "[Model]") {
     }
 
     SECTION("Load models from database") {
-        ModelData loadModel {5, "LoadModel", "./load/path", "{}", "Load Title", {}, "Load Author", "/load/file/path", "LoadLibrary", false};
+        ModelData loadModel {5, "LoadModel", "./load/path", "{}", "Load Title", {}, "Load Author", "/load/file/path", "LoadLibrary", false, false};
         REQUIRE(model.insertModel(loadModel.id, loadModel) == true);
 
         model.refreshModelData();
@@ -239,12 +238,12 @@ TEST_CASE("Model Operations", "[Model]") {
 
 TEST_CASE("Extended Model Edge Cases", "[Model]") {
     std::string testDir = setupTestDirectory();
-    cleanupTestDirectory(testDir);  
+    cleanupTestDirectory(testDir);
     std::filesystem::create_directories(testDir);
     Model model(testDir);
 
     SECTION("Attempt to Insert Duplicate Model IDs") {
-        ModelData modelData {6, "DuplicateModel", "./duplicate/path", "{}", "Duplicate Title", {}, "Author", "/duplicate/path", "Library", false};
+        ModelData modelData {6, "DuplicateModel", "./duplicate/path", "{}", "Duplicate Title", {}, "Author", "/duplicate/path", "Library", false, false};
         REQUIRE(model.insertModel(modelData.id, modelData) == true);
 
         // Try inserting again with the same ID
@@ -252,7 +251,7 @@ TEST_CASE("Extended Model Edge Cases", "[Model]") {
     }
 
     SECTION("Insert and Retrieve Nested Objects") {
-        ModelData nestedModel {7, "NestedModel", "./nested/path", "{}", "Nested Title", {}, "Nested Author", "/nested/path", "NestedLibrary", false};
+        ModelData nestedModel {7, "NestedModel", "./nested/path", "{}", "Nested Title", {}, "Nested Author", "/nested/path", "NestedLibrary", false, false};
         REQUIRE(model.insertModel(nestedModel.id, nestedModel) == true);
 
         ObjectData parentObject {0, nestedModel.id, "ParentObject", -1, false};
@@ -271,18 +270,18 @@ TEST_CASE("Extended Model Edge Cases", "[Model]") {
     }
 
     SECTION("Validate Model Data on Refresh") {
-        ModelData refreshModel {8, "RefreshModel", "./refresh/path", "{}", "Refresh Title", {}, "Author", "/refresh/path", "Library", true};
+        ModelData refreshModel {8, "RefreshModel", "./refresh/path", "{}", "Refresh Title", {}, "Author", "/refresh/path", "Library", true, false};
         REQUIRE(model.insertModel(refreshModel.id, refreshModel) == true);
 
         // Refresh the data and check consistency
         model.refreshModelData();
         auto fetchedModel = model.getModelById(refreshModel.id);
         REQUIRE(fetchedModel.short_name == refreshModel.short_name);
-        REQUIRE(fetchedModel.isSelected == true);
+        REQUIRE(fetchedModel.is_selected == true);
     }
 
     SECTION("Handle SQL Injection in Model Insertion") {
-        ModelData injectionModel {9, "InjectionModel", "./injection/path; DROP TABLE models;", "{}", "Injection Title", {}, "Author", "/injection/path", "Library", false};
+        ModelData injectionModel {9, "InjectionModel", "./injection/path; DROP TABLE models;", "{}", "Injection Title", {}, "Author", "/injection/path", "Library", false, false};
         REQUIRE(model.insertModel(injectionModel.id, injectionModel) == true);
 
         auto fetchedModel = model.getModelById(injectionModel.id);
@@ -298,8 +297,8 @@ TEST_CASE("Model Data Roles", "[Model]") {
     std::filesystem::create_directories(testDir);
     Model model(testDir);
 
-    ModelData testModel {1, "TestModel", "./path/to/primary/file", "{\"info\": true}", 
-                         "Test Title", {}, "Author", "/file/path", "Library", true};
+    ModelData testModel {1, "TestModel", "./path/to/primary/file", "{\"info\": true}",
+                        "Test Title", {}, "Author", "/file/path", "Library", true, false};
     testModel.thumbnail = std::vector<char>({'\x89', 'P', 'N', 'G'}); // Simulated PNG header
     REQUIRE(model.insertModel(testModel.id, testModel) == true);
 
@@ -353,7 +352,7 @@ TEST_CASE("Model Data Roles", "[Model]") {
 
     SECTION("Is Selected Role") {
         QVariant isSelected = model.data(index, Model::IsSelectedRole);
-        REQUIRE(isSelected.toBool() == testModel.isSelected);
+        REQUIRE(isSelected.toBool() == testModel.is_selected);
     }
 
     cleanupTestDirectory(testDir);
