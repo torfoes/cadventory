@@ -32,20 +32,19 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     // Calculate rectangles
     QRect previewR = previewRect(option);
     QRect textR = textRect(option);
-    QRect iconR = iconRect(option);  // For the icon
+    QRect iconR = iconRect(option);
 
-    QRect redRectR = iconRect(option);  // For the red rectangle
 
-    // Draw thumbnail or placeholder
+    // draw thumbnail or placeholder
     if (!thumbnail.isNull()) {
         painter->drawPixmap(previewR, thumbnail.scaled(previewR.size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
     } else {
-        // Placeholder if no thumbnail
+        // placeholder if no thumbnail
         painter->fillRect(previewR, Qt::lightGray);
         painter->drawText(previewR, Qt::AlignCenter, "No Image");
     }
 
-    // Draw text
+    // text
     painter->setPen(option.palette.text().color());
     QFont boldFont = option.font;
     boldFont.setBold(true);
@@ -55,10 +54,6 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     painter->setFont(option.font);
     painter->drawText(textR.adjusted(0, 20, 0, 0), Qt::AlignLeft | Qt::AlignTop, title);
     painter->drawText(textR.adjusted(0, 40, 0, 0), Qt::AlignLeft | Qt::AlignTop, author);
-
-    // Draw red rectangle (acting as an icon)
-    painter->setBrush(Qt::red);
-    painter->setPen(Qt::NoPen);
 
     QIcon icon = QApplication::style()->standardIcon(QStyle::SP_DialogOpenButton);
     icon.paint(painter, iconR, Qt::AlignCenter, QIcon::Normal, QIcon::On);
@@ -108,7 +103,7 @@ QRect ModelCardDelegate::textRect(const QStyleOptionViewItem& option) const {
     int margin = 10;
     int imageSize = option.rect.height() - 2 * margin;
     int textX = option.rect.left() + margin + imageSize + margin;
-    int textWidth = option.rect.width() - imageSize - 4 * margin - 24;  // Adjusted for red rectangle
+    int textWidth = option.rect.width() - imageSize - 4 * margin - 24;
     return QRect(textX, option.rect.top() + margin, textWidth, option.rect.height() - 2 * margin);
 }
 
@@ -116,6 +111,6 @@ QRect ModelCardDelegate::iconRect(const QStyleOptionViewItem& option) const {
     int margin = 10;
     int iconSize = 24;
     int x = option.rect.right() - margin - iconSize;
-    int y = option.rect.top() + margin;  // Position at the top-right corner
+    int y = option.rect.top() + margin;
     return QRect(x, y, iconSize, iconSize);
 }

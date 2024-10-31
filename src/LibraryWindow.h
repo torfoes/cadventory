@@ -42,6 +42,8 @@ private slots:
 
     void startIndexing();
     void onModelProcessed(int modelId);
+    void onProgressUpdated(const QString& currentObject, int percentage);
+
 
 private:
     void setupModelsAndViews();

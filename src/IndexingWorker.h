@@ -16,6 +16,7 @@ public slots:
 
 signals:
     void modelProcessed(int modelId);
+    void progressUpdated(const QString& currentObject, int percentage);
     void finished();
 
 private:

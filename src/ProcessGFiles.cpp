@@ -41,177 +41,136 @@ void ProcessGFiles::extractTitle(ModelData& modelData, const std::string& file_p
 
     modelData.title = title;
 }
+std::vector<ObjectData> ProcessGFiles::extractObjects(
+    const ModelData& modelData,
+    const std::string& file_path,
+    std::map<std::string, std::string>& parentRelations) {
 
-void ProcessGFiles::extractObjects(ModelData& modelData, const std::string& file_path) {
+    std::vector<ObjectData> objects;
     std::string mged_executable = MGED_EXECUTABLE_PATH;
-
-    // Set the maximum depth for traversal
     int max_depth = 3;
-    
-    // Use BFS to traverse the object hierarchy
-    // Queue now includes the current depth
-    std::queue<std::tuple<std::string, int, int>> object_queue; // (object_name, parent_object_id, depth)
+
+    std::queue<std::tuple<std::string, std::string, int>> object_queue;
     std::set<std::string> processed_objects;
 
-    // Get top-level objects
     std::string tops_command = mged_executable + " -c \"" + file_path + "\" tops -n";
-    std::cout << "Executing tops command: " << tops_command << std::endl;
     auto [tops_output, tops_error, tops_return_code] = runCommand(tops_command);
     std::string tops_result = !tops_output.empty() ? tops_output : tops_error;
-    std::cout << "tops command output:\n" << tops_result << std::endl;
-    std::cout << "tops command return code: " << tops_return_code << std::endl;
+    std::vector<std::string> tops_elements = splitStringByWhitespace(tops_result);
 
-    // Parse the tops output
-    std::vector<std::string> tops_elements = parseTopsOutput(tops_result);
-    std::cout << "Parsed top-level elements: ";
-    for (const auto& elem : tops_elements) {
-        std::cout << elem << " ";
-    }
-    std::cout << std::endl;
+    // Determine the selected object
+    std::string model_short_name = modelData.short_name;
+    std::vector<std::string> objects_to_try = {
+        "all", "all.g", model_short_name, model_short_name + ".g", model_short_name + ".c"
+    };
+    std::string selected_object_name;
 
-    // Insert top-level objects
-    for (const auto& top_element : tops_elements) {
-        if (processed_objects.find(top_element) != processed_objects.end()) {
-            std::cout << "Already processed top element: " << top_element << std::endl;
-            continue;
+    // check if any objects_to_try are in tops_elements
+    for (const auto& obj_name : objects_to_try) {
+        if (std::find(tops_elements.begin(), tops_elements.end(), obj_name) != tops_elements.end()) {
+            selected_object_name = obj_name;
+            break;
         }
+    }
 
-        std::cout << "Inserting top-level object: " << top_element << std::endl;
+    // if no match, select the first top-level object
+    if (selected_object_name.empty() && !tops_elements.empty()) {
+        selected_object_name = tops_elements.front();
+    }
+
+    for (const auto& top_element : tops_elements) {
+        if (processed_objects.count(top_element)) continue;
 
         ObjectData objectData;
         objectData.model_id = modelData.id;
         objectData.name = top_element;
-        objectData.parent_object_id = -1; // No parent for top-level objects
-        objectData.is_selected = true;    // Default selection state
+        objectData.parent_object_id = -1;
+        objectData.is_selected = (top_element == selected_object_name);
 
-        int objectId = model->insertObject(objectData);
-        if (objectId != -1) {
-            std::cout << "Inserted object '" << top_element << "' with ID " << objectId << std::endl;
-            int initial_depth = 1; // Depth of top-level objects is 1
-            object_queue.emplace(top_element, objectId, initial_depth);
-            processed_objects.insert(top_element);
-        } else {
-            std::cerr << "Failed to insert object: " << top_element << std::endl;
-        }
+        objects.push_back(objectData);
+        processed_objects.insert(top_element);
+        object_queue.emplace(top_element, "", 1);
+
+        parentRelations[top_element] = "";
     }
 
-    // Process the queue with depth limit
+    // BFS traversal
     while (!object_queue.empty()) {
-        auto [current_object, parent_object_id, current_depth] = object_queue.front();
+        auto [current_object, parent_name, current_depth] = object_queue.front();
         object_queue.pop();
 
-        std::cout << "Processing object: " << current_object
-                  << ", parent ID: " << parent_object_id
-                  << ", depth: " << current_depth << std::endl;
-
-        // Check if we've reached the maximum depth
-        if (current_depth >= max_depth) {
-            std::cout << "Reached maximum depth for object: " << current_object << std::endl;
-            continue;
-        }
+        if (current_depth >= max_depth) continue;
 
         // Get child objects
         std::string lt_command = mged_executable + " -c \"" + file_path + "\" lt " + current_object;
-        std::cout << "Executing lt command: " << lt_command << std::endl;
         auto [lt_output, lt_error, lt_return_code] = runCommand(lt_command);
         std::string lt_result = !lt_output.empty() ? lt_output : lt_error;
-        std::cout << "lt command output:\n" << lt_result << std::endl;
-        std::cout << "lt command return code: " << lt_return_code << std::endl;
 
-        // Parse the lt output
+        // Parse lt output
         std::vector<std::string> child_objects = parseLtOutput(lt_result);
-        std::cout << "Parsed child objects of " << current_object << ": ";
-        for (const auto& child : child_objects) {
-            std::cout << child << " ";
-        }
-        std::cout << std::endl;
 
         for (const auto& child_object : child_objects) {
-            if (processed_objects.find(child_object) != processed_objects.end()) {
-                std::cout << "Already processed child object: " << child_object << std::endl;
-                continue;
-            }
-
-            std::cout << "Inserting child object: " << child_object
-                      << ", parent ID: " << parent_object_id << std::endl;
+            if (processed_objects.count(child_object)) continue;
 
             ObjectData objectData;
             objectData.model_id = modelData.id;
             objectData.name = child_object;
-            objectData.parent_object_id = parent_object_id;
-            objectData.is_selected = true; // Default selection state
+            objectData.parent_object_id = -1;
+            objectData.is_selected = (child_object == selected_object_name);
 
-            int objectId = model->insertObject(objectData);
+            objects.push_back(objectData);
+            processed_objects.insert(child_object);
+            object_queue.emplace(child_object, current_object, current_depth + 1);
 
-
-            if (objectId != -1) {
-                std::cout << "Inserted object '" << child_object << "' with ID " << objectId << std::endl;
-                int child_depth = current_depth + 1;
-                object_queue.emplace(child_object, objectId, child_depth);
-                processed_objects.insert(child_object);
-            } else {
-                std::cerr << "Failed to insert object: " << child_object << std::endl;
-            }
+            parentRelations[child_object] = current_object;
         }
     }
+
+    return objects;
 }
 
 
-void ProcessGFiles::generateThumbnail(ModelData& modelData, const std::string& file_path, const std::string& previews_folder) {
+void ProcessGFiles::generateThumbnail(
+    ModelData& modelData,
+    const std::string& file_path,
+    const std::string& previews_folder,
+    const std::string& selected_object_name) {
+
     std::string rt_executable = RT_EXECUTABLE_PATH;
     std::string model_short_name = fs::path(file_path).stem().string();
 
-    // Determine objects to try for raytracing
-    std::vector<std::string> objects_to_try = {"all", "all.g", model_short_name, model_short_name + ".g", model_short_name + ".c"};
-
-    // Validate objects
-    std::vector<std::string> valid_objects;
-    for (const auto& obj : objects_to_try) {
-        if (validateObject(file_path, obj)) {
-            valid_objects.push_back(obj);
-        }
-    }
-
-    if (valid_objects.empty()) {
-        std::cerr << "No valid objects to raytrace in file: " << file_path << "\n";
+    if (selected_object_name.empty()) {
+        std::cerr << "No valid object selected for raytrace in file: " << file_path << "\n";
         return;
     }
 
     // Generate thumbnail
     std::string png_file = previews_folder + "/" + model_short_name + ".png";
     fs::create_directories(fs::path(png_file).parent_path());
-    std::string rt_command_template = rt_executable + " -s512 -o \"" + png_file + "\" \"" + file_path + "\" ";
+    std::string rt_command = rt_executable + " -s512 -o \"" + png_file + "\" \"" + file_path + "\" " + selected_object_name;
 
-    bool raytrace_successful = false;
-    for (const auto& obj : valid_objects) {
-        std::string rt_command = rt_command_template + obj;
-        try {
-            auto [rt_output, rt_error, rt_return_code] = runCommand(rt_command, 30);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    try {
+        auto [rt_output, rt_error, rt_return_code] = runCommand(rt_command, 30);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            if (fs::exists(png_file) && fs::file_size(png_file) > 0) {
-                raytrace_successful = true;
+        if (fs::exists(png_file) && fs::file_size(png_file) > 0) {
+            // Read thumbnail data
+            std::ifstream thumbnail_file(png_file, std::ios::binary);
+            std::vector<char> thumbnail_data((std::istreambuf_iterator<char>(thumbnail_file)), std::istreambuf_iterator<char>());
+            thumbnail_file.close();
 
-                // Read thumbnail data
-                std::ifstream thumbnail_file(png_file, std::ios::binary);
-                std::vector<char> thumbnail_data((std::istreambuf_iterator<char>(thumbnail_file)), std::istreambuf_iterator<char>());
-                thumbnail_file.close();
+            modelData.thumbnail = thumbnail_data;
 
-                modelData.thumbnail = thumbnail_data;
-
-                // Optionally delete the PNG file
-                fs::remove(png_file);
-                break;
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Raytrace failed for '" << obj << "': " << e.what() << "\n";
+            // Optionally delete the PNG file
+            fs::remove(png_file);
+        } else {
+            std::cerr << "Raytrace failed for object: " << selected_object_name << "\n";
         }
-    }
-
-    if (!raytrace_successful) {
-        std::cerr << "Raytrace failed for all possible objects in " << model_short_name << ".\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Raytrace failed for '" << selected_object_name << "': " << e.what() << "\n";
     }
 }
+
 
 void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
     try {
@@ -230,30 +189,64 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         modelData.primary_file = file_path.filename().string();
         modelData.file_path = file_path.string();
         modelData.library_name = "";
-        modelData.isSelected = false;
-
-        // Insert the model
-        model->insertModel(modelId, modelData);
+        modelData.is_selected = false;
 
         // Extract title
         extractTitle(modelData, file_path.string());
 
+        // Extract objects
+        std::map<std::string, std::string> parentRelations; // objectName -> parentName
+        std::vector<ObjectData> objects = extractObjects(modelData, file_path.string(), parentRelations);
+
+        // Determine selected object name
+        std::string selected_object_name;
+        for (const auto& obj : objects) {
+            if (obj.is_selected) {
+                selected_object_name = obj.name;
+                break;
+            }
+        }
+
+        // Generate thumbnail
+        generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+
+        // Now, insert the model into the database
+        model->insertModel(modelId, modelData);
+
         // Delete existing objects if any
         model->deleteObjectsForModel(modelId);
 
-        // Extract objects
-        extractObjects(modelData, file_path.string());
+        // Map from object name to object_id
+        std::map<std::string, int> objectNameToId;
 
-        // Generate thumbnail
-        generateThumbnail(modelData, file_path.string(), previews_folder);
+        // Begin transaction
+        model->beginTransaction();
 
-        // Update model
-        model->updateModel(modelId, modelData);
+        // Insert objects and collect mapping
+        for (auto& objData : objects) {
+            int objectId = model->insertObject(objData);
+            objectNameToId[objData.name] = objectId;
+        }
+
+        // Update parent_object_id for each object
+        for (auto& objData : objects) {
+            std::string parentName = parentRelations[objData.name];
+            if (!parentName.empty()) {
+                int objectId = objectNameToId[objData.name];
+                int parentObjectId = objectNameToId[parentName];
+                model->updateObjectParentId(objectId, parentObjectId);
+            }
+        }
+
+        // Commit transaction
+        model->commitTransaction();
 
     } catch (const std::exception& e) {
         std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
     }
 }
+
+
 
 std::tuple<std::string, std::string, int> ProcessGFiles::runCommand(const std::string& command, int timeout_seconds) {
     std::array<char, 256> buffer;
@@ -312,6 +305,19 @@ std::vector<std::string> ProcessGFiles::parseLtOutput(const std::string& lt_outp
         searchStart = match.suffix().first;
     }
     return components;
+}
+
+// Function to split a string by whitespace
+std::vector<std::string> ProcessGFiles::splitStringByWhitespace(const std::string &input) {
+    std::istringstream stream(input);
+    std::vector<std::string> tokens;
+    std::string token;
+
+    while (stream >> token) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
 }
 
 bool ProcessGFiles::validateObject(const std::string& file_path, const std::string& object_name) {
