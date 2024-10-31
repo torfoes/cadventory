@@ -54,7 +54,8 @@ bool Model::createTables() {
             author TEXT,
             file_path TEXT,
             library_name TEXT,
-            is_selected INTEGER DEFAULT 0
+            is_selected INTEGER DEFAULT 0,
+            is_processed INTEGER DEFAULT 0
         );
     )";
 
@@ -112,7 +113,7 @@ QVariant Model::data(const QModelIndex& index, int role) const {
     case LibraryNameRole:
         return QString::fromStdString(modelData.library_name);
     case IsSelectedRole:
-        return modelData.isSelected;
+        return modelData.is_selected;
     default:
         return QVariant();
     }
@@ -129,16 +130,17 @@ QHash<int, QByteArray> Model::roleNames() const {
     roles[AuthorRole] = "author";
     roles[FilePathRole] = "file_path";
     roles[LibraryNameRole] = "library_name";
-    roles[IsSelectedRole] = "isSelected";
+    roles[IsSelectedRole] = "is_selected";
     return roles;
 }
 
 bool Model::insertModel(int id, const ModelData& modelData) {
     std::string sql = R"(
-        INSERT OR IGNORE INTO models
-        (id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    )";
+    INSERT OR IGNORE INTO models
+    (id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+)";
+
 
     sqlite3_stmt* stmt;
     std::lock_guard<std::mutex> lock(db_mutex);
@@ -159,7 +161,8 @@ bool Model::insertModel(int id, const ModelData& modelData) {
         sqlite3_bind_text(stmt, 7, modelData.author.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 8, modelData.file_path.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 9, modelData.library_name.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 10, modelData.isSelected ? 1 : 0);
+        sqlite3_bind_int(stmt, 10, modelData.is_selected ? 1 : 0);
+        sqlite3_bind_int(stmt, 11, modelData.is_processed ? 1 : 0);
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             std::cerr << "Insert model failed: " << sqlite3_errmsg(db) << std::endl;
@@ -191,7 +194,8 @@ bool Model::updateModel(int id, const ModelData& modelData) {
             author = ?,
             file_path = ?,
             library_name = ?,
-            is_selected = ?
+            is_selected = ?,
+            is_processed = ?
         WHERE id = ?;
     )";
 
@@ -213,8 +217,9 @@ bool Model::updateModel(int id, const ModelData& modelData) {
         sqlite3_bind_text(stmt, 6, modelData.author.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 7, modelData.file_path.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 8, modelData.library_name.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 9, modelData.isSelected ? 1 : 0);
-        sqlite3_bind_int(stmt, 10, id);
+        sqlite3_bind_int(stmt, 9, modelData.is_selected ? 1 : 0);
+        sqlite3_bind_int(stmt, 10, modelData.is_processed ? 1 : 0);
+        sqlite3_bind_int(stmt, 11, id);
 
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             std::cerr << "Update model failed: " << sqlite3_errmsg(db) << std::endl;
@@ -299,7 +304,7 @@ bool Model::modelExists(int id) {
 
 ModelData Model::getModelById(int id) {
     std::string sql = R"(
-        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected
+        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed
         FROM models WHERE id = ?;
     )";
     sqlite3_stmt* stmt;
@@ -324,7 +329,8 @@ ModelData Model::getModelById(int id) {
             model.author = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
             model.file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
             model.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
-            model.isSelected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_selected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_processed = sqlite3_column_int(stmt, 10) != 0;
         }
         sqlite3_finalize(stmt);
     } else {
@@ -337,7 +343,7 @@ ModelData Model::getModelById(int id) {
 void Model::loadModelsFromDatabase() {
     std::vector<ModelData> loadedModels;
     std::string sql = R"(
-        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected
+        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed
         FROM models;
     )";
     sqlite3_stmt* stmt;
@@ -361,7 +367,8 @@ void Model::loadModelsFromDatabase() {
             model.author = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
             model.file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
             model.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
-            model.isSelected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_selected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_processed = sqlite3_column_int(stmt, 10) != 0;
 
             loadedModels.push_back(model);
         }
@@ -419,25 +426,24 @@ bool Model::setData(const QModelIndex& index, const QVariant& value, int role) {
     ModelData& modelData = models[index.row()];
 
     if (role == IsSelectedRole) {
-        modelData.isSelected = value.toBool();
+        modelData.is_selected = value.toBool();
 
-        // Update the database
         std::string sql = "UPDATE models SET is_selected = ? WHERE id = ?;";
         sqlite3_stmt* stmt;
         std::lock_guard<std::mutex> lock(db_mutex);
 
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-            sqlite3_bind_int(stmt, 1, modelData.isSelected ? 1 : 0);
+            sqlite3_bind_int(stmt, 1, modelData.is_selected ? 1 : 0);
             sqlite3_bind_int(stmt, 2, modelData.id);
 
             if (sqlite3_step(stmt) != SQLITE_DONE) {
-                std::cerr << "Failed to update isSelected in database: " << sqlite3_errmsg(db) << std::endl;
+                std::cerr << "Failed to update is_selected in database: " << sqlite3_errmsg(db) << std::endl;
                 sqlite3_finalize(stmt);
                 return false;
             }
             sqlite3_finalize(stmt);
         } else {
-            std::cerr << "SQL error in setData when updating isSelected: " << sqlite3_errmsg(db) << std::endl;
+            std::cerr << "SQL error in setData when updating is_selected: " << sqlite3_errmsg(db) << std::endl;
             return false;
         }
 
@@ -447,6 +453,7 @@ bool Model::setData(const QModelIndex& index, const QVariant& value, int role) {
 
     return false;
 }
+
 
 
 Qt::ItemFlags Model::flags(const QModelIndex& index) const {
@@ -669,7 +676,7 @@ std::vector<ModelData> Model::getSelectedModels() {
     std::lock_guard<std::mutex> lock(db_mutex);
 
     for (const auto& modelData : models) {
-        if (modelData.isSelected) {
+        if (modelData.is_selected) {
             selectedModels.push_back(modelData);
         }
     }
@@ -712,4 +719,36 @@ std::vector<ObjectData> Model::getSelectedObjectsForModel(int model_id) {
     }
 
     return selectedObjects;
+}
+
+
+void Model::beginTransaction() {
+    executeSQL("BEGIN TRANSACTION;");
+}
+
+void Model::commitTransaction() {
+    executeSQL("COMMIT;");
+}
+
+bool Model::updateObjectParentId(int object_id, int parent_object_id) {
+    std::string sql = "UPDATE objects SET parent_object_id = ? WHERE object_id = ?;";
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "SQL error in updateObjectParentId: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_int(stmt, 1, parent_object_id);
+    sqlite3_bind_int(stmt, 2, object_id);
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        std::cerr << "Update object parent ID failed: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    sqlite3_finalize(stmt);
+    return true;
 }

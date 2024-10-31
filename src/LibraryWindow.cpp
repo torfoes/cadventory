@@ -103,6 +103,8 @@ void LibraryWindow::startIndexing() {
     // Connect signals and slots
     connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
     connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
+    connect(indexingWorker, &IndexingWorker::progressUpdated, this, &LibraryWindow::onProgressUpdated);
+
 
     // Start the indexing thread
     indexingThread->start();
@@ -230,7 +232,8 @@ void LibraryWindow::onGenerateReportButtonClicked() {
         std::cout << "Author: " << modelData.author << "\n";
         std::cout << "File Path: " << modelData.file_path << "\n";
         std::cout << "Library Name: " << modelData.library_name << "\n";
-        std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No") << "\n";
+        std::cout << "Is Selected: " << (modelData.is_selected ? "Yes" : "No") << "\n";
+        std::cout << "Is Processed: " << (modelData.is_processed ? "Yes" : "No") << "\n";
 
         // log thumbnail information
         if (!modelData.thumbnail.empty()) {
@@ -278,6 +281,7 @@ void LibraryWindow::onModelProcessed(int modelId) {
     availableModelsProxyModel->invalidate();
     selectedModelsProxyModel->invalidate();
 }
+
 void LibraryWindow::on_backButton_clicked() {
     qDebug() << "Back button clicked";
 
@@ -307,7 +311,17 @@ void LibraryWindow::on_backButton_clicked() {
 void LibraryWindow::onGeometryBrowserClicked(int modelId) {
     qDebug() << "Geometry browser clicked for model ID:" << modelId;
 
-    // Create and show the geometry browser dialog
     GeometryBrowserDialog* dialog = new GeometryBrowserDialog(modelId, model, this);
     dialog->exec();
+}
+
+void LibraryWindow::onProgressUpdated(const QString& currentObject, int percentage) {
+    ui.progressBar->setValue(percentage);
+
+    if (percentage >= 100) {
+        ui.statusLabel->setText("Processing complete");
+        ui.progressBar->setVisible(false);
+    } else {
+        ui.statusLabel->setText(QString("Processing: %1").arg(currentObject));
+    }
 }

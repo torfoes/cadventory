@@ -18,7 +18,8 @@ struct ModelData {
     std::string author;
     std::string file_path;
     std::string library_name;
-    bool isSelected;
+    bool is_selected;
+    bool is_processed;
 };
 
 // Declare ModelData as a Qt metatype
@@ -94,6 +95,11 @@ public:
 
     // Retrieve selected objects for a given model ID
     std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
+
+    void beginTransaction();
+    void commitTransaction();
+    bool updateObjectParentId(int object_id, int parent_object_id);
+
 
 
 private:
