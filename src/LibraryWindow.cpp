@@ -99,7 +99,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
     indexingThread = new QThread(this); // Parent is LibraryWindow
-    indexingWorker = new IndexingWorker(library);
+    indexingWorker = new IndexingWorker(library, mainWindow->previewFlag);
 
     // Move the worker to the thread
     indexingWorker->moveToThread(indexingThread);
@@ -176,11 +176,10 @@ void LibraryWindow::setupConnections() {
     // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
 
-<<<<<<< HEAD
-=======
+
     connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
             this, &LibraryWindow::onGeometryBrowserClicked);
->>>>>>> 80a9badffdc758a9a9c2e381f2fb43c33d2728e8
+
 
 }
 
@@ -267,6 +266,7 @@ void LibraryWindow::on_backButton_clicked() {
     // Show the MainWindow
     if (mainWindow) {
         this->mainWindow->editMenu->removeAction(reload);
+        disconnect(reload,0,0,0);
         mainWindow->show();
         qDebug() << "MainWindow shown";
     } else {
@@ -305,7 +305,7 @@ void LibraryWindow::reloadLibrary() {
         std::cout << "File 'metadata.db' does not exist." << std::endl;
 }
 
-
+}
 
 void LibraryWindow::onGeometryBrowserClicked(int modelId) {
     qDebug() << "Geometry browser clicked for model ID:" << modelId;

@@ -102,7 +102,8 @@ set(LIBS
 qt_add_executable(cadventory WIN32 ${SRCS}
     src/ModelCardDelegate.h src/ModelCardDelegate.cpp
     src/ModelFilterProxyModel.h src/ModelFilterProxyModel.cpp
-    src/GeometryBrowserDialog.h src/GeometryBrowserDialog.cpp)
+    src/GeometryBrowserDialog.h src/GeometryBrowserDialog.cpp
+    src/SettingWindow.h src/SettingWindow.cpp src/SettingWindow.ui)
 
 
 # Note dependencies

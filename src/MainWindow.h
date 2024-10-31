@@ -13,6 +13,9 @@
 #include "ui_mainwindow.h"
 
 #include "Library.h"
+#include "SettingWindow.h"
+
+class SettingWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +27,10 @@ public:
 
     void addLibrary(const char* label = nullptr, const char* path = nullptr);
     void openLibrary();
+    void showSettingsWindow();
+    void setPreviewFlag(bool state);
+    SettingWindow *setting;
+    bool previewFlag = true;
     QMenu * fileMenu;
     QMenu * editMenu;
     QMenu * viewMenu;

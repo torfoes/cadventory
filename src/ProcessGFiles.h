@@ -13,7 +13,7 @@ class ProcessGFiles {
 public:
     explicit ProcessGFiles(Model* model);
 
-    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
+    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder, bool preview);
 
 private:
     // Helper methods

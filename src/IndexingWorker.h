@@ -8,7 +8,7 @@
 class IndexingWorker : public QObject {
     Q_OBJECT
 public:
-    explicit IndexingWorker(Library* library, QObject* parent = nullptr);
+    explicit IndexingWorker(Library* library,bool preview,QObject* parent = nullptr);
     void stop();
 
 public slots:
@@ -21,6 +21,7 @@ signals:
 private:
     Library* library;
     std::atomic<bool> m_stopRequested;
+    bool previewFlag;
 };
 
 #endif // INDEXINGWORKER_H

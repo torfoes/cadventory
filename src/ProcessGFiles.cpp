@@ -213,7 +213,7 @@ void ProcessGFiles::generateThumbnail(ModelData& modelData, const std::string& f
     }
 }
 
-void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
+void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder, bool preview) {
     try {
         std::string model_short_name = file_path.stem().string();
         int modelId = model->hashModel(file_path.string());
@@ -245,7 +245,9 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         extractObjects(modelData, file_path.string());
 
         // Generate thumbnail
+        if(preview){
         generateThumbnail(modelData, file_path.string(), previews_folder);
+        }
 
         // Update model
         model->updateModel(modelId, modelData);

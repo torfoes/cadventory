@@ -48,16 +48,26 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     windowMenu = new QMenu(tr("&Window"),this);
     helpMenu = new QMenu(tr("&Help"),this);
 
-    //reload = new QAction(tr("&Reload"),this);
+    QAction *set = new QAction(tr("&General Settings"),this);
 
-    //editMenu->addAction(reload);
-    //editMenu->removeAction();
+    windowMenu->addAction(set);
+
+    QAction *test = new QAction(tr("&test"),this);
+
+    fileMenu->addAction(test);
+    windowMenu->addAction(test);
+    viewMenu->addAction(test);
+    helpMenu->addAction(test);
+
 
     menuBar()->addMenu(fileMenu);
     menuBar()->addMenu(editMenu);
     menuBar()->addMenu(viewMenu);
     menuBar()->addMenu(windowMenu);
     menuBar()->addMenu(helpMenu);
+
+    setting = new SettingWindow(this,nullptr);
+    connect(set,&QAction::triggered,this,&MainWindow::showSettingsWindow);
 
 }
 
@@ -241,4 +251,14 @@ void MainWindow::on_homeLibraryButton_clicked()
     if (button) {
         openLibrary();
     }
+}
+
+void MainWindow::showSettingsWindow()
+{
+    setting->show();
+}
+
+void MainWindow::setPreviewFlag(bool state)
+{
+    previewFlag = state;
 }
