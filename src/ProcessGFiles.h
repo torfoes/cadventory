@@ -15,10 +15,11 @@ public:
     explicit ProcessGFiles(Model* model);
 
     void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
+    std::tuple<bool, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath);
+
 
 private:
     // Helper methods
-    bool isModelProcessed(int modelId);
     void extractTitle(ModelData& modelData, const std::string& file_path);
 
     std::vector<ObjectData> extractObjects(
