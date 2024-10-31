@@ -208,7 +208,6 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
 
         // Generate thumbnail
         generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
-
         modelData.is_processed = true;
 
         // **Insert or update the model in the database**

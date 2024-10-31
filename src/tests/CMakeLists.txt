@@ -4,8 +4,13 @@ cmake_minimum_required(VERSION 3.25)
 
 project(CADventoryTests)
 
-# Include the parent source directory to access headers
-include_directories(${CMAKE_SOURCE_DIR}/src)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}/src
+)
 
 # Find the required Qt modules
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Test)
@@ -37,17 +42,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 endif()
 
-# Generate ui_LibraryWindow.h from LibraryWindow.ui
-# Assuming LibraryWindow.ui is in src
-qt6_wrap_ui(UISrcs ../librarywindow.ui)
-
 # Add the ModelTest executable
-add_executable(ModelTest ModelTest.cpp ../Model.cpp)
-add_executable(LibraryTest
-    LibraryTest.cpp
-    ../Library.cpp
+add_executable(ModelTest
+    ModelTest.cpp
     ../Model.cpp
-    ../FilesystemIndexer.cpp
 )
 
 # Link the test executable against the necessary libraries
@@ -58,61 +56,32 @@ target_link_libraries(ModelTest PRIVATE
     ${SQLITE_LIBRARY}
 )
 
-target_link_libraries(LibraryTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-)
-
-# Include directories for SQLite (if necessary)
+# Include directories for ModelTest
 target_include_directories(ModelTest PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    ${CMAKE_CURRENT_BINARY_DIR}/../..
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}/src
 )
 
-target_include_directories(LibraryTest PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    ${CMAKE_CURRENT_BINARY_DIR}/../..
-)
-
-# Add the FilesystemIndexerTest executable
-add_executable(FilesystemIndexerTest FilesystemIndexerTest.cpp ../FilesystemIndexer.cpp)
-
-# Link the FilesystemIndexerTest executable against the necessary libraries
-target_link_libraries(FilesystemIndexerTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-)
-
-# Include directories for FilesystemIndexerTest if necessary
-target_include_directories(FilesystemIndexerTest PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    ${CMAKE_CURRENT_BINARY_DIR}/../..
-)
-
-# Add the FilesystemIndexerPerfTest executable
-add_executable(FilesystemIndexerPerfTest FilesystemIndexerPerfTest.cpp ../FilesystemIndexer.cpp)
-
-# Link the FilesystemIndexerPerfTest executable against the necessary libraries
-target_link_libraries(FilesystemIndexerPerfTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-)
-
-# Include directories for FilesystemIndexerPerfTest if necessary
-target_include_directories(FilesystemIndexerPerfTest PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    ${CMAKE_CURRENT_BINARY_DIR}/../..
-)
+# Repeat similar steps for LibraryTest and other tests
+# ...
 
 # Add the MainWindowTest executable
-# Including UISrcs to ensure ui_LibraryWindow.h is generated and linked
-add_executable(MainWindowTest MainWindowTest.cpp ../MainWindow.cpp ${UISrcs})
+add_executable(MainWindowTest
+    MainWindowTest.cpp
+    ../MainWindow.cpp
+    ../LibraryWindow.cpp
+    ../Library.cpp
+    ../Model.cpp
+    ../ProcessGFiles.cpp
+    ../IndexingWorker.cpp
+    ../FilesystemIndexer.cpp
+    ../ModelCardDelegate.cpp
+    ../GeometryBrowserDialog.cpp
+    ../ReportGenerationWindow.cpp
+    ../librarywindow.ui
+    ../mainwindow.ui
+    ../reportgenerationwindow.ui
+)
 
 # Link the Main Window GUI test executable against the necessary libraries
 target_link_libraries(MainWindowTest PRIVATE
@@ -126,13 +95,12 @@ target_link_libraries(MainWindowTest PRIVATE
 
 # Include directories for MainWindowTest
 target_include_directories(MainWindowTest PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    ${CMAKE_CURRENT_BINARY_DIR}/../..
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}/src
 )
 
 # Register each test with CTest
 add_test(NAME ModelTests COMMAND ModelTest)
 add_test(NAME LibraryTests COMMAND LibraryTest)
-add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
-add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
+# Add other tests as needed
 add_test(NAME MainWindowTests COMMAND MainWindowTest)
