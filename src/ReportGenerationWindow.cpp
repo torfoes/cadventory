@@ -1,4 +1,7 @@
 #include "ReportGenerationWindow.h"
+#include "ReportGeneratorWorker.h"
+#include "config.h"
+#include "ui_reportgenerationwindow.h"
 
 #include <QComboBox>
 #include <QDesktopServices>
@@ -8,8 +11,6 @@
 #include <QLineEdit>
 #include <QListView>
 #include <QMessageBox>
-#include <QPainter>
-#include <QPdfWriter>
 #include <QPushButton>
 #include <QString>
 #include <QThread>
@@ -18,14 +19,12 @@
 #include <iostream>
 #include <string>
 
-#include "config.h"
-#include "ui_reportgenerationwindow.h"
-
 ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
                                                Library* library)
     : QWidget(parent),
       model(model),
       library(library),
+      num_file(0),
       ui(new Ui::ReportGenerationWindow),
       title("3D Model Inventory Report"),
       username("username"),
@@ -65,10 +64,10 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   std::cout << "directory to save: " << output_directory << std::endl;
   std::string report_filepath = output_directory + "/report_" + time + ".pdf";
 
-  QPdfWriter pdfWriter(QString::fromStdString(report_filepath));
-  pdfWriter.setResolution(300);
-  pdfWriter.setPageSize(QPageSize(QPageSize::A4));
-  QPainter painter(&pdfWriter);
+  pdfWriter = new QPdfWriter(QString::fromStdString(report_filepath));
+  pdfWriter->setResolution(300);
+  pdfWriter->setPageSize(QPageSize(QPageSize::A4));
+  painter = new QPainter(pdfWriter);
 
   // fonts
   QFont font("Helvetica", 18);
@@ -87,186 +86,156 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
     title = ui->title_textEdit->toPlainText().toStdString();
   }
 
-  painter.setFont(title_font);
-  painter.drawText(max_width / 2 - 900, max_height / 2 - 150,
-                   QString::fromStdString(title));
+  painter->setFont(title_font);
+  painter->drawText(max_width / 2 - 900, max_height / 2 - 150,
+                    QString::fromStdString(title));
 
   // top logo
   if (!logo1_filepath.empty()) {
     QPixmap top_logo(QString::fromStdString(logo1_filepath));
-    painter.drawPixmap(300, 300, top_logo);
+    painter->drawPixmap(300, 300, top_logo);
   }
 
   // version text
   if (!ui->version_textEdit->toPlainText().isEmpty()) {
     version = ui->version_textEdit->toPlainText().toStdString();
   }
-  painter.setPen(Qt::gray);
-  painter.setFont(version_font);
+  painter->setPen(Qt::gray);
+  painter->setFont(version_font);
 
   // bottom logo, and placing version
   if (!logo2_filepath.empty()) {
     QPixmap bottom_logo(QString::fromStdString(logo2_filepath));
-    painter.drawPixmap(max_width - 300 - bottom_logo.width(),
-                       max_height - 300 - bottom_logo.height(), bottom_logo);
-    painter.drawText(300, max_height - 300 - (bottom_logo.height() / 2),
-                     QString::fromStdString(version));
+    painter->drawPixmap(max_width - 300 - bottom_logo.width(),
+                        max_height - 300 - bottom_logo.height(), bottom_logo);
+    painter->drawText(300, max_height - 300 - (bottom_logo.height() / 2),
+                      QString::fromStdString(version));
 
   } else {
-    painter.drawText(300, max_height - 300, QString::fromStdString(version));
+    painter->drawText(300, max_height - 300, QString::fromStdString(version));
   }
 
   // user and date, drawtext with rectangles
   if (!ui->username_textEdit->toPlainText().isEmpty()) {
     username = ui->username_textEdit->toPlainText().toStdString();
   }
-  painter.setPen(Qt::black);
-  painter.setFont(subtext_and_user_font);
+  painter->setPen(Qt::black);
+  painter->setFont(subtext_and_user_font);
   const QRect user_rect = QRect(max_width - 300 - 300, 300, 300, 150);
-  painter.drawText(user_rect, Qt::AlignRight | Qt::TextWordWrap,
-                   QString::fromStdString(username));
+  painter->drawText(user_rect, Qt::AlignRight | Qt::TextWordWrap,
+                    QString::fromStdString(username));
   const QRect date_rect = QRect(max_width - 300 - 600, 450, 600, 200);
-  painter.drawText(date_rect, Qt::AlignRight,
-                   QString::fromStdString(time.substr(0, time.find(","))));
+  painter->drawText(date_rect, Qt::AlignRight,
+                    QString::fromStdString(time.substr(0, time.find(","))));
 
   // Set a font for the text
-  if (pdfWriter.newPage()) {
-    painter.setFont(font);
-    painter.drawText(750, 200, "Cadventory");
-    painter.setPen(QPen(Qt::black, 3));
-    painter.drawLine(-200, 250, 2450, 250);
-    painter.drawLine(-200, 3400, 2450, 3400);
-    painter.setFont(font_two);
-    painter.drawText(
+  if (pdfWriter->newPage()) {
+    painter->setFont(font);
+    painter->drawText(750, 200, "Cadventory");
+    painter->setPen(QPen(Qt::black, 3));
+    painter->drawLine(-200, 250, 2450, 250);
+    painter->drawLine(-200, 3400, 2450, 3400);
+    painter->setFont(font_two);
+    painter->drawText(
         300, 300,
         QString::fromStdString("Library: " + std::string(library->name())));
-    painter.drawText(300, 350,
-                     QString::fromStdString("Report Generated on: " + time));
+    painter->drawText(300, 350,
+                      QString::fromStdString("Report Generated on: " + time));
     // will need to adjust for windows, macos "local home" libraries
   } else {
     std::cout << "error: new page failed" << std::endl;
   }
 
-  int x = 325;
-  int y = 400;
-
-  painter.drawText(x, y, "Geometry");
+  painter->drawText(x, y, "Geometry");
   y += 25;
 
   for (const auto& str : library->getGeometry()) {
     y += 25;
-    painter.drawText(x, y, QString::fromStdString(str));
+    painter->drawText(x, y, QString::fromStdString(str));
   }
   y += 50;
-  painter.drawText(x, y, "Images");
+  painter->drawText(x, y, "Images");
   y += 25;
   for (const auto& str : library->getImages()) {
     y += 25;
-    painter.drawText(x, y, QString::fromStdString(str));
+    painter->drawText(x, y, QString::fromStdString(str));
   }
   y += 50;
-  painter.drawText(x, y, "Documents");
+  painter->drawText(x, y, "Documents");
   y += 25;
   for (const auto& str : library->getDocuments()) {
     y += 25;
-    painter.drawText(x, y, QString::fromStdString(str));
+    painter->drawText(x, y, QString::fromStdString(str));
   }
 
-    ProcessGFiles gFileProcessor(model);
-    int num_file = 0;
-    std::cout << "generating gist reports" << std::endl;
-    painter.setFont(font);
-    painter.rotate(90);
+  ProcessGFiles gFileProcessor(model);
+  std::cout << "generating gist reports" << std::endl;
+  painter->setFont(font);
+  painter->rotate(90);
 
-    std::vector<std::string> err_vec;
+  err_vec = new std::vector<std::string>();
 
-    std::vector<ModelData> selectedModels = model->getSelectedModels();
+  std::vector<ModelData> selectedModels = model->getSelectedModels();
+  num_file = new int(0);
+  tot_num_files = new int(model->getSelectedModels().size());
+  // Iterate through each selected model
+  // for (const auto& modelData : selectedModels) {
+  //   std::string path_gist_output =
+  //       output_directory + "/" + std::to_string(*num_file) + ".png";
 
-    // Iterate through each selected model
-    for (const auto& modelData : selectedModels) {
-        std::string path_gist_output = output_directory + "/" + std::to_string(num_file) + ".png";
+  //   ui->fileInProcess_label->setText(
+  //       QString::fromStdString(modelData.file_path));
 
-        ui->fileInProcess_label->setText(QString::fromStdString(modelData.file_path));
+  //   std::string primary_obj = "";
+  //   std::vector<ObjectData> associatedObjects =
+  //       model->getObjectsForModel(modelData.id);
 
-        // Use the generateGistReport method
-        auto [success, errorMessage] = gFileProcessor.generateGistReport(modelData.file_path, path_gist_output);
+  //   if (associatedObjects.empty()) {
+  //     std::cout << "No associated objects for this model.\n";
+  //   } else {
+  //     std::cout << "Associated Objects (" << associatedObjects.size() <<
+  //     "):\n";
 
-        if (success) {
-            // Load the generated PNG image
-            QString png_qstr = QString::fromStdString(path_gist_output);
-            QPixmap gist(png_qstr);
+  //     for (const auto& obj : associatedObjects) {
+  //       if (obj.is_selected) {
+  //         primary_obj = obj.name;
+  //       }
+  //     }
+  //   }
 
-            bool status_newpage = pdfWriter.newPage();
-            if (!status_newpage) {
-                std::cerr << "Failed to create new PDF page." << std::endl;
-            }
-            painter.drawPixmap(0, -2408, gist);
-        } else {
-            // Handle the error
-            std::string err = "Model: " + modelData.file_path + "\nError:\n" + errorMessage;
-            err_vec.push_back(err);
-            painter.rotate(-90);
-            painter.setFont(font);
-            painter.drawText(100, 100, QString::fromStdString(modelData.file_path));
-            painter.setFont(font_two);
-            painter.drawText(100, 150, QString::fromStdString(errorMessage));
-            painter.rotate(90);
-        }
+  //   // Use the generateGistReport method
+  //   auto [success, errorMessage] = gFileProcessor.generateGistReport(
+  //       modelData.file_path, path_gist_output, primary_obj);
 
-        ui->progressBar->setValue(int(num_file / selectedModels.size()));
-        num_file++;
-    }
+  //   if (success) {
+  //     onSuccessfulGistCall(path_gist_output);
+  //   } else {
 
-    //     // retrieve associated objects for the current model
-    //     std::vector<ObjectData> associatedObjects =
-    //     model->getObjectsForModel(modelData.id);
+  //     std::string fpath_err = modelData.file_path;
+  //     onFailedGistCall(fpath_err, errorMessage);
+  //   }
+  // }
+  // onFinishedGeneratingReport();
 
-    //     // if (associatedObjects.empty()) {
-    //     //     std::cout << "No associated objects for this model.\n";
-    //     // } else {
-    //     //     std::cout << "Associated Objects (" <<
-    //     associatedObjects.size() << "):\n";
+  QThread* generatingReportThread =
+      new QThread(this);  // Parent is ReportGenerationWindow
+  ReportGeneratorWorker *reporterWorker = new ReportGeneratorWorker(nullptr);
+  // IndexingWorker* indexworker = new IndexingWorker(library);
+  // // Move the worker to the thread
+  // reporterWorker->moveToThread(generatingReportThread);
 
-    //     //     for (const auto& obj : associatedObjects) {
-    //     //         std::cout << "  -------------------------\n";
-    //     //         std::cout << "  Object ID: " << obj.object_id << "\n";
-    //     //         std::cout << "  Name: " << obj.name << "\n";
-    //     //         std::cout << "  Parent Object ID: "
-    //     //                   << (obj.parent_object_id != -1 ?
-    //     std::to_string(obj.parent_object_id) : "None")
-    //     //                   << "\n";
-    //     //         std::cout << "  Is Selected: " << (obj.is_selected ? "Yes"
-    //     : "No") << "\n";
-    //     //     }
-    //     //     std::cout << "  -------------------------\n";
-    //     // }
+  // Connect signals and slots
+  // connect(generatingReportThread, &QThread::started, reporterWorker,
+  //         &ReportGeneratorWorker::process);
+  // connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
+  //         &ReportGenerationWindow::onSuccessfulGistCall);
+  // connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
+  //         &ReportGenerationWindow::onFailedGistCall);
+  // connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
+  //         &ReportGenerationWindow::onFinishedGeneratingReport);
 
-    //     std::cout << "==============================\n\n";
-
-
-
-  ui->progressBar->setValue(100);
-  ui->fileInProcess_label->setText(QString::fromStdString("Complete"));
-
-  painter.end();
-
-  std::cout << "Report Generated" << std::endl;
-  if (err_vec.size()) {
-    // Convert std::vector<std::string> to QString
-    QString message;
-    for (const auto& str : err_vec) {
-      message += QString::fromStdString(str) +
-                 "\n";  // Append each string with a newline
-    }
-
-    // Create and show the popup
-    QMessageBox msgBox(this);
-    msgBox.setText("Errors:");
-    msgBox.setInformativeText(message);
-    msgBox.exec();
-  }
-  QDesktopServices::openUrl(QUrl(
-      QString::fromStdString(output_directory)));  // open pdf after generation
+  // Start the indexing thread
+  // generatingReportThread->start();
 }
 
 void ReportGenerationWindow::onOutputDirectoryButtonClicked() {
@@ -300,4 +269,83 @@ void ReportGenerationWindow::onLogo2ButtonClicked() {
   logo2_filepath = bottom_logo_path.toStdString();
 }
 
-ReportGenerationWindow::~ReportGenerationWindow() { delete ui; }
+void ReportGenerationWindow::onSuccessfulGistCall(const QString& path_gist_output){
+
+  // Load the generated PNG image
+  QPixmap gist(path_gist_output);
+
+  // bool status_newpage = pdfWriter->newPage();
+  if (pdfWriter->newPage()) {
+    painter->drawPixmap(0, -2408, gist);
+  } else {
+    std::cerr << "Failed to create new PDF page." << std::endl;
+  }
+
+  ui->progressBar->setValue(int(*num_file / *tot_num_files));
+  (*num_file)++;
+}
+void ReportGenerationWindow::onFailedGistCall(const QString& filepath, const QString& errorMessage) {
+  std::string err = "Model: " + filepath.toStdString() + "\nError:\n" +
+                    errorMessage.toStdString();
+  QFont font("Helvetica", 18);
+  QFont font_two("Helvetica", 6);
+  err_vec->push_back(err);
+  if (pdfWriter->newPage()) {
+    painter->rotate(-90);
+    painter->setFont(font);
+    painter->drawText(100, 100, QString::fromStdString(filepath.toStdString()));
+    painter->setFont(font_two);
+    painter->drawText(100, 150,
+                      QString::fromStdString(errorMessage.toStdString()));
+    painter->rotate(90);
+  } else {
+    std::cerr << "Failed to create new PDF page." << std::endl;
+  }
+
+  ui->progressBar->setValue(int(*num_file / *tot_num_files));
+  (*num_file)++;
+}
+
+void ReportGenerationWindow::onFinishedGeneratingReport() {
+  ui->progressBar->setValue(100);
+  ui->fileInProcess_label->setText(QString::fromStdString("Complete"));
+
+  painter->end();
+
+  std::cout << "Report Generated" << std::endl;
+  if (err_vec->size()) {
+    // Convert std::vector<std::string> to QString
+    QString message;
+    for (const auto& str : *err_vec) {
+      message += QString::fromStdString(str) +
+                 "\n";  // Append each string with a newline
+    }
+
+    // Create and show the popup
+    QMessageBox msgBox(this);
+    msgBox.setText("Errors:");
+    msgBox.setInformativeText(message);
+    msgBox.exec();
+  }
+  QDesktopServices::openUrl(QUrl(
+      QString::fromStdString(output_directory)));  // open pdf after generation
+}
+
+ReportGenerationWindow::~ReportGenerationWindow() {
+  delete ui;
+  if (pdfWriter) {
+    delete pdfWriter;
+  }
+  if (painter) {
+    delete painter;
+  }
+  if (err_vec) {
+    delete err_vec;
+  }
+  if (num_file) {
+    delete num_file;
+  }
+  if (tot_num_files) {
+    delete tot_num_files;
+  }
+}

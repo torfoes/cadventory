@@ -335,12 +335,12 @@ bool ProcessGFiles::validateObject(const std::string& file_path, const std::stri
 
 #include <iostream> // Ensure this is included for logging
 
-std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath) {
+std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj) {
     // log the function entry and input parameters
     std::cout << "generateGistReport called with:" << std::endl;
     std::cout << "  inputFilePath: " << inputFilePath << std::endl;
     std::cout << "  outputFilePath: " << outputFilePath << std::endl;
-
+    std::cout << "  primary obj: " << primary_obj << std::endl;
     // check if input file exists
     QFileInfo inputFile(QString::fromStdString(inputFilePath));
     if (!inputFile.exists()) {
@@ -353,6 +353,10 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     // construct the gist command
     std::string gistCommand = std::string(GIST_EXECUTABLE_PATH) + " \"" +
                               inputFilePath + "\" -o \"" + outputFilePath + "\"";
+    
+    if(!primary_obj.empty()){
+        gistCommand += " -t \"" + primary_obj + "\"";
+    }
     std::cout << "Constructed gistCommand: " << gistCommand << std::endl;
 
     // execute the command
@@ -364,7 +368,7 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     std::cout << "Standard Error:" << std::endl << stderrStr << std::endl;
 
     // check for command execution errors
-    if (returnCode != 0) {
+    if (returnCode != 0 || !stdoutStr.empty() || !stderrStr.empty()) {
         std::cerr << "Gist command failed with code " << returnCode << std::endl;
         std::string errorMsg = stderrStr.empty() ? stdoutStr : stderrStr;
         return {false, "Gist command failed with code " + std::to_string(returnCode) + ": " + errorMsg};
@@ -376,7 +380,7 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     QFileInfo outputFile(QString::fromStdString(outputFilePath));
     if (!outputFile.exists()) {
         std::cerr << "Output file not generated: " << outputFilePath << std::endl;
-        return {false, "Failed to generate output file: " + outputFilePath};
+        return {false, stdoutStr};
     } else {
         std::cout << "Confirmed output file was generated successfully." << std::endl;
     }

@@ -82,6 +82,7 @@ set(SRCS
   src/GeometryBrowserDialog.cpp
   src/ReportGenerationWindow.cpp
   src/main.cpp
+  src/ReportGeneratorWorker.cpp
 )
 
 set(UIS
@@ -102,6 +103,7 @@ set(HEADERS
   src/ModelFilterProxyModel.h
   src/GeometryBrowserDialog.h
   src/ReportGenerationWindow.h
+  src/ReportGeneratorWorker.h
 )
 
 # qt_add_executable automatically handles AUTOUIC, AUTOMOC, AUTORCC

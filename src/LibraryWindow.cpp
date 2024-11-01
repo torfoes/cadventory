@@ -6,6 +6,7 @@
 #include "MainWindow.h"
 #include "GeometryBrowserDialog.h"
 // #include "AdvancedOptionsDialog.h"
+#include "ReportGenerationWindow.h"
 
 #include <QThread>
 #include <QMessageBox>
@@ -22,7 +23,6 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include "ReportGenerationWindow.h"
 
 
 namespace fs = std::filesystem;
