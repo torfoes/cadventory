@@ -224,3 +224,8 @@ void MainWindow::on_homeLibraryButton_clicked()
         openLibrary();
     }
 }
+
+void MainWindow::clearLibraries()
+{
+    libraries.clear();
+}

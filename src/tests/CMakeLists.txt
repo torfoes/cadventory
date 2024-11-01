@@ -62,6 +62,33 @@ target_include_directories(ModelTest PRIVATE
     ${CMAKE_BINARY_DIR}/src
 )
 
+# Add the FilesystemIndexerTest executable
+add_executable(FilesystemIndexerTest FilesystemIndexerTest.cpp ../FilesystemIndexer.cpp)
+
+# Link the FilesystemIndexerTest executable against the necessary libraries
+target_link_libraries(FilesystemIndexerTest PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Gui
+    ${SQLITE_LIBRARY}
+)
+
+# Include directories for FilesystemIndexerTest if necessary
+target_include_directories(FilesystemIndexerTest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    ${CMAKE_CURRENT_BINARY_DIR}/../..
+)
+
+# Add the FilesystemIndexerPerfTest executable
+add_executable(FilesystemIndexerPerfTest FilesystemIndexerPerfTest.cpp ../FilesystemIndexer.cpp)
+
+# Link the FilesystemIndexerPerfTest executable against the necessary libraries
+target_link_libraries(FilesystemIndexerPerfTest PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Gui
+    ${SQLITE_LIBRARY}
+)
 
 # Add the MainWindowTest executable
 add_executable(MainWindowTest
@@ -101,5 +128,6 @@ target_include_directories(MainWindowTest PRIVATE
 # Register each test with CTest
 add_test(NAME ModelTests COMMAND ModelTest)
 add_test(NAME LibraryTests COMMAND LibraryTest)
-# Add other tests as needed
+add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
+add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
 add_test(NAME MainWindowTests COMMAND MainWindowTest)
