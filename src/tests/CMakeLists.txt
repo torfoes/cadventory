@@ -15,6 +15,8 @@ include_directories(
 # Find the required Qt modules
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Test)
 
+qt6_wrap_ui(UIS_HEADERS ../src/mainwindow.ui ../src/librarywindow.ui)
+
 # Include FetchContent module
 include(FetchContent)
 
@@ -103,10 +105,8 @@ add_executable(MainWindowTest
     ../ModelCardDelegate.cpp
     ../GeometryBrowserDialog.cpp
     ../ReportGenerationWindow.cpp
-    ../librarywindow.ui
-    ../mainwindow.ui
-    ../reportgenerationwindow.ui
     ../ModelFilterProxyModel.cpp
+    ../mainwindow.ui
 )
 
 # Link the Main Window GUI test executable against the necessary libraries
@@ -125,9 +125,43 @@ target_include_directories(MainWindowTest PRIVATE
     ${CMAKE_BINARY_DIR}/src
 )
 
+# Add the LibraryWindowTest executable
+add_executable(LibraryWindowTest
+    LibraryWindowTest.cpp
+    ../LibraryWindow.cpp
+    ../Library.cpp
+    ../Model.cpp
+    ../ProcessGFiles.cpp
+    ../IndexingWorker.cpp
+    ../FilesystemIndexer.cpp
+    ../ModelCardDelegate.cpp
+    ../GeometryBrowserDialog.cpp
+    ../ReportGenerationWindow.cpp
+    ../ModelFilterProxyModel.cpp
+    ../mainwindow.ui
+    ../librarywindow.ui
+)
+
+# Link the LibraryWindow GUI test executable against the necessary libraries
+target_link_libraries(LibraryWindowTest PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Test
+    ${SQLITE_LIBRARY}
+)
+
+# Include directories for LibraryWindowTest
+target_include_directories(LibraryWindowTest PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}/src
+)
+
 # Register each test with CTest
 add_test(NAME ModelTests COMMAND ModelTest)
 add_test(NAME LibraryTests COMMAND LibraryTest)
 add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
 add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
 add_test(NAME MainWindowTests COMMAND MainWindowTest)
+add_test(NAME LibraryWindowTests COMMAND LibraryWindowTest)
