@@ -80,6 +80,8 @@ add_executable(MainWindowTest
     ../mainwindow.ui
     ../reportgenerationwindow.ui
     ../ModelFilterProxyModel.cpp
+    ../ReportGeneratorWorker.cpp
+    ../ReportGeneratorWorker.h
 )
 
 # Link the Main Window GUI test executable against the necessary libraries
