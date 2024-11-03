@@ -7,7 +7,7 @@
 #include "GeometryBrowserDialog.h"
 // #include "AdvancedOptionsDialog.h"
 #include "ReportGenerationWindow.h"
-
+#include "ReportGeneratorWorker.h"
 #include <QThread>
 #include <QMessageBox>
 #include <QVBoxLayout>

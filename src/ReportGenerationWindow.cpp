@@ -1,5 +1,4 @@
 #include "ReportGenerationWindow.h"
-#include "ReportGeneratorWorker.h"
 #include "config.h"
 #include "ui_reportgenerationwindow.h"
 
@@ -18,6 +17,7 @@
 #include <QVBoxLayout>
 #include <iostream>
 #include <string>
+#include "ReportGeneratorWorker.h"
 
 ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
                                                Library* library)
@@ -178,64 +178,27 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   std::vector<ModelData> selectedModels = model->getSelectedModels();
   num_file = new int(0);
   tot_num_files = new int(model->getSelectedModels().size());
-  // Iterate through each selected model
-  // for (const auto& modelData : selectedModels) {
-  //   std::string path_gist_output =
-  //       output_directory + "/" + std::to_string(*num_file) + ".png";
-
-  //   ui->fileInProcess_label->setText(
-  //       QString::fromStdString(modelData.file_path));
-
-  //   std::string primary_obj = "";
-  //   std::vector<ObjectData> associatedObjects =
-  //       model->getObjectsForModel(modelData.id);
-
-  //   if (associatedObjects.empty()) {
-  //     std::cout << "No associated objects for this model.\n";
-  //   } else {
-  //     std::cout << "Associated Objects (" << associatedObjects.size() <<
-  //     "):\n";
-
-  //     for (const auto& obj : associatedObjects) {
-  //       if (obj.is_selected) {
-  //         primary_obj = obj.name;
-  //       }
-  //     }
-  //   }
-
-  //   // Use the generateGistReport method
-  //   auto [success, errorMessage] = gFileProcessor.generateGistReport(
-  //       modelData.file_path, path_gist_output, primary_obj);
-
-  //   if (success) {
-  //     onSuccessfulGistCall(path_gist_output);
-  //   } else {
-
-  //     std::string fpath_err = modelData.file_path;
-  //     onFailedGistCall(fpath_err, errorMessage);
-  //   }
-  // }
-  // onFinishedGeneratingReport();
 
   QThread* generatingReportThread =
       new QThread(this);  // Parent is ReportGenerationWindow
-  ReportGeneratorWorker *reporterWorker = new ReportGeneratorWorker(nullptr);
-  // IndexingWorker* indexworker = new IndexingWorker(library);
+  ReportGeneratorWorker *reporterWorker = new ReportGeneratorWorker(model, output_directory, nullptr);
   // // Move the worker to the thread
-  // reporterWorker->moveToThread(generatingReportThread);
+  reporterWorker->moveToThread(generatingReportThread);
 
   // Connect signals and slots
-  // connect(generatingReportThread, &QThread::started, reporterWorker,
-  //         &ReportGeneratorWorker::process);
-  // connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
-  //         &ReportGenerationWindow::onSuccessfulGistCall);
-  // connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
-  //         &ReportGenerationWindow::onFailedGistCall);
-  // connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
-  //         &ReportGenerationWindow::onFinishedGeneratingReport);
+  connect(generatingReportThread, &QThread::started, reporterWorker,
+          &ReportGeneratorWorker::process);
+  connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
+          &ReportGenerationWindow::onSuccessfulGistCall);
+  connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
+          &ReportGenerationWindow::onFailedGistCall);
+  connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
+          &ReportGenerationWindow::onFinishedGeneratingReport);
+  connect(reporterWorker, &ReportGeneratorWorker::processingGistCall, this,
+          &ReportGenerationWindow::onProcessingGistCall);
 
   // Start the indexing thread
-  // generatingReportThread->start();
+  generatingReportThread->start();
 }
 
 void ReportGenerationWindow::onOutputDirectoryButtonClicked() {
@@ -269,6 +232,13 @@ void ReportGenerationWindow::onLogo2ButtonClicked() {
   logo2_filepath = bottom_logo_path.toStdString();
 }
 
+
+void ReportGenerationWindow::onProcessingGistCall(const QString& file){
+
+  std::string cur_file = "Processing: " + file.toStdString().substr(file.toStdString().find_last_of("/\\") + 1);
+  ui->fileInProcess_label->setText(QString::fromStdString(cur_file));
+}
+
 void ReportGenerationWindow::onSuccessfulGistCall(const QString& path_gist_output){
 
   // Load the generated PNG image
@@ -281,7 +251,8 @@ void ReportGenerationWindow::onSuccessfulGistCall(const QString& path_gist_outpu
     std::cerr << "Failed to create new PDF page." << std::endl;
   }
 
-  ui->progressBar->setValue(int(*num_file / *tot_num_files));
+  int progress = (*num_file) * 100 / (*tot_num_files); 
+  ui->progressBar->setValue(progress);
   (*num_file)++;
 }
 void ReportGenerationWindow::onFailedGistCall(const QString& filepath, const QString& errorMessage) {
@@ -301,8 +272,8 @@ void ReportGenerationWindow::onFailedGistCall(const QString& filepath, const QSt
   } else {
     std::cerr << "Failed to create new PDF page." << std::endl;
   }
-
-  ui->progressBar->setValue(int(*num_file / *tot_num_files));
+  int progress = (*num_file) * 100 / (*tot_num_files); 
+  ui->progressBar->setValue(progress);
   (*num_file)++;
 }
 

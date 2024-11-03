@@ -16,6 +16,7 @@
 #include "ModelFilterProxyModel.h"
 #include "IndexingWorker.h"
 
+
 class MainWindow;
 
 class LibraryWindow : public QWidget {
