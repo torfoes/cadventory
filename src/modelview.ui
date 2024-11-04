@@ -59,7 +59,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>150</y>
+     <y>160</y>
      <width>71</width>
      <height>16</height>
     </rect>
@@ -68,27 +68,7 @@
     <string>Properties: </string>
    </property>
   </widget>
-  <widget class="QGraphicsView" name="graphicsView">
-   <property name="geometry">
-    <rect>
-     <x>110</x>
-     <y>10</y>
-     <width>151</width>
-     <height>141</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QListWidget" name="propertiesList">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>180</y>
-     <width>241</width>
-     <height>191</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QListWidget" name="listWidget_2">
+  <widget class="QListWidget" name="tagsList">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -114,9 +94,9 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>30</y>
-     <width>151</width>
+     <x>300</x>
+     <y>20</y>
+     <width>161</width>
      <height>22</height>
     </rect>
    </property>
@@ -142,8 +122,8 @@
     <rect>
      <x>300</x>
      <y>90</y>
-     <width>181</width>
-     <height>211</height>
+     <width>201</width>
+     <height>281</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -153,7 +133,7 @@
     <enum>QFrame::Raised</enum>
    </property>
   </widget>
-  <widget class="QLineEdit" name="newTag">
+  <widget class="QLineEdit" name="newTagLine">
    <property name="geometry">
     <rect>
      <x>150</x>
@@ -163,7 +143,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QLabel" name="libraryTag">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -176,7 +156,7 @@
     <string>Library:</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_3">
+  <widget class="QLabel" name="modelTag">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -188,6 +168,50 @@
    <property name="text">
     <string>Model: </string>
    </property>
+  </widget>
+  <widget class="QPushButton" name="addTagButton">
+   <property name="geometry">
+    <rect>
+     <x>119</x>
+     <y>390</y>
+     <width>21</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>+</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="previewLabel">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>20</y>
+     <width>121</width>
+     <height>121</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>preview label</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>19</x>
+     <y>180</y>
+     <width>251</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QListWidget" name="keysList"/>
+    </item>
+    <item>
+     <widget class="QListWidget" name="valuesList"/>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

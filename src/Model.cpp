@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 
 namespace fs = std::filesystem;
@@ -45,6 +46,7 @@ Model::~Model() {
 }
 
 bool Model::createTables() {
+  std::cout << "Creating tables..." << std::endl;
   std::string sqlModels = R"(
         CREATE TABLE IF NOT EXISTS models (
             id INTEGER PRIMARY KEY,
@@ -88,7 +90,8 @@ bool Model::createTables() {
       );
   )";
 
-  return executeSQL(sqlModels) && executeSQL(sqlObjects);
+  return executeSQL(sqlModels) && executeSQL(sqlObjects) &&
+         executeSQL(sqlTags) && executeSQL(sqlModelTags);
 }
 
 int Model::rowCount(const QModelIndex& parent) const {
@@ -219,6 +222,27 @@ bool Model::updateModel(int id, const ModelData& modelData) {
             is_selected = ?
         WHERE id = ?;
     )";
+
+  // Remove existing tags for the model
+  std::string sqlDeleteTags = "DELETE FROM model_tags WHERE model_id = ?;";
+  sqlite3_stmt* deleteStmt;
+  if (sqlite3_prepare_v2(db, sqlDeleteTags.c_str(), -1, &deleteStmt, nullptr) ==
+      SQLITE_OK) {
+    sqlite3_bind_int(deleteStmt, 1, id);
+    if (sqlite3_step(deleteStmt) != SQLITE_DONE) {
+      std::cerr << "Failed to delete existing tags: " << sqlite3_errmsg(db)
+                << std::endl;
+    }
+    sqlite3_finalize(deleteStmt);
+  } else {
+    std::cerr << "SQL error in delete existing tags: " << sqlite3_errmsg(db)
+              << std::endl;
+  }
+
+  // Insert new tags for the model
+  for (const auto& tag : modelData.tags) {
+    addTagToModel(id, tag);
+  }
 
   sqlite3_stmt* stmt;
   std::lock_guard<std::mutex> lock(db_mutex);
@@ -822,7 +846,8 @@ std::vector<std::string> Model::getAllTags() {
   if (!stmt) return tags;
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
-    const char* tagText = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+    const char* tagText =
+        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
     if (tagText) {
       tags.push_back(tagText);
     }
@@ -864,6 +889,90 @@ bool Model::removeTagFromModel(int modelId, const std::string& tagName) {
   sqlite3_bind_int(stmt, 1, modelId);
   sqlite3_bind_int(stmt, 2, tagId);
 
+  std::cout << "Removing tag " << tagName << " from model " << modelId
+            << std::endl;
+
+  return executePreparedStatement(stmt);
+}
+
+bool Model::removeAllTagsFromModel(int modelId) {
+  std::string sql = "DELETE FROM model_tags WHERE model_id = ?;";
+  sqlite3_stmt* stmt = prepareStatement(sql);
+  if (!stmt) return false;
+
+  sqlite3_bind_int(stmt, 1, modelId);
+
+  std::cout << "Removing all tags from model " << modelId << std::endl;
+
+  return executePreparedStatement(stmt);
+}
+
+// Property Operations
+std::map<std::string, std::string> Model::getPropertiesForModel(int modelId) {
+  std::map<std::string, std::string> properties;
+  std::string sql = R"(
+    SELECT short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name
+    FROM models
+    WHERE id = ?;
+  )";
+  sqlite3_stmt* stmt = prepareStatement(sql);
+  if (!stmt) return properties;
+  sqlite3_bind_int(stmt, 1, modelId);
+
+  int columnCount = sqlite3_column_count(stmt);
+  if (sqlite3_step(stmt) == SQLITE_ROW) {
+    for (int i = 0; i < columnCount; ++i) {
+      const char* columnName = sqlite3_column_name(stmt, i);
+      const char* columnValue =
+          reinterpret_cast<const char*>(sqlite3_column_text(stmt, i));
+      if (columnValue) {
+        properties[columnName] = columnValue;
+      } else if (sqlite3_column_type(stmt, i) == SQLITE_BLOB) {
+        properties[columnName] = std::string(
+            reinterpret_cast<const char*>(sqlite3_column_blob(stmt, i)),
+            sqlite3_column_bytes(stmt, i));
+      } else {
+        properties[columnName] = "";
+      }
+    }
+  } else {
+    std::cerr << "Failed to retrieve properties for model: "
+              << sqlite3_errmsg(db) << std::endl;
+  }
+
+  std::vector<std::string> columns = {"short_name", "primary_file",
+                                      "title",      "author",
+                                      "file_path",  "library_name"};
+
+  for (auto it = properties.begin(); it != properties.end();)
+    if (std::find(columns.begin(), columns.end(), it->first) == columns.end())
+      it = properties.erase(it);
+    else
+      ++it;
+
+  sqlite3_finalize(stmt);
+  return properties;
+}
+
+bool Model::setPropertyForModel(int modelId, const std::string& property,
+                                const std::string& value) {
+  // Validate that the property is an allowed column
+  static const std::set<std::string> allowedProperties = {
+      "short_name", "primary_file", "override_info", "title",
+      "author",     "file_path",    "library_name"};
+
+  if (allowedProperties.find(property) == allowedProperties.end()) {
+    std::cerr << "Invalid property name: " << property << std::endl;
+    return false;
+  }
+
+  std::string sql = "UPDATE models SET " + property + " = ? WHERE id = ?;";
+  sqlite3_stmt* stmt = prepareStatement(sql);
+  if (!stmt) return false;
+
+  sqlite3_bind_text(stmt, 1, value.c_str(), -1, SQLITE_STATIC);
+  sqlite3_bind_int(stmt, 2, modelId);
+
   return executePreparedStatement(stmt);
 }
 
@@ -879,6 +988,7 @@ sqlite3_stmt* Model::prepareStatement(const std::string& sql) {
 }
 
 bool Model::executePreparedStatement(sqlite3_stmt* stmt) {
+  std::lock_guard<std::mutex> lock(db_mutex);
   if (sqlite3_step(stmt) != SQLITE_DONE) {
     std::cerr << "Execution failed: " << sqlite3_errmsg(db) << std::endl;
     sqlite3_finalize(stmt);
