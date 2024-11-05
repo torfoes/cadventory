@@ -34,9 +34,42 @@ private:
 
 // Initialize MainWindow for testing
 void TestMainWindowGUI::initTestCase() {
-    mainWindow = new MainWindow();
-    mainWindow->show();
+    try {
+        // Base path for testing
+        QString testDirPath = "/tmp/MainWindowTest";
+        QDir testDir(testDirPath);
+
+        // Log and create the base test directory if it doesn’t exist
+        if (!testDir.exists()) {
+            qDebug() << "Creating base directory at:" << testDirPath;
+            if (!testDir.mkpath(".")) {
+                qDebug() << "Failed to create base directory at:" << testDirPath;
+                QFAIL("Unable to create base directory.");
+            }
+        }
+
+        // Create `.cadventory` subdirectory under test path
+        QString cadventoryDirPath = testDirPath + "/.cadventory";
+        QDir cadventoryDir(cadventoryDirPath);
+        if (!cadventoryDir.exists()) {
+            qDebug() << "Creating .cadventory directory at:" << cadventoryDirPath;
+            if (!cadventoryDir.mkpath(".")) {
+                qDebug() << "Failed to create .cadventory directory at:" << cadventoryDirPath;
+                QFAIL("Unable to create .cadventory directory.");
+            }
+        }
+
+        // Initialize and show the main window
+        mainWindow = new MainWindow();
+        mainWindow->show();
+
+    } catch (const std::filesystem::filesystem_error& e) {
+        qDebug() << "Exception caught during setup:" << e.what();
+        QFAIL("Caught unhandled filesystem_error during directory setup.");
+    }
 }
+
+
 
 // Test if the main window is visible
 void TestMainWindowGUI::testMainWindowVisible() {
@@ -133,4 +166,3 @@ void TestMainWindowGUI::testAddLibraryButtonClick()
 
 QTEST_MAIN(TestMainWindowGUI)
 #include "MainWindowTest.moc"
-

@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 void createTestFiles(const std::string& directory, const std::vector<std::string>& filenames) {
     for (const auto& filename : filenames) {
@@ -50,7 +51,7 @@ TEST_CASE("Library Operations", "[Library]") {
 
     SECTION("Indexing Files") {
         size_t indexedFiles = library.indexFiles();
-        REQUIRE(indexedFiles == testFiles.size()+1);
+        REQUIRE(indexedFiles == testFiles.size() + 1);
     }
 
     SECTION("Get Models") {
@@ -60,6 +61,64 @@ TEST_CASE("Library Operations", "[Library]") {
         std::vector<std::string> expectedModels = {"model1.g", "model2.g"};
         REQUIRE(std::is_permutation(models.begin(), models.end(), expectedModels.begin()));
     }
+
+    SECTION("Get Geometry Files") {
+        auto geometryFiles = library.getGeometry();
+        
+        std::vector<std::string> expectedGeometryFiles = {"model1.g", "model2.g", "geometry1.stl", "geometry2.obj"};
+        
+        std::vector<std::string> geometryFileBasenames;
+        for (const auto& file : geometryFiles) {
+            geometryFileBasenames.push_back(std::filesystem::path(file).filename().string());
+        }
+        
+        REQUIRE(std::is_permutation(geometryFileBasenames.begin(), geometryFileBasenames.end(), expectedGeometryFiles.begin()));
+    }
+
+    SECTION("Get Image Files") {
+        auto imageFiles = library.getImages();
+        
+        std::vector<std::string> expectedImageFiles = {"image1.jpg", "image2.png"};
+        
+        std::vector<std::string> imageFileBasenames;
+        for (const auto& file : imageFiles) {
+            imageFileBasenames.push_back(std::filesystem::path(file).filename().string());
+        }
+        
+        REQUIRE(std::is_permutation(imageFileBasenames.begin(), imageFileBasenames.end(), expectedImageFiles.begin()));
+    }
+
+    SECTION("Get Document Files") {
+        auto documentFiles = library.getDocuments();
+        
+        std::vector<std::string> expectedDocumentFiles = {"document1.pdf", "document2.txt"};
+        
+        std::vector<std::string> documentFileBasenames;
+        for (const auto& file : documentFiles) {
+            documentFileBasenames.push_back(std::filesystem::path(file).filename().string());
+        }
+        
+        REQUIRE(std::is_permutation(documentFileBasenames.begin(), documentFileBasenames.end(), expectedDocumentFiles.begin()));
+    }
+
+    SECTION("Get Data Files") {
+        auto dataFiles = library.getData();
+
+        std::vector<std::string> expectedDataFiles = {"data1.csv", "data2.json", "otherfile.xyz"};
+
+        // Extract only the basenames for comparison
+        std::vector<std::string> dataFileBasenames;
+        for (const auto& file : dataFiles) {
+            dataFileBasenames.push_back(std::filesystem::path(file).filename().string());
+        }
+
+        REQUIRE(std::is_permutation(dataFileBasenames.begin(), dataFileBasenames.end(), expectedDataFiles.begin()));
+    }
+
+    SECTION("Load Database") {
+        REQUIRE_NOTHROW(library.loadDatabase());
+    }
+
     // Clean up after tests
     cleanupTestDirectory(testDir);
 }
