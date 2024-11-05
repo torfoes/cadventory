@@ -11,12 +11,14 @@
 
 class ProcessGFiles {
 public:
-    explicit ProcessGFiles(Model* model);
+    explicit ProcessGFiles(Model* model, bool debug = false);
 
-    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
+    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder, const std::string& library_name);
 
 private:
     // Helper methods
+    void debugPrint(const std::string& message);
+    void debugError(const std::string& message);
     bool isModelProcessed(int modelId);
     void extractTitle(ModelData& modelData, const std::string& file_path);
     void extractObjects(ModelData& modelData, const std::string& file_path);
@@ -29,6 +31,7 @@ private:
     bool validateObject(const std::string& file_path, const std::string& object_name);
 
     Model* model;
+    bool debug;
     std::mutex db_mutex;
 };
 

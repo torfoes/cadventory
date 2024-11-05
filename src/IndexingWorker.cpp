@@ -34,7 +34,7 @@ void IndexingWorker::process() {
         int modelId = library->model->hashModel(fullFilePath);
 
         // Process the .g file to extract metadata and generate thumbnails
-        processor.processGFile(fullFilePath, previewsFolder);
+        processor.processGFile(fullFilePath, previewsFolder, library->shortName);
 
         // emit signal indicating that a model has been processed
         emit modelProcessed(modelId);
