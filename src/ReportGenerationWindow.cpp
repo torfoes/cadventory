@@ -1,6 +1,4 @@
 #include "ReportGenerationWindow.h"
-#include "config.h"
-#include "ui_reportgenerationwindow.h"
 
 #include <QComboBox>
 #include <QDesktopServices>
@@ -10,6 +8,7 @@
 #include <QLineEdit>
 #include <QListView>
 #include <QMessageBox>
+#include <QPageLayout>
 #include <QPushButton>
 #include <QString>
 #include <QThread>
@@ -17,7 +16,10 @@
 #include <QVBoxLayout>
 #include <iostream>
 #include <string>
+
 #include "ReportGeneratorWorker.h"
+#include "config.h"
+#include "ui_reportgenerationwindow.h"
 
 ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
                                                Library* library)
@@ -45,21 +47,55 @@ ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
 
 void ReportGenerationWindow::onGenerateReportButtonClicked() {
   // need output directory
-  if (output_directory.empty()) {
-    QMessageBox msgBox(this);
-    msgBox.setText("No Directory Found");
-    QString message = "Please choose a directory to store your report.";
-    msgBox.setInformativeText(message);
-    msgBox.setStyleSheet("QLabel{min-width: 300px;}");
-    msgBox.exec();
-    return;
-  }
+  // if (output_directory.empty()) {
+  //   QMessageBox msgBox(this);
+  //   msgBox.setText("No Directory Found");
+  //   QString message = "Please choose a directory to store your report.";
+  //   msgBox.setInformativeText(message);
+  //   msgBox.setStyleSheet("QLabel{min-width: 300px;}");
+  //   msgBox.exec();
+  //   return;
+  // }
 
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
   std::ostringstream oss;
   oss << std::put_time(&tm, "%m-%d-%Y, %H:%M:%S");
-  auto time = oss.str();
+  time = oss.str();
+
+  coverPage();
+  // tableOfContentsPage();
+
+  err_vec = new std::vector<std::string>();
+
+  num_file = new int(0);
+  tot_num_files = new int(model->getSelectedModels().size());
+
+  QThread* generatingReportThread =
+      new QThread(this);  // Parent is ReportGenerationWindow
+  ReportGeneratorWorker* reporterWorker =
+      new ReportGeneratorWorker(model, output_directory, nullptr);
+  // // Move the worker to the thread
+  reporterWorker->moveToThread(generatingReportThread);
+
+  // Connect signals and slots
+  connect(generatingReportThread, &QThread::started, reporterWorker,
+          &ReportGeneratorWorker::process);
+  connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
+          &ReportGenerationWindow::onSuccessfulGistCall);
+  connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
+          &ReportGenerationWindow::onFailedGistCall);
+  connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
+          &ReportGenerationWindow::onFinishedGeneratingReport);
+  connect(reporterWorker, &ReportGeneratorWorker::processingGistCall, this,
+          &ReportGenerationWindow::onProcessingGistCall);
+
+  // Start the indexing thread
+  generatingReportThread->start();
+}
+
+void ReportGenerationWindow::coverPage() {
+  /* portrait mode
 
   std::cout << "directory to save: " << output_directory << std::endl;
   std::string report_filepath = output_directory + "/report_" + time + ".pdf";
@@ -127,8 +163,89 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   const QRect date_rect = QRect(max_width - 300 - 600, 450, 600, 200);
   painter->drawText(date_rect, Qt::AlignRight,
                     QString::fromStdString(time.substr(0, time.find(","))));
+  */
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t);
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%m-%d-%Y, %H:%M:%S");
+  auto time = oss.str();
 
-  // Set a font for the text
+  // std::cout << "directory to save: " << output_directory << std::endl;
+  std::string report_filepath = output_directory + "/report_" + time + ".pdf";
+
+  pdfWriter = new QPdfWriter(QString::fromStdString(report_filepath));
+  pdfWriter->setResolution(300);
+  pdfWriter->setPageSize(QPageSize(QPageSize::A4));
+  pdfWriter->setPageOrientation(QPageLayout::Landscape);
+  painter = new QPainter(pdfWriter);
+
+  // // fonts
+  QFont font("Helvetica", 18);
+  QFont font_two("Helvetica", 6);
+  QFont title_font("Arial", 32);
+  title_font.setWeight(QFont::Bold);
+  QFont version_font("Arial", 12);
+  QFont subtext_and_user_font("Arial", 12);
+  int max_width = 2480;
+  int max_height = 3508;
+  int Margin = 300;
+
+  // cover report
+  QPixmap top_logo;
+  // // top logo
+  if (!logo1_filepath.empty()) {
+    top_logo = QPixmap(QString::fromStdString(logo1_filepath));
+    painter->drawPixmap(Margin, Margin, top_logo);
+  }
+
+  // bottom logo, and placing version
+  if (!logo2_filepath.empty()) {
+    QPixmap bottom_logo(QString::fromStdString(logo2_filepath));
+    painter->drawPixmap(A4_MAXWIDTH_LS - Margin - bottom_logo.width(),
+                        A4_MAXHEIGHT_LS - Margin - bottom_logo.height(),
+                        bottom_logo);
+  } else {
+    // TODO: draw brlcad logo from qt resource system/built in :)
+  }
+  painter->drawText(Margin, A4_MAXHEIGHT_LS - Margin,
+                    QString::fromStdString(version));
+
+  // title
+  if (!ui->title_textEdit->toPlainText().isEmpty()) {
+    title = ui->title_textEdit->toPlainText().toStdString();
+  }
+
+  // what is default margin
+  painter->setPen(QPen(Qt::black, 3));
+  painter->setFont(title_font);
+  // const QRect zero_rect = QRect(Margin, Margin, 100, 100);
+
+  int mx = Margin + 500;
+  int my = Margin + 500;  // assuming logo heights are <= 500 pixels
+  QRect title_rect(mx, my, A4_MAXWIDTH_LS - 2 * mx, A4_MAXHEIGHT_LS - 2 * my);
+  // painter->drawRect(zero_rect);
+  painter->drawRect(title_rect);
+  painter->drawText(title_rect,
+                    Qt::AlignVCenter | Qt::AlignHCenter | Qt::TextWordWrap,
+                    QString::fromStdString(title));
+  // // user and date, drawtext with rectangles
+  if (!ui->username_textEdit->toPlainText().isEmpty()) {
+    username = ui->username_textEdit->toPlainText().toStdString();
+  }
+  painter->setPen(Qt::black);
+  painter->setFont(subtext_and_user_font);
+  const QRect user_rect = QRect(A4_MAXWIDTH_LS - 300 - 500, 300, 500, 100);
+  painter->drawText(user_rect, Qt::AlignRight | Qt::TextWordWrap,
+                    QString::fromStdString(username));
+  const QRect date_rect = QRect(A4_MAXWIDTH_LS - 300 - 500, 400, 500, 100);
+  painter->drawText(date_rect, Qt::AlignRight,
+                    QString::fromStdString(time.substr(0, time.find(","))));
+}
+
+void ReportGenerationWindow::tableOfContentsPage() {
+  /* portrait mode
+  QFont font("Helvetica", 18);
+  QFont font_two("Helvetica", 6);
   if (pdfWriter->newPage()) {
     painter->setFont(font);
     painter->drawText(750, 200, "Cadventory");
@@ -172,35 +289,8 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   std::cout << "generating gist reports" << std::endl;
   painter->setFont(font);
   painter->rotate(90);
-
-  err_vec = new std::vector<std::string>();
-
-  std::vector<ModelData> selectedModels = model->getSelectedModels();
-  num_file = new int(0);
-  tot_num_files = new int(model->getSelectedModels().size());
-
-  QThread* generatingReportThread =
-      new QThread(this);  // Parent is ReportGenerationWindow
-  ReportGeneratorWorker *reporterWorker = new ReportGeneratorWorker(model, output_directory, nullptr);
-  // // Move the worker to the thread
-  reporterWorker->moveToThread(generatingReportThread);
-
-  // Connect signals and slots
-  connect(generatingReportThread, &QThread::started, reporterWorker,
-          &ReportGeneratorWorker::process);
-  connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
-          &ReportGenerationWindow::onSuccessfulGistCall);
-  connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
-          &ReportGenerationWindow::onFailedGistCall);
-  connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
-          &ReportGenerationWindow::onFinishedGeneratingReport);
-  connect(reporterWorker, &ReportGeneratorWorker::processingGistCall, this,
-          &ReportGenerationWindow::onProcessingGistCall);
-
-  // Start the indexing thread
-  generatingReportThread->start();
+  */
 }
-
 void ReportGenerationWindow::onOutputDirectoryButtonClicked() {
   QString temp_dir_1 = QFileDialog::getExistingDirectory(
       this, tr("Choose Directory to store Output"));
@@ -232,30 +322,31 @@ void ReportGenerationWindow::onLogo2ButtonClicked() {
   logo2_filepath = bottom_logo_path.toStdString();
 }
 
-
-void ReportGenerationWindow::onProcessingGistCall(const QString& file){
-
-  std::string cur_file = "Processing: " + file.toStdString().substr(file.toStdString().find_last_of("/\\") + 1);
+void ReportGenerationWindow::onProcessingGistCall(const QString& file) {
+  std::string cur_file =
+      "Processing: " +
+      file.toStdString().substr(file.toStdString().find_last_of("/\\") + 1);
   ui->fileInProcess_label->setText(QString::fromStdString(cur_file));
 }
 
-void ReportGenerationWindow::onSuccessfulGistCall(const QString& path_gist_output){
-
+void ReportGenerationWindow::onSuccessfulGistCall(
+    const QString& path_gist_output) {
   // Load the generated PNG image
   QPixmap gist(path_gist_output);
 
   // bool status_newpage = pdfWriter->newPage();
   if (pdfWriter->newPage()) {
-    painter->drawPixmap(0, -2408, gist);
+    painter->drawPixmap(0, 0, gist);
   } else {
     std::cerr << "Failed to create new PDF page." << std::endl;
   }
 
-  int progress = (*num_file) * 100 / (*tot_num_files); 
+  int progress = (*num_file) * 100 / (*tot_num_files);
   ui->progressBar->setValue(progress);
   (*num_file)++;
 }
-void ReportGenerationWindow::onFailedGistCall(const QString& filepath, const QString& errorMessage) {
+void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
+                                              const QString& errorMessage) {
   std::string err = "Model: " + filepath.toStdString() + "\nError:\n" +
                     errorMessage.toStdString();
   QFont font("Helvetica", 18);
@@ -272,7 +363,7 @@ void ReportGenerationWindow::onFailedGistCall(const QString& filepath, const QSt
   } else {
     std::cerr << "Failed to create new PDF page." << std::endl;
   }
-  int progress = (*num_file) * 100 / (*tot_num_files); 
+  int progress = (*num_file) * 100 / (*tot_num_files);
   ui->progressBar->setValue(progress);
   (*num_file)++;
 }
@@ -282,6 +373,39 @@ void ReportGenerationWindow::onFinishedGeneratingReport() {
   ui->fileInProcess_label->setText(QString::fromStdString("Complete"));
 
   painter->end();
+
+std::vector<ModelData> selectedModels = model->getSelectedModels();
+
+  std::string hidden_dir_path = library->fullPath + "/.cadventory";
+
+  // yay this works
+
+  // make a temp dir for this report!
+  std::string working_folders_dir =
+      hidden_dir_path + "/working_folders_" + time;
+  QDir wfdir(QString::fromStdString(working_folders_dir));
+  if (!wfdir.exists()) {
+    wfdir.mkpath(".");
+  } else {
+    std::cout << "folder exists!" << std::endl;
+  }
+
+  for (const auto& model : selectedModels) {
+    std::string model_working_path =
+        model.file_path.substr(0, model.file_path.find(".g")) + ".working";
+    std::string model_working_name =
+        model_working_path.substr(model_working_path.find_last_of("/\\") + 1);
+    QDir dir_temp(QString::fromStdString(model_working_path));
+    if (dir_temp.exists()) {
+      // move it
+      std::string dest = working_folders_dir + "/" + model_working_name;
+      QDir dir_temp_two;
+      if (!dir_temp_two.rename(QString::fromStdString(model_working_path),
+                               QString::fromStdString(dest))) {
+        std::cout << "ruh roh" << std::endl;
+      }
+    }
+  }
 
   std::cout << "Report Generated" << std::endl;
   if (err_vec->size()) {

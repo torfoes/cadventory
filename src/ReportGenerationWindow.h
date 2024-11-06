@@ -1,13 +1,17 @@
 #ifndef REPORTGENERATIONWINDOW_H
 #define REPORTGENERATIONWINDOW_H
 
-#include <QWidget>
 #include <QPainter>
 #include <QPdfWriter>
 #include <QThread>
+#include <QWidget>
+
 #include "Library.h"
 #include "Model.h"
 #include "ProcessGFiles.h"
+#define A4_MAXWIDTH_LS 3508
+#define A4_MAXHEIGHT_LS 2480
+
 
 namespace Ui {
 class ReportGenerationWindow;
@@ -33,10 +37,14 @@ class ReportGenerationWindow : public QWidget {
   void onFinishedGeneratingReport();
 
  private:
+  void coverPage();
+  void tableOfContentsPage();
+
   int* num_file;
   int* tot_num_files;
   int x = 325;
   int y = 400;
+  std::string time;
   QPdfWriter* pdfWriter;
   QPainter* painter;
   Library* library;
@@ -48,7 +56,7 @@ class ReportGenerationWindow : public QWidget {
   std::string title;
   std::string username;
   std::string version;
-  std::vector<std::string> *err_vec;
+  std::vector<std::string>* err_vec;
 };
 
 #endif  // REPORTGENERATIONWINDOW_H
