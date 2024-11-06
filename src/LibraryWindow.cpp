@@ -15,6 +15,7 @@
 #include <QListView>
 #include <QPushButton>
 #include <QComboBox>
+#include <QMenuBar>
 #include <QLineEdit>
 #include <QLabel>
 
@@ -53,7 +54,9 @@ LibraryWindow::~LibraryWindow() {
     // Ensure the indexing thread is stopped if it wasn't already
     if (indexingThread && indexingThread->isRunning()) {
         qDebug() << "Waiting for indexingThread to finish in destructor";
+        indexingThread->quit();
         indexingThread->wait();
+        //indexingThread->~QThread();
         qDebug() << "indexingThread finished in destructor";
     }
 
@@ -69,6 +72,8 @@ LibraryWindow::~LibraryWindow() {
         indexingThread = nullptr;
         qDebug() << "indexingThread deleted in destructor";
     }
+
+
 }
 
 
@@ -92,12 +97,13 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
     selectedModelsProxyModel->setFilterFixedString("1"); // Show selected models
 
     startIndexing();
+
 }
 
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
     indexingThread = new QThread(this); // Parent is LibraryWindow
-    indexingWorker = new IndexingWorker(library);
+    indexingWorker = new IndexingWorker(library,false);//mainWindow->previewFlag);
 
     // Move the worker to the thread
     indexingWorker->moveToThread(indexingThread);
@@ -116,6 +122,11 @@ void LibraryWindow::startIndexing() {
 
 void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
     this->mainWindow = mainWindow;
+    reload = new QAction(tr("&Reload"),this);
+
+    this->mainWindow->editMenu->addAction(reload);
+    connect(reload,&QAction::triggered,this,&LibraryWindow::reloadLibrary);
+
 }
 
 void LibraryWindow::setupModelsAndViews() {
@@ -171,8 +182,10 @@ void LibraryWindow::setupConnections() {
     // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
 
+
     connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
             this, &LibraryWindow::onGeometryBrowserClicked);
+
 
 }
 
@@ -258,7 +271,10 @@ void LibraryWindow::on_backButton_clicked() {
 
     // Show the MainWindow
     if (mainWindow) {
-        mainWindow->show();
+        this->mainWindow->editMenu->removeAction(reload);
+        disconnect(reload,0,0,0);
+        this->mainWindow->returnCentralWidget();
+        //mainWindow->show();
         qDebug() << "MainWindow shown";
     } else {
         qDebug() << "mainWindow is null";
@@ -267,11 +283,43 @@ void LibraryWindow::on_backButton_clicked() {
 }
 
 
+void LibraryWindow::reloadLibrary() {
+
+    namespace fs = std::filesystem;
+    std::string path = library->fullPath + "/.cadventory/metadata.db";
+    fs::path filePath(path);
+
+    qDebug() << filePath.string();
+
+    // Check if the file exists
+    if (fs::exists(filePath)) {
+        // Try to remove the file
+        try {
+            if (fs::remove(filePath)) {
+                std::cout << "File 'metadata.db' successfully deleted." << std::endl;
+
+
+
+
+                startIndexing();
+            } else {
+                std::cout << "Failed to delete 'metadata.db'." << std::endl;
+            }
+        } catch (const fs::filesystem_error& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+        }
+    } else {
+        std::cout << "File 'metadata.db' does not exist." << std::endl;
+}
+
+}
+
 void LibraryWindow::onGeometryBrowserClicked(int modelId) {
     qDebug() << "Geometry browser clicked for model ID:" << modelId;
 
     GeometryBrowserDialog* dialog = new GeometryBrowserDialog(modelId, model, this);
     dialog->exec();
+
 }
 
 void LibraryWindow::onProgressUpdated(const QString& currentObject, int percentage) {

@@ -14,7 +14,7 @@ class ProcessGFiles {
 public:
     explicit ProcessGFiles(Model* model);
 
-    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
+    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder, bool preview);
     std::tuple<bool, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj);
 
 

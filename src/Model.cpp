@@ -752,3 +752,20 @@ bool Model::updateObjectParentId(int object_id, int parent_object_id) {
     sqlite3_finalize(stmt);
     return true;
 }
+
+bool Model::deleteTables() {
+    std::string sqlDeleteModels = "DROP TABLE IF EXISTS models;";
+    std::string sqlDeleteObjects = "DROP TABLE IF EXISTS objects;";
+
+    // Execute SQL commands to delete tables
+    return executeSQL(sqlDeleteModels) && executeSQL(sqlDeleteObjects);
+}
+
+void Model::resetDatabase() {
+    if (deleteTables()) {  // Delete existing tables
+        createTables();    // Recreate tables
+        refreshModelData(); // Optional: Load initial data if necessary
+    } else {
+        std::cerr << "Failed to delete tables." << std::endl;
+    }
+}

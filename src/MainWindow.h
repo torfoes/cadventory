@@ -13,6 +13,9 @@
 #include "ui_mainwindow.h"
 
 #include "Library.h"
+#include "SettingWindow.h"
+
+class SettingWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +27,16 @@ public:
 
     void addLibrary(const char* label = nullptr, const char* path = nullptr);
     void openLibrary();
+    void showSettingsWindow();
+    void setPreviewFlag(bool state);
+    bool previewFlag = true;
+    QMenu * fileMenu;
+    QMenu * editMenu;
+    QMenu * viewMenu;
+    QMenu * windowMenu;
+    QMenu * helpMenu;
+    void returnCentralWidget();
+
 
 public slots:
     void updateStatusLabel(const char* status);
@@ -40,7 +53,10 @@ protected:
 
 private:
     Ui::MainWindow ui;
+    SettingWindow *settingWindow;
     std::vector<Library*> libraries;
+
+
 };
 
 #endif /* MAINWINDOW_H */

@@ -2,12 +2,14 @@
 
 #include "MainWindow.h"
 #include "LibraryWindow.h"
+#include "SettingWindow.h"
 
 #include <iostream>
 #include <QFileDialog>
 #include <QPushButton>
 #include <QSettings>
 #include <QMessageBox>
+#include <QMenuBar>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -40,6 +42,37 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QString home = QDir::homePath();
     addLibrary("Local Home", home.toStdString().c_str());
     std::cout << "Loaded local home [" << home.toStdString().c_str() << "] library" << std::endl;
+
+    fileMenu = new QMenu(tr("&File"),this);
+    editMenu = new QMenu(tr("&Edit"),this);
+    viewMenu = new QMenu(tr("&View"),this);
+    windowMenu = new QMenu(tr("&Window"),this);
+    helpMenu = new QMenu(tr("&Help"),this);
+
+    ui.librarywidget->hide();
+
+
+
+    QAction *set = new QAction(tr("&General Settings"),this);
+
+    windowMenu->addAction(set);
+
+    QAction *test = new QAction(tr("&test"),this);
+
+    fileMenu->addAction(test);
+    windowMenu->addAction(test);
+    viewMenu->addAction(test);
+    helpMenu->addAction(test);
+
+
+    menuBar()->addMenu(fileMenu);
+    menuBar()->addMenu(editMenu);
+    menuBar()->addMenu(viewMenu);
+    menuBar()->addMenu(windowMenu);
+    menuBar()->addMenu(helpMenu);
+
+    //settingWindow = new SettingWindow(nullptr);
+    connect(set,&QAction::triggered,this,&MainWindow::showSettingsWindow);
 
 }
 
@@ -91,7 +124,7 @@ void MainWindow::openLibrary()
     }
 
     if (foundLibrary) {
-        LibraryWindow* libraryWindow = new LibraryWindow(nullptr);
+        LibraryWindow* libraryWindow = new LibraryWindow(this->centralWidget());
         std::cout << "Opening library " << foundLibrary->name() << std::endl;
 
         // Set the main window pointer using a setter method
@@ -103,8 +136,15 @@ void MainWindow::openLibrary()
         std::cout << "Loaded library " << foundLibrary->name() << std::endl;
 
         // Hide the main window and show the library window
-        this->hide();
-        libraryWindow->show();
+        //this->hide();
+        //libraryWindow->show();
+        ui.librarywidget=libraryWindow;
+
+        ui.origin->hide();
+        setWindowTitle(foundLibrary->name() + QString(" Library"));
+        ui.librarywidget->setAttribute(Qt::WA_DeleteOnClose);
+        ui.librarywidget->show();
+
     } else {
         QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);
     }
@@ -223,4 +263,24 @@ void MainWindow::on_homeLibraryButton_clicked()
     if (button) {
         openLibrary();
     }
+}
+
+void MainWindow::showSettingsWindow()
+{
+    settingWindow->show();
+}
+
+void MainWindow::setPreviewFlag(bool state)
+{
+    previewFlag = state;
+}
+
+void MainWindow::returnCentralWidget()
+{
+
+    //this->setCentralWidget(origin);
+    ui.librarywidget->hide();
+
+    ui.origin->show();
+
 }
