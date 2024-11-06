@@ -2,9 +2,11 @@
 
 #include <qboxlayout.h>
 
+#include <QFileDialog>
 #include <iostream>
 
 #include "Model.h"
+#include "GeometryBrowserDialog.h"
 #include "ui_modelview.h"
 
 ModelView::ModelView(int modelId, Model* model, QWidget* parent)
@@ -12,8 +14,13 @@ ModelView::ModelView(int modelId, Model* model, QWidget* parent)
   ui.setupUi(this);
   currModel = model->getModelById(modelId);
 
-  ui.modelName->setText(QString::fromStdString(currModel.short_name));
+  geometryBrowser = new GeometryBrowserDialog(modelId, model, this);
+  geometryBrowser->setWindowFlags(Qt::Widget);
+  ui.geometryLayout->addWidget(geometryBrowser);
+
   ui.libraryName->setText(QString::fromStdString(currModel.library_name));
+  ui.modelName->setText(QString::fromStdString(currModel.short_name));
+  ui.primaryFile->setText(QString::fromStdString(currModel.primary_file));
 
   loadPreviewImage();
   populateProperties();
@@ -26,6 +33,8 @@ ModelView::ModelView(int modelId, Model* model, QWidget* parent)
           &ModelView::onPropertyChanged);
   connect(ui.buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked,
           this, &ModelView::onOkClicked);
+  connect(ui.primaryChangeButton, &QPushButton::clicked, this,
+          &ModelView::onPrimaryChangeClicked);
 }
 
 void ModelView::loadPreviewImage() {
@@ -144,11 +153,15 @@ void ModelView::onOkClicked() {
     model->addTagToModel(modelId, tagText.toStdString());
     std::cout << "Added tag " << tagText.toStdString() << std::endl;
   }
+}
 
-  // Confirm tags were added
-  std::cout << "Tags in the model after update:" << std::endl;
-  for (const auto& tag : model->getTagsForModel(modelId)) {
-    std::cout << tag << std::endl;
+void ModelView::onPrimaryChangeClicked() {
+  std::cout << "onPrimaryChangeClicked" << std::endl;
+  QString fileName = QFileDialog::getOpenFileName(
+      this, "Select Primary File", QDir::currentPath(), "All files (*.*)");
+  if (!fileName.isEmpty()) {
+    ui.primaryFile->setText(fileName);
+    currModel.primary_file = fileName.toStdString();
   }
 }
 

@@ -4,6 +4,7 @@
 #include <QDialog>
 
 #include "Model.h"
+#include "GeometryBrowserDialog.h"
 #include "ui_modelview.h"
 
 class Model;
@@ -20,6 +21,7 @@ class ModelView : public QDialog {
   void onRemoveTagClicked(QListWidgetItem* item);
   void onPropertyChanged(QListWidgetItem* item);
   void onOkClicked();
+  void onPrimaryChangeClicked();
 
  private:
   void loadPreviewImage();
@@ -33,6 +35,7 @@ class ModelView : public QDialog {
   Model* model;
   QMap<QString, QString> properties;
   QStringList tags;
+  GeometryBrowserDialog* geometryBrowser;
 };
 
 #endif  // modelview_H

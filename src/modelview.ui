@@ -32,8 +32,8 @@
   <widget class="QLabel" name="libraryName">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>30</y>
+     <x>90</x>
+     <y>20</y>
      <width>91</width>
      <height>20</height>
     </rect>
@@ -45,9 +45,9 @@
   <widget class="QLabel" name="modelName">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>80</y>
-     <width>81</width>
+     <x>90</x>
+     <y>40</y>
+     <width>91</width>
      <height>16</height>
     </rect>
    </property>
@@ -91,12 +91,12 @@
     <string>Tags: </string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="primaryChangeButton">
    <property name="geometry">
     <rect>
-     <x>300</x>
-     <y>20</y>
-     <width>161</width>
+     <x>10</x>
+     <y>100</y>
+     <width>131</width>
      <height>22</height>
     </rect>
    </property>
@@ -108,29 +108,13 @@
    <property name="geometry">
     <rect>
      <x>290</x>
-     <y>70</y>
+     <y>220</y>
      <width>121</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
     <string>Geometry Browser: </string>
-   </property>
-  </widget>
-  <widget class="QFrame" name="frame">
-   <property name="geometry">
-    <rect>
-     <x>300</x>
-     <y>90</y>
-     <width>201</width>
-     <height>281</height>
-    </rect>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
    </property>
   </widget>
   <widget class="QLineEdit" name="newTagLine">
@@ -147,7 +131,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
+     <y>20</y>
      <width>57</width>
      <height>14</height>
     </rect>
@@ -160,7 +144,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>60</y>
+     <y>40</y>
      <width>57</width>
      <height>14</height>
     </rect>
@@ -185,7 +169,7 @@
   <widget class="QLabel" name="previewLabel">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>360</x>
      <y>20</y>
      <width>121</width>
      <height>121</height>
@@ -212,6 +196,43 @@
      <widget class="QListWidget" name="valuesList"/>
     </item>
    </layout>
+  </widget>
+  <widget class="QLabel" name="primaryTag">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>60</y>
+     <width>57</width>
+     <height>14</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Primary: </string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="primaryFile">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>60</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PrimaryFile</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>289</x>
+     <y>260</y>
+     <width>221</width>
+     <height>301</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="geometryLayout"/>
   </widget>
  </widget>
  <resources/>
