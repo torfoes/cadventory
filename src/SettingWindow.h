@@ -3,9 +3,7 @@
 
 #include <QDialog>
 #include <QSettings>
-#include "MainWindow.h"
 
-class MainWindow;
 
 namespace Ui {
 class SettingWindow;

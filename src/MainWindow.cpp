@@ -1,8 +1,8 @@
 // MainWindow.cpp
 
+#include "SettingWindow.h"
 #include "MainWindow.h"
 #include "LibraryWindow.h"
-#include "SettingWindow.h"
 
 #include <iostream>
 #include <QFileDialog>
@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     menuBar()->addMenu(windowMenu);
     menuBar()->addMenu(helpMenu);
 
-    //settingWindow = new SettingWindow(nullptr);
+    settingWindow = new SettingWindow(this);
     connect(set,&QAction::triggered,this,&MainWindow::showSettingsWindow);
 
 }
@@ -278,9 +278,8 @@ void MainWindow::setPreviewFlag(bool state)
 void MainWindow::returnCentralWidget()
 {
 
-    //this->setCentralWidget(origin);
     ui.librarywidget->hide();
-
+    setWindowTitle( QString("Main Window"));
     ui.origin->show();
 
 }

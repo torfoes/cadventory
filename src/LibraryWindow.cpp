@@ -54,6 +54,7 @@ LibraryWindow::~LibraryWindow() {
     // Ensure the indexing thread is stopped if it wasn't already
     if (indexingThread && indexingThread->isRunning()) {
         qDebug() << "Waiting for indexingThread to finish in destructor";
+        indexingWorker->stop();
         indexingThread->requestInterruption();
         indexingThread->quit();
         indexingThread->wait();
@@ -79,7 +80,7 @@ LibraryWindow::~LibraryWindow() {
 
 void LibraryWindow::loadFromLibrary(Library* _library) {
     library = _library;
-    setWindowTitle(library->name() + QString(" Library"));
+    //setWindowTitle(library->name() + QString(" Library"));
     ui.currentLibrary->setText(library->name());
 
     // Load models from the library
@@ -103,7 +104,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
     indexingThread = new QThread(this); // Parent is LibraryWindow
-    indexingWorker = new IndexingWorker(library,true);//mainWindow->previewFlag);
+    indexingWorker = new IndexingWorker(library,mainWindow->settingWindow->previewFlag);
 
     // Move the worker to the thread
     indexingWorker->moveToThread(indexingThread);
@@ -112,6 +113,10 @@ void LibraryWindow::startIndexing() {
     connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
     connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
     connect(indexingWorker, &IndexingWorker::progressUpdated, this, &LibraryWindow::onProgressUpdated);
+    //connect(indexingThread, &QThread::finished, indexingWorker, &QObject::deleteLater);
+
+    connect(indexingThread,SIGNAL(finished()),indexingThread,SLOT(deleteLater()));
+
 
 
     // Start the indexing thread
@@ -301,7 +306,8 @@ void LibraryWindow::reloadLibrary() {
 
 
 
-                startIndexing();
+
+                //loadFromLibrary(library);
             } else {
                 std::cout << "Failed to delete 'metadata.db'." << std::endl;
             }

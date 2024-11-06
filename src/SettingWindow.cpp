@@ -10,7 +10,9 @@ SettingWindow::SettingWindow(QWidget *parent)
     ui->setupUi(this);
 
     //default
-    previewFlag = true;
+    // if(){
+    //     previewFlag = settings.value("preview",);
+    // }
 
 }
 

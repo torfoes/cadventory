@@ -11,9 +11,10 @@
 #include <QObject>
 
 #include "ui_mainwindow.h"
+#include "SettingWindow.h"
 
 #include "Library.h"
-#include "SettingWindow.h"
+
 
 class SettingWindow;
 
@@ -35,6 +36,7 @@ public:
     QMenu * viewMenu;
     QMenu * windowMenu;
     QMenu * helpMenu;
+    SettingWindow *settingWindow;
     void returnCentralWidget();
 
 
@@ -53,8 +55,8 @@ protected:
 
 private:
     Ui::MainWindow ui;
-    SettingWindow *settingWindow;
     std::vector<Library*> libraries;
+
 
 
 };
