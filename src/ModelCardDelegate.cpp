@@ -83,14 +83,6 @@ bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
         QPoint itemPos = pos - itemRect.topLeft();
 
         if (iconRect(option).contains(pos)) {
-        //     int modelId = index.data(Model::IdRole).toInt();
-        //     emit geometryBrowserClicked(modelId);
-
-        //     // accept the event and prevent further processing
-        //     event->accept();
-        //     return true;
-        // }
-        // if (textRect(option).contains(pos)) {
             int modelId = index.data(Model::IdRole).toInt();
             emit modelViewClicked(modelId);
 
