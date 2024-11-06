@@ -207,7 +207,9 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         }
 
         // Generate thumbnail
+        if(preview){
         generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+        }
         modelData.is_processed = true;
 
         // **Insert or update the model in the database**
@@ -247,10 +249,6 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         model->commitTransaction();
 
         
-// // Generate thumbnail
-//         if(preview){
-//         generateThumbnail(modelData, file_path.string(), previews_folder);
-//         }
 
     
     } catch (const std::exception& e) {

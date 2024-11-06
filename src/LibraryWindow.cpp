@@ -54,9 +54,9 @@ LibraryWindow::~LibraryWindow() {
     // Ensure the indexing thread is stopped if it wasn't already
     if (indexingThread && indexingThread->isRunning()) {
         qDebug() << "Waiting for indexingThread to finish in destructor";
+        indexingThread->requestInterruption();
         indexingThread->quit();
         indexingThread->wait();
-        //indexingThread->~QThread();
         qDebug() << "indexingThread finished in destructor";
     }
 
@@ -103,7 +103,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
     indexingThread = new QThread(this); // Parent is LibraryWindow
-    indexingWorker = new IndexingWorker(library,false);//mainWindow->previewFlag);
+    indexingWorker = new IndexingWorker(library,true);//mainWindow->previewFlag);
 
     // Move the worker to the thread
     indexingWorker->moveToThread(indexingThread);
