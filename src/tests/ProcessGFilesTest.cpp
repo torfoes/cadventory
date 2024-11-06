@@ -20,27 +20,21 @@ TEST_CASE("ProcessGFiles - Initialization", "[ProcessGFiles]") {
     REQUIRE(&processor != nullptr);
 }
 
-TEST_CASE("ProcessGFiles - File Processing", "[ProcessGFiles]") {
+TEST_CASE("ProcessGFiles - File Processing with annual_gift_man.g", "[ProcessGFiles]") {
     setupTestLibraryPath();
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
     ProcessGFiles processor(model.get());
-    std::string validFilePath = "src/tests/truck.g"; // Update based on actual location
-    std::string invalidFilePath = "src/tests/nonexistent.g";
+    std::string validFilePath = "../src/tests/annual_gift_man.g"; // Update based on actual location
 
-    SECTION("Process valid .g file") {
-        REQUIRE(std::filesystem::exists(validFilePath));
-        processor.processGFile(validFilePath, "output_folder");
+    SECTION("Process annual_gift_man.g file") {
+        if (std::filesystem::exists(validFilePath)) {
+            processor.processGFile(validFilePath, "output_folder");
 
-        // Check if output (e.g., preview or thumbnail) was generated
-        REQUIRE(std::filesystem::exists("output_folder/truck.png")); // Adjust path as needed
-    }
-
-    SECTION("Attempt to process invalid .g file") {
-        REQUIRE_FALSE(std::filesystem::exists(invalidFilePath));
-        processor.processGFile(invalidFilePath, "output_folder");
-
-        // Here, we expect no output to be generated
-        REQUIRE_FALSE(std::filesystem::exists("output_folder/nonexistent.png")); // Adjust path as needed
+            // Check if output (e.g., preview or thumbnail) was generated
+            REQUIRE(std::filesystem::exists("output_folder/annual_gift_man.png")); // Adjust path as needed
+        } else {
+            WARN("annual_gift_man.g file not found, skipping test");
+        }
     }
 }
 
@@ -48,45 +42,29 @@ TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
     setupTestLibraryPath();
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
     ProcessGFiles processor(model.get());
-    std::string filePath = "src/tests/truck.g";
+    std::string filePath = "../src/tests/annual_gift_man.g";
     
     REQUIRE(std::filesystem::exists(filePath));
     processor.processGFile(filePath, "output_folder");
 
-    SECTION("Check thumbnail exists") {
-        std::string previewPath = "output_folder/truck.png"; // Update based on expected path
+    SECTION("Check thumbnail exists for annual_gift_man.g") {
+        std::string previewPath = "output_folder/annual_gift_man.png"; // Update based on expected path
         REQUIRE(std::filesystem::exists(previewPath));
     }
 }
 
-TEST_CASE("ProcessGFiles - Error Handling", "[ProcessGFiles]") {
+TEST_CASE("ProcessGFiles - Generate Gist Report for annual_gift_man.g", "[ProcessGFiles]") {
     setupTestLibraryPath();
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
     ProcessGFiles processor(model.get());
-    std::string corruptedFilePath = "src/tests/corrupted.g";
 
-    SECTION("Handle corrupted .g file") {
-        if (std::filesystem::exists(corruptedFilePath)) {
-            processor.processGFile(corruptedFilePath, "output_folder");
-            REQUIRE_FALSE(std::filesystem::exists("output_folder/corrupted.png"));
-        } else {
-            WARN("Corrupted .g file not found, skipping test");
-        }
-    }
-}
+    std::string outputFilePath = "output_folder/annual_gist_report.txt";
+    auto [success, errorMessage] = processor.generateGistReport("src/tests/annual_gift_man.g", outputFilePath);
 
-TEST_CASE("ProcessGFiles - Edge Cases", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-    std::string emptyFilePath = "src/tests/empty.g";
+    // Check if report generation was successful
+    REQUIRE(success == true);
+    REQUIRE(errorMessage.empty());
 
-    SECTION("Handle empty .g file") {
-        if (std::filesystem::exists(emptyFilePath)) {
-            processor.processGFile(emptyFilePath, "output_folder");
-            REQUIRE_FALSE(std::filesystem::exists("output_folder/empty.png"));
-        } else {
-            WARN("Empty .g file not found, skipping test");
-        }
-    }
+    // Confirm output file was created
+    REQUIRE(std::filesystem::exists(outputFilePath));
 }

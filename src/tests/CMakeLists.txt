@@ -218,6 +218,26 @@ target_link_libraries(ProcessGFilesTest PRIVATE
     ${SQLITE_LIBRARY}
 )
 
+# Add the IndexingWorkerTest executable
+add_executable(IndexingWorkerTest
+    IndexingWorkerTest.cpp
+    ../IndexingWorker.cpp
+    ../Library.cpp
+    ../Model.cpp
+    ../ProcessGFiles.cpp          
+    ../FilesystemIndexer.cpp
+)
+
+# Link the test executable against the necessary libraries
+target_link_libraries(IndexingWorkerTest PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Test
+    sqlite3
+)
+
+
 # Register each test with CTest
 add_test(NAME ModelTests COMMAND ModelTest)
 add_test(NAME LibraryTests COMMAND LibraryTest)
@@ -227,3 +247,4 @@ add_test(NAME MainWindowTests COMMAND MainWindowTest)
 # add_test(NAME LibraryWindowTests COMMAND LibraryWindowTest)
 add_test(NAME GeometryBrowserDialogTests COMMAND GeometryBrowserDialogTest)
 add_test(NAME ProcessGFilesTests COMMAND ProcessGFilesTest)
+add_test(NAME IndexingWorkerTests COMMAND IndexingWorkerTest)
