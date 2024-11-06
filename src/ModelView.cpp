@@ -20,7 +20,6 @@ ModelView::ModelView(int modelId, Model* model, QWidget* parent)
 
   ui.libraryName->setText(QString::fromStdString(currModel.library_name));
   ui.modelName->setText(QString::fromStdString(currModel.short_name));
-  ui.primaryFile->setText(QString::fromStdString(currModel.primary_file));
 
   loadPreviewImage();
   populateProperties();
@@ -33,8 +32,6 @@ ModelView::ModelView(int modelId, Model* model, QWidget* parent)
           &ModelView::onPropertyChanged);
   connect(ui.buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked,
           this, &ModelView::onOkClicked);
-  connect(ui.primaryChangeButton, &QPushButton::clicked, this,
-          &ModelView::onPrimaryChangeClicked);
 }
 
 void ModelView::loadPreviewImage() {
@@ -134,35 +131,19 @@ void ModelView::onOkClicked() {
     QString key = keyItem->text();
     QString value = valueItem->text();
 
-    std::cout << "Property key: " << key.toStdString()
-              << ", value: " << value.toStdString() << std::endl;
-
     model->setPropertyForModel(modelId, key.toStdString(), value.toStdString());
   }
 
   // Update tags
-  std::cout << "Removing all tags from model" << std::endl;
   model->removeAllTagsFromModel(modelId);
-  std::cout << "Adding tags to model" << std::endl;
   for (int i = 0; i < ui.tagsList->count(); ++i) {
-    std::cout << "Adding tag " << i << std::endl;
     QListWidgetItem* item = ui.tagsList->item(i);
     QWidget* widget = ui.tagsList->itemWidget(item);
     QLabel* tagLabel = widget->findChild<QLabel*>();
     QString tagText = tagLabel->text();
     model->addTagToModel(modelId, tagText.toStdString());
-    std::cout << "Added tag " << tagText.toStdString() << std::endl;
   }
 }
 
-void ModelView::onPrimaryChangeClicked() {
-  std::cout << "onPrimaryChangeClicked" << std::endl;
-  QString fileName = QFileDialog::getOpenFileName(
-      this, "Select Primary File", QDir::currentPath(), "All files (*.*)");
-  if (!fileName.isEmpty()) {
-    ui.primaryFile->setText(fileName);
-    currModel.primary_file = fileName.toStdString();
-  }
-}
 
 ModelView::~ModelView() { qDebug() << "ModelView destructor called"; }

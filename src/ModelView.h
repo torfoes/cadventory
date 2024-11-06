@@ -21,7 +21,6 @@ class ModelView : public QDialog {
   void onRemoveTagClicked(QListWidgetItem* item);
   void onPropertyChanged(QListWidgetItem* item);
   void onOkClicked();
-  void onPrimaryChangeClicked();
 
  private:
   void loadPreviewImage();

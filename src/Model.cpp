@@ -902,8 +902,6 @@ bool Model::removeAllTagsFromModel(int modelId) {
 
   sqlite3_bind_int(stmt, 1, modelId);
 
-  std::cout << "Removing all tags from model " << modelId << std::endl;
-
   return executePreparedStatement(stmt);
 }
 
