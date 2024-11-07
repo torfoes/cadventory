@@ -104,7 +104,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
     indexingThread = new QThread(this); // Parent is LibraryWindow
-    indexingWorker = new IndexingWorker(library,mainWindow->settingWindow->previewFlag);
+    indexingWorker = new IndexingWorker(library);
 
     // Move the worker to the thread
     indexingWorker->moveToThread(indexingThread);

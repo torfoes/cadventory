@@ -6,8 +6,8 @@
 
 namespace fs = std::filesystem;
 
-IndexingWorker::IndexingWorker(Library* library, bool preview, QObject* parent)
-    : QObject(parent), library(library), m_stopRequested(false),previewFlag(preview) {}
+IndexingWorker::IndexingWorker(Library* library, QObject* parent)
+    : QObject(parent), library(library), m_stopRequested(false) {}
 
 void IndexingWorker::stop() {
     qDebug() << "IndexingWorker::stop() called";
@@ -44,7 +44,7 @@ void IndexingWorker::process() {
         int modelId = library->model->hashModel(fullFilePath);
 
         // Process the .g file to extract metadata and generate thumbnails
-        processor.processGFile(fullFilePath, previewsFolder,previewFlag);
+        processor.processGFile(fullFilePath, previewsFolder);
 
         // Increment processed files count
         processedFiles++;
