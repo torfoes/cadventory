@@ -2,18 +2,14 @@
 #include "ui_SettingWindow.h"
 #include <QSettings>
 
-
 SettingWindow::SettingWindow(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::SettingWindow)
 {
     ui->setupUi(this);
 
-    //default
-    // if(){
-    //     previewFlag = settings.value("preview",);
-    // }
-
+    // Load settings when the window is initialized
+    loadSettings();
 }
 
 SettingWindow::~SettingWindow()
@@ -21,28 +17,21 @@ SettingWindow::~SettingWindow()
     delete ui;
 }
 
+void SettingWindow::loadSettings()
+{
+    QSettings settings;
+    bool previewFlag = settings.value("previewFlag", true).toBool();
+    ui->enablePreview->setChecked(previewFlag);
+}
+
 void SettingWindow::saveSettings()
 {
-
-    settings.setValue("preview", previewFlag);
+    QSettings settings;
+    settings.setValue("previewFlag", ui->enablePreview->isChecked());
 }
-
-void SettingWindow::on_enablePreview_stateChanged(int state)
-{
-    if(state == Qt::Checked){
-        previewFlag=true;
-    }
-    else if(state == Qt::Unchecked)
-    {
-        previewFlag=false;
-    }
-
-}
-
 
 void SettingWindow::on_buttonBox_accepted()
 {
-
     saveSettings();
+    accept();
 }
-

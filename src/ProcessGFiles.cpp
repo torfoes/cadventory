@@ -20,6 +20,8 @@
 #include <QFileInfo>
 #include <QProcess>
 
+#include <QSettings>
+
 
 namespace fs = std::filesystem;
 
@@ -169,8 +171,13 @@ void ProcessGFiles::generateThumbnail(
 }
 
 
-void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder, bool preview) {
+void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
     try {
+        QSettings settings;
+        bool previewFlag = settings.value("previewFlag", true).toBool();
+
+
+
         std::string model_short_name = file_path.stem().string();
         int modelId = model->hashModel(file_path.string());
 
@@ -207,9 +214,10 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         }
 
         // Generate thumbnail
-        if(preview){
-        generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+        if(previewFlag){
+            generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
         }
+
         modelData.is_processed = true;
 
         // **Insert or update the model in the database**

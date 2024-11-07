@@ -2,8 +2,6 @@
 #define SETTINGWINDOW_H
 
 #include <QDialog>
-#include <QSettings>
-
 
 namespace Ui {
 class SettingWindow;
@@ -17,17 +15,14 @@ public:
     explicit SettingWindow(QWidget *parent = nullptr);
     ~SettingWindow();
 
-    bool previewFlag;
-
 private slots:
-    void on_enablePreview_stateChanged(int state);
-
     void on_buttonBox_accepted();
-    void saveSettings();
 
 private:
+    void loadSettings();
+    void saveSettings();
+
     Ui::SettingWindow *ui;
-    QSettings settings;
 };
 
 #endif // SETTINGWINDOW_H
