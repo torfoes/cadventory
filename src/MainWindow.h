@@ -28,6 +28,11 @@ public:
 
     void addLibrary(const char* label = nullptr, const char* path = nullptr);
     void openLibrary();
+    const std::vector<Library*>& getLibraries() const { return libraries; }
+    size_t publicSaveState() { return saveState(); }
+    size_t publicLoadState() { return loadState(); }
+    void clearLibraries();
+
     void showSettingsWindow();
     void setPreviewFlag(bool state);
     bool previewFlag = true;
@@ -38,7 +43,6 @@ public:
     QMenu * helpMenu;
     SettingWindow *settingWindow;
     void returnCentralWidget();
-
 
 public slots:
     void updateStatusLabel(const char* status);

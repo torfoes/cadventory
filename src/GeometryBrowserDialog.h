@@ -11,6 +11,7 @@ class GeometryBrowserDialog : public QDialog {
 
 public:
     GeometryBrowserDialog(int modelId, Model* model, QWidget* parent = nullptr);
+    QTreeWidget* getTreeWidget() const { return treeWidget; }
 
 private slots:
     void onItemChanged(QTreeWidgetItem* item, int column);

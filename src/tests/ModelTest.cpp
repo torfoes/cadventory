@@ -1,129 +1,10 @@
-
-// /* let catch provide main() */
-// #define CATCH_CONFIG_MAIN
-// #include <catch2/catch_test_macros.hpp>
-
-// #include "Model.h"
-// #include <filesystem>
-
-
-// void setupTestDB(const std::string& path) {
-//   if (std::filesystem::exists(path)) {
-//     std::filesystem::remove(path);
-//   }
-// }
-
-// int createTestModel(Model& model, const std::string& name = "TestModel", const std::string& cadFile = "./truck.g", const std::string& overrideInfo = "{}") {
-//   model.insertModel(cadFile, name, "primary", overrideInfo);
-//   auto models = model.getModels();
-//   if (!models.empty()) {
-//     return models.front().id;
-//   }
-//   return -1; // oops.
-// }
-
-
-// TEST_CASE("ModelOperations", "[Model]") {
-//   std::string testDB = "test_models.db";
-//   setupTestDB(testDB);
-//   Model model(testDB);
-
-//   SECTION("Insert model") {
-//     bool insertResult = model.insertModel("path/to/cad/file", "testModel", "primary", "{\"test\":true}");
-//     REQUIRE(insertResult == true);
-//   }
-
-//   SECTION("Read model") {
-//     int modelId = createTestModel(model);
-//     REQUIRE(modelId != -1);
-
-//     auto models = model.getModels();
-//     REQUIRE(models.size() == 1);
-//     REQUIRE(models.front().id == modelId);
-//   }
-
-//   SECTION("Update model") {
-//     int modelId = createTestModel(model);
-//     REQUIRE(modelId != -1);
-
-//     bool updateResult = model.updateModel(modelId, "updatedModel", "new/path/to/cad/file", "{\"updated\":true}");
-//     REQUIRE(updateResult == true);
-
-//     auto models = model.getModels();
-//     REQUIRE(models.size() == 1);
-//     REQUIRE(models.front().short_name == "updatedModel");
-//     REQUIRE(models.front().primary_file == "new/path/to/cad/file");
-//     REQUIRE(models.front().override_info == "{\"updated\":true}");
-//   }
-
-//   SECTION("Delete model") {
-//     int modelId = createTestModel(model);
-//     REQUIRE(modelId != -1);
-
-//     bool deleteResult = model.deleteModel(modelId);
-//     REQUIRE(deleteResult == true);
-
-//     auto models = model.getModels();
-//     REQUIRE(models.empty() == true);
-//   }
-
-//   setupTestDB(testDB);
-// }
-
-// TEST_CASE("TagOperations", "[Model]") {
-//   std::string testDB = "test_tags.db";
-//   setupTestDB(testDB);
-//   Model model(testDB);
-
-//   SECTION("Add tag to model") {
-//     int modelId = createTestModel(model);
-//     REQUIRE(modelId != -1);
-
-//     bool addResult = model.addTagToModel(modelId, "testTag");
-//     REQUIRE(addResult == true);
-
-//     auto tags = model.getTagsForModel(modelId);
-//     REQUIRE(tags.size() == 1);
-//     REQUIRE(tags.front() == "testTag");
-//   }
-
-//   SECTION("Remove tag from model") {
-//     int modelId = createTestModel(model);
-//     REQUIRE(modelId != -1);
-
-//     model.addTagToModel(modelId, "testTag");
-//     auto tags = model.getTagsForModel(modelId);
-//     REQUIRE(tags.size() == 1);
-
-//     bool removeResult = model.removeTagFromModel(modelId, "testTag");
-//     REQUIRE(removeResult == true);
-
-//     tags = model.getTagsForModel(modelId);
-//     REQUIRE(tags.empty() == true);
-//   }
-
-//   SECTION("Get all tags from a model") {
-//     int modelId = createTestModel(model);
-//     REQUIRE(modelId != -1);
-
-//     model.addTagToModel(modelId, "tag1");
-//     model.addTagToModel(modelId, "tag2");
-//     model.addTagToModel(modelId, "tag3");
-
-//     auto tags = model.getTagsForModel(modelId);
-//     REQUIRE(tags.size() == 3);
-//     REQUIRE(tags[0] == "tag1");
-//     REQUIRE(tags[1] == "tag2");
-//     REQUIRE(tags[2] == "tag3");
-//   }
-
-//   setupTestDB(testDB);
-// }
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
+#include <fstream>
 #include "Model.h"
 #include <filesystem>
 #include <iostream>
+#include <memory>
 
 // Helper function for testing directory
 std::string setupTestDirectory() {
@@ -401,4 +282,261 @@ TEST_CASE("Role Names Mapping", "[Model]") {
     SECTION("IsSelectedRole Mapping") {
         REQUIRE(roles[Model::IsSelectedRole] == "isSelected");
     }
+}
+
+TEST_CASE("Model Hashing Functionality", "[Model]") {
+    std::string testDir = setupTestDirectory();
+    cleanupTestDirectory(testDir); 
+    std::filesystem::create_directories(testDir);
+
+    Model model(testDir);
+    std::string tempFilePath = testDir + "/testfile.txt";
+
+    SECTION("Hash of an existing file") {
+        // Create a temporary file
+        std::ofstream outFile(tempFilePath);
+        outFile << "Test content for hashing";
+        outFile.close();
+
+        // Call hashModel
+        int hashValue = model.hashModel(tempFilePath);
+        REQUIRE(hashValue != 0);  // Ensure a valid hash is returned
+    }
+
+    SECTION("Hash of a non-existent file") {
+        // Call hashModel on a non-existent file
+        int hashValue = model.hashModel(testDir + "/nonexistent.txt");
+        REQUIRE(hashValue == 0);  // Hash should be zero as file doesn't exist
+    }
+
+    cleanupTestDirectory(testDir);  // Clean up after test
+}
+
+TEST_CASE("Model setData Function", "[Model]") {
+    std::string testDir = setupTestDirectory();
+    cleanupTestDirectory(testDir);
+    std::filesystem::create_directories(testDir);
+
+    Model model(testDir);
+
+    // Insert a sample model
+    ModelData sampleModel {1, "SampleModel", "./path/to/model", "{}", "Sample Title", {}, "Author", "/path", "Library", true, false};
+    REQUIRE(model.insertModel(sampleModel.id, sampleModel) == true);
+
+    // Set up a valid index and update `is_selected` role
+    QModelIndex index = model.index(0, 0);
+    REQUIRE(index.isValid());
+
+    REQUIRE(model.setData(index, QVariant(false), Model::IsSelectedRole) == true);
+    auto updatedModel = model.getModelById(sampleModel.id);
+    REQUIRE(updatedModel.is_selected == false);
+
+    // Test an invalid index
+    QModelIndex invalidIndex;
+    REQUIRE(model.setData(invalidIndex, QVariant(true), Model::IsSelectedRole) == false);
+
+    cleanupTestDirectory(testDir);
+}
+
+TEST_CASE("Get Selected Models from Model", "[Model]") {
+    std::string testDir = setupTestDirectory();
+    cleanupTestDirectory(testDir);
+    std::filesystem::create_directories(testDir);
+
+    Model model(testDir);
+
+    // Manually insert test data to `models` list with varied selection status
+    ModelData model1 = {1, "Model1", "./path/to/model1", "{}", "Title1", {}, "Author1", "/path1", "Library1", true, false};
+    ModelData model2 = {2, "Model2", "./path/to/model2", "{}", "Title2", {}, "Author2", "/path2", "Library2", false, false};
+    ModelData model3 = {3, "Model3", "./path/to/model3", "{}", "Title3", {}, "Author3", "/path3", "Library3", true, false};
+    ModelData model4 = {4, "Model4", "./path/to/model4", "{}", "Title4", {}, "Author4", "/path4", "Library4", false, false};
+
+    // Insert each model directly using the known `insertModel` function
+    REQUIRE(model.insertModel(model1.id, model1) == true);
+    REQUIRE(model.insertModel(model2.id, model2) == true);
+    REQUIRE(model.insertModel(model3.id, model3) == true);
+    REQUIRE(model.insertModel(model4.id, model4) == true);
+
+    // Test case: Retrieve only selected models
+    auto selectedModels = model.getSelectedModels();
+    REQUIRE(selectedModels.size() == 2);  // Expect only model1 and model3 to be selected
+
+    // Verify each selected model is correct
+    std::vector<int> expectedIds = {1, 3};
+    for (const auto& selectedModel : selectedModels) {
+        REQUIRE(std::find(expectedIds.begin(), expectedIds.end(), selectedModel.id) != expectedIds.end());
+        REQUIRE(selectedModel.is_selected == true);
+    }
+
+    cleanupTestDirectory(testDir);
+}
+
+TEST_CASE("Get Selected Objects for Model", "[Model]") {
+    std::string testDir = setupTestDirectory();
+    cleanupTestDirectory(testDir);
+    std::filesystem::create_directories(testDir);
+
+    Model model(testDir);
+
+    // Insert a model for testing
+    ModelData testModel = {1, "TestModel", "./path/to/model", "{}", "Test Title", {}, "Author", "/file/path", "Library", true, false};
+    REQUIRE(model.insertModel(testModel.id, testModel) == true);
+
+    // Insert ObjectData associated with the model, with varied selection states
+    ObjectData object1 = {1, testModel.id, "Object1", -1, true};   // Selected
+    ObjectData object2 = {2, testModel.id, "Object2", -1, false};  // Not selected
+    ObjectData object3 = {3, testModel.id, "Object3", -1, true};   // Selected
+    ObjectData object4 = {4, testModel.id, "Object4", -1, false};  // Not selected
+
+    REQUIRE(model.insertObject(object1));  // Insert using verified existing insert function
+    REQUIRE(model.insertObject(object2));
+    REQUIRE(model.insertObject(object3));
+    REQUIRE(model.insertObject(object4));
+
+    SECTION("Retrieve only selected objects for a given model ID") {
+        auto selectedObjects = model.getSelectedObjectsForModel(testModel.id);
+        REQUIRE(selectedObjects.size() == 2);  // Only object1 and object3 should be selected
+
+        std::vector<int> expectedIds = {1, 3};
+        for (const auto& selectedObject : selectedObjects) {
+            REQUIRE(std::find(expectedIds.begin(), expectedIds.end(), selectedObject.object_id) != expectedIds.end());
+            REQUIRE(selectedObject.is_selected == true);
+        }
+    }
+
+    SECTION("No objects selected for the given model ID") {
+        // Deselect all objects in the test model
+        object1.is_selected = false;
+        object3.is_selected = false;
+        REQUIRE(model.updateObject(object1));
+        REQUIRE(model.updateObject(object3));
+
+        auto selectedObjects = model.getSelectedObjectsForModel(testModel.id);
+        REQUIRE(selectedObjects.empty());  // No selected objects should be returned
+    }
+
+    SECTION("All objects selected for the given model ID") {
+        // Select all objects in the test model
+        object1.is_selected = true;
+        object2.is_selected = true;
+        object3.is_selected = true;
+        object4.is_selected = true;
+
+        REQUIRE(model.updateObject(object1));
+        REQUIRE(model.updateObject(object2));
+        REQUIRE(model.updateObject(object3));
+        REQUIRE(model.updateObject(object4));
+
+        auto selectedObjects = model.getSelectedObjectsForModel(testModel.id);
+        REQUIRE(selectedObjects.size() == 4);  // All objects should be selected
+
+        std::vector<int> expectedIds = {1, 2, 3, 4};
+        for (const auto& selectedObject : selectedObjects) {
+            REQUIRE(std::find(expectedIds.begin(), expectedIds.end(), selectedObject.object_id) != expectedIds.end());
+            REQUIRE(selectedObject.is_selected == true);
+        }
+    }
+
+    cleanupTestDirectory(testDir);
+}
+
+TEST_CASE("Model Transaction Management", "[Model]") {
+    std::string testDir = setupTestDirectory();
+    cleanupTestDirectory(testDir);
+    std::filesystem::create_directories(testDir);
+
+    Model model(testDir);
+
+    // Insert a test model
+    ModelData testModel = {1, "TestModel", "./path/to/model", "{}", "Test Title", {}, "Author", "/file/path", "Library", true, false};
+    REQUIRE(model.insertModel(testModel.id, testModel) == true);
+
+    // Insert an object associated with the model
+    ObjectData object = {1, testModel.id, "Object", -1, false};
+    REQUIRE(model.insertObject(object) == true);
+
+    SECTION("Begin and Commit Transaction") {
+        // Test beginning a transaction (should not throw or fail)
+        REQUIRE_NOTHROW(model.beginTransaction());
+        
+        // Simulate a change within the transaction
+        object.is_selected = true;
+        REQUIRE(model.updateObject(object) == true);
+
+        // Commit the transaction
+        REQUIRE_NOTHROW(model.commitTransaction());
+        
+        // Verify the change persisted
+        auto selectedObjects = model.getSelectedObjectsForModel(testModel.id);
+        REQUIRE(selectedObjects.size() == 1);
+        REQUIRE(selectedObjects[0].object_id == object.object_id);
+    }
+
+    cleanupTestDirectory(testDir);
+}
+
+TEST_CASE("Update Object Parent ID", "[Model]") {
+    std::string testDir = setupTestDirectory();
+    cleanupTestDirectory(testDir);
+    std::filesystem::create_directories(testDir);
+
+    Model model(testDir);
+
+    // Insert a test model
+    ModelData testModel = {1, "TestModel", "./path/to/model", "{}", "Test Title", {}, "Author", "/file/path", "Library", true, false};
+    REQUIRE(model.insertModel(testModel.id, testModel) == true);
+
+    // Insert objects associated with the model and set is_selected to true
+    ObjectData object1 = {1, testModel.id, "Object1", -1, true};
+    ObjectData object2 = {2, testModel.id, "Object2", -1, true}; // Set is_selected = true to match retrieval criteria
+
+    bool insertResult1 = model.insertObject(object1);
+    bool insertResult2 = model.insertObject(object2);
+
+    REQUIRE(insertResult1 == true);  
+    REQUIRE(insertResult2 == true); 
+
+    // Confirm objects are retrievable with `is_selected` as true
+    auto objectsBeforeUpdate = model.getSelectedObjectsForModel(testModel.id);
+    REQUIRE(std::find_if(objectsBeforeUpdate.begin(), objectsBeforeUpdate.end(), [&](const ObjectData& obj) {
+        return obj.object_id == object2.object_id;
+    }) != objectsBeforeUpdate.end());
+
+    SECTION("Update parent ID successfully") {
+        int newParentId = object1.object_id;
+
+        // Start a transaction, update the parent ID, and commit
+        model.beginTransaction();
+        REQUIRE(model.updateObjectParentId(object2.object_id, newParentId) == true);
+        model.commitTransaction();
+
+        // Fetch updated object and verify parent ID change
+        auto selectedObjects = model.getSelectedObjectsForModel(testModel.id);
+        auto updatedObject = std::find_if(selectedObjects.begin(), selectedObjects.end(), [&](const ObjectData& obj) {
+            return obj.object_id == object2.object_id;
+        });
+
+        REQUIRE(updatedObject != selectedObjects.end());
+        REQUIRE(updatedObject->parent_object_id == newParentId);
+    }
+
+    SECTION("Attempt to update parent ID with invalid object ID") {
+        int invalidObjectId = 9999; // Assumed non-existent
+        int newParentId = object1.object_id;
+
+        model.beginTransaction();
+        bool updateResult = model.updateObjectParentId(invalidObjectId, newParentId);
+        model.commitTransaction();
+
+        REQUIRE(updateResult == true);
+
+        // Ensure that no existing object's parent ID has been incorrectly set to newParentId
+        auto allObjects = model.getSelectedObjectsForModel(testModel.id);
+        for (const auto& obj : allObjects) {
+            REQUIRE(obj.object_id != invalidObjectId); // invalid object should not exist
+            REQUIRE(obj.parent_object_id != newParentId); // ensure parent ID of valid objects is unchanged
+        }
+    }
+
+    cleanupTestDirectory(testDir);
 }

@@ -265,6 +265,11 @@ void MainWindow::on_homeLibraryButton_clicked()
     }
 }
 
+void MainWindow::clearLibraries()
+{
+    libraries.clear();
+}
+
 void MainWindow::showSettingsWindow()
 {
     settingWindow->show();
