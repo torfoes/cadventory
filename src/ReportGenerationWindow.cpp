@@ -47,15 +47,15 @@ ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
 
 void ReportGenerationWindow::onGenerateReportButtonClicked() {
   // need output directory
-  // if (output_directory.empty()) {
-  //   QMessageBox msgBox(this);
-  //   msgBox.setText("No Directory Found");
-  //   QString message = "Please choose a directory to store your report.";
-  //   msgBox.setInformativeText(message);
-  //   msgBox.setStyleSheet("QLabel{min-width: 300px;}");
-  //   msgBox.exec();
-  //   return;
-  // }
+  if (output_directory.empty()) {
+    QMessageBox msgBox(this);
+    msgBox.setText("No Directory Found");
+    QString message = "Please choose a directory to store your report.";
+    msgBox.setInformativeText(message);
+    msgBox.setStyleSheet("QLabel{min-width: 300px;}");
+    msgBox.exec();
+    return;
+  }
 
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
@@ -64,7 +64,7 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   time = oss.str();
 
   coverPage();
-  // tableOfContentsPage();
+  tableOfContentsPage();
 
   err_vec = new std::vector<std::string>();
 
@@ -78,7 +78,7 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   // // Move the worker to the thread
   reporterWorker->moveToThread(generatingReportThread);
 
-  // Connect signals and slots
+  // // Connect signals and slots
   connect(generatingReportThread, &QThread::started, reporterWorker,
           &ReportGeneratorWorker::process);
   connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
@@ -186,8 +186,6 @@ void ReportGenerationWindow::coverPage() {
   title_font.setWeight(QFont::Bold);
   QFont version_font("Arial", 12);
   QFont subtext_and_user_font("Arial", 12);
-  int max_width = 2480;
-  int max_height = 3508;
   int Margin = 300;
 
   // cover report
@@ -223,8 +221,6 @@ void ReportGenerationWindow::coverPage() {
   int mx = Margin + 500;
   int my = Margin + 500;  // assuming logo heights are <= 500 pixels
   QRect title_rect(mx, my, A4_MAXWIDTH_LS - 2 * mx, A4_MAXHEIGHT_LS - 2 * my);
-  // painter->drawRect(zero_rect);
-  painter->drawRect(title_rect);
   painter->drawText(title_rect,
                     Qt::AlignVCenter | Qt::AlignHCenter | Qt::TextWordWrap,
                     QString::fromStdString(title));
@@ -290,6 +286,133 @@ void ReportGenerationWindow::tableOfContentsPage() {
   painter->setFont(font);
   painter->rotate(90);
   */
+
+  // width = 600
+  // height = 100
+  // draw "Table of Contents" in middle of page
+  int x_tr = int(A4_MAXWIDTH_LS / 2) - 600;
+  int y_tr = 300;
+  int height_tr = 130;
+  int width_tr = 1200;
+  QRect title_rect(x_tr, y_tr, width_tr, height_tr);
+
+  // draw "table"
+  int x_tb = 300;
+  int y_tb = height_tr + y_tr + 150;
+  int width_tb = A4_MAXWIDTH_LS - (2 * 300);
+  int height_tb =
+      A4_MAXHEIGHT_LS - (2 * 300) -
+      height_tr;  // last 300 is margin in between table of contents and table
+  QRect table_rect(x_tb, y_tb, width_tb, height_tb);
+
+  QFont table_header_font("Arial", 12);
+  QFont table_font("Arial", 6);
+  QFont title_font("Arial", 32);
+
+  // x positions for each column
+  int num_item_x = x_tb;
+  int model_name_x = num_item_x + 200;
+  int primary_comp_x = model_name_x + 600;
+  int parent_dir_x = primary_comp_x + 600;
+  int tag_rect_x = parent_dir_x + 600;
+  int row_y = y_tb;
+
+  // row height  = 50px
+  // 33 models per page of table of contents
+
+  // draw header row in tbale
+  QRect num_item_rect = QRect(num_item_x, row_y, 200, 100);
+  QRect model_name_rect = QRect(model_name_x, row_y, 600, 100);
+  QRect primary_comp_rect = QRect(primary_comp_x, row_y, 600, 100);
+  QRect parent_dir_rect = QRect(parent_dir_x, row_y, 600, 100);
+  QRect tag_rect = QRect(tag_rect_x, row_y, 908, 100);
+
+  // every 33 models new page
+  int model_count = 0;
+  for (const auto& modelData : model->getSelectedModels()) {
+    if (model_count % 33 == 0) {
+      row_y = y_tb;
+      if (pdfWriter->newPage()) {
+        // draw title
+        painter->setPen(QPen(Qt::black, 3));
+        painter->setFont(title_font);
+        painter->drawText(title_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("Table of Contents"));
+
+        // draw table
+        painter->drawRect(table_rect);
+
+        // draw table header
+        painter->setPen(QPen(Qt::black, 1));
+        painter->setFont(table_header_font);
+        num_item_rect = QRect(num_item_x, row_y, 200, 100);
+        model_name_rect = QRect(model_name_x, row_y, 600, 100);
+        primary_comp_rect = QRect(primary_comp_x, row_y, 600, 100);
+        parent_dir_rect = QRect(parent_dir_x, row_y, 600, 100);
+        tag_rect = QRect(tag_rect_x, row_y, 908, 100);
+        painter->drawRect(num_item_rect);
+        painter->drawRect(model_name_rect);
+        painter->drawRect(primary_comp_rect);
+        painter->drawRect(parent_dir_rect);
+        painter->drawRect(tag_rect);
+
+        painter->drawText(num_item_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("#"));
+        painter->drawText(model_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("model_name"));
+        painter->drawText(primary_comp_rect,
+                          Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("primary component"));
+        painter->drawText(parent_dir_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("parent directory"));
+        painter->drawText(tag_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("tags"));
+        row_y += 100;
+      } else {
+        std::cerr << "Error in creating new page" << std::endl;
+      }
+    }
+
+    // get primary object
+    std::string primary_obj = "";
+    std::vector<ObjectData> associatedObjects =
+        model->getObjectsForModel(modelData.id);
+
+    if (associatedObjects.empty()) {
+      std::cout << "No associated objects for this model.\n";
+    } else {
+      std::cout << "Associated Objects (" << associatedObjects.size() << "):\n";
+      for (const auto& obj : associatedObjects) {
+        if (obj.is_selected) {
+          primary_obj = obj.name;
+        }
+      }
+    }
+    // draw model row
+    painter->setFont(table_font);
+    num_item_rect = QRect(num_item_x, row_y, 200, 50);
+    model_name_rect = QRect(model_name_x, row_y, 600, 50);
+    primary_comp_rect = QRect(primary_comp_x, row_y, 600, 50);
+    parent_dir_rect = QRect(parent_dir_x, row_y, 600, 50);
+    tag_rect = QRect(tag_rect_x, row_y, 908, 50);
+    painter->drawRect(num_item_rect);
+    painter->drawRect(model_name_rect);
+    painter->drawRect(primary_comp_rect);
+    painter->drawRect(parent_dir_rect);
+    painter->drawRect(tag_rect);
+    painter->drawText(num_item_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString(std::to_string(model_count)));
+    painter->drawText(model_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString(modelData.short_name));
+    painter->drawText(primary_comp_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString(primary_obj));
+    painter->drawText(parent_dir_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString(library->fullPath));
+    painter->drawText(tag_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString("tags"));
+    row_y += 50;
+    model_count++;
+  }
 }
 void ReportGenerationWindow::onOutputDirectoryButtonClicked() {
   QString temp_dir_1 = QFileDialog::getExistingDirectory(
@@ -338,7 +461,8 @@ void ReportGenerationWindow::onSuccessfulGistCall(
   if (pdfWriter->newPage()) {
     painter->drawPixmap(0, 0, gist);
   } else {
-    std::cerr << "Failed to create new PDF page." << std::endl;
+    std::cerr << "Failed to create new PDF page. (onSuccessfulGistCall)"
+              << std::endl;
   }
 
   int progress = (*num_file) * 100 / (*tot_num_files);
@@ -361,7 +485,8 @@ void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
                       QString::fromStdString(errorMessage.toStdString()));
     painter->rotate(90);
   } else {
-    std::cerr << "Failed to create new PDF page." << std::endl;
+    std::cerr << "Failed to create new PDF page. (onFailedGistCall)"
+              << std::endl;
   }
   int progress = (*num_file) * 100 / (*tot_num_files);
   ui->progressBar->setValue(progress);
@@ -374,7 +499,7 @@ void ReportGenerationWindow::onFinishedGeneratingReport() {
 
   painter->end();
 
-std::vector<ModelData> selectedModels = model->getSelectedModels();
+  std::vector<ModelData> selectedModels = model->getSelectedModels();
 
   std::string hidden_dir_path = library->fullPath + "/.cadventory";
 
@@ -402,7 +527,9 @@ std::vector<ModelData> selectedModels = model->getSelectedModels();
       QDir dir_temp_two;
       if (!dir_temp_two.rename(QString::fromStdString(model_working_path),
                                QString::fromStdString(dest))) {
-        std::cout << "ruh roh" << std::endl;
+        std::cerr
+            << "Moving model.working file failed (onFinishedGeneratingReport)"
+            << std::endl;
       }
     }
   }
