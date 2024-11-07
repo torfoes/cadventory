@@ -28,6 +28,18 @@ Click + in GUI and navigate to a folder to index.
 
 To clear all settings, run with --no-gui command-line option.
 
+## Testing 
+
+1. Create build directory from root of the project (mkdir build)
+2. Navigate to build directory (cd build)
+3. cmake -DCMAKE_BUILD_TYPE=Debug -DBRLCAD_DIR=/path/to/brlcad/build ..
+4. make
+5. ctest --output-on-failure
+6. lcov --capture --directory . --output-file coverage.info
+7. lcov --remove coverage.info '/usr/*' --output-file coverage_filtered.info
+8. genhtml coverage_filtered.info --output-directory coverage_report
+9. view coverage_report/index.html 
+
 
 ## Roadmap
 
