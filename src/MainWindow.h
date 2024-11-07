@@ -11,8 +11,12 @@
 #include <QObject>
 
 #include "ui_mainwindow.h"
+#include "SettingWindow.h"
 
 #include "Library.h"
+
+
+class SettingWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -28,6 +32,17 @@ public:
     size_t publicSaveState() { return saveState(); }
     size_t publicLoadState() { return loadState(); }
     void clearLibraries();
+
+    void showSettingsWindow();
+    void setPreviewFlag(bool state);
+    bool previewFlag = true;
+    QMenu * fileMenu;
+    QMenu * editMenu;
+    QMenu * viewMenu;
+    QMenu * windowMenu;
+    QMenu * helpMenu;
+    SettingWindow *settingWindow;
+    void returnCentralWidget();
 
 public slots:
     void updateStatusLabel(const char* status);
@@ -45,6 +60,9 @@ protected:
 private:
     Ui::MainWindow ui;
     std::vector<Library*> libraries;
+
+
+
 };
 
 #endif /* MAINWINDOW_H */

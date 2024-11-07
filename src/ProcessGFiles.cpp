@@ -20,6 +20,8 @@
 #include <QFileInfo>
 #include <QProcess>
 
+#include <QSettings>
+
 
 namespace fs = std::filesystem;
 
@@ -171,6 +173,11 @@ void ProcessGFiles::generateThumbnail(
 
 void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
     try {
+        QSettings settings;
+        bool previewFlag = settings.value("previewFlag", true).toBool();
+
+
+
         std::string model_short_name = file_path.stem().string();
         int modelId = model->hashModel(file_path.string());
 
@@ -207,7 +214,10 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         }
 
         // Generate thumbnail
-        generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+        if(previewFlag){
+            generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+        }
+
         modelData.is_processed = true;
 
         // **Insert or update the model in the database**
@@ -246,6 +256,9 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         // Commit transaction
         model->commitTransaction();
 
+        
+
+    
     } catch (const std::exception& e) {
         std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
     }
@@ -335,12 +348,12 @@ bool ProcessGFiles::validateObject(const std::string& file_path, const std::stri
 
 #include <iostream> // Ensure this is included for logging
 
-std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath) {
+std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj) {
     // log the function entry and input parameters
     std::cout << "generateGistReport called with:" << std::endl;
     std::cout << "  inputFilePath: " << inputFilePath << std::endl;
     std::cout << "  outputFilePath: " << outputFilePath << std::endl;
-
+    std::cout << "  primary obj: " << primary_obj << std::endl;
     // check if input file exists
     QFileInfo inputFile(QString::fromStdString(inputFilePath));
     if (!inputFile.exists()) {
@@ -353,6 +366,10 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     // construct the gist command
     std::string gistCommand = std::string(GIST_EXECUTABLE_PATH) + " \"" +
                               inputFilePath + "\" -o \"" + outputFilePath + "\"";
+    
+    if(!primary_obj.empty()){
+        gistCommand += " -t \"" + primary_obj + "\"";
+    }
     std::cout << "Constructed gistCommand: " << gistCommand << std::endl;
 
     // execute the command
@@ -364,7 +381,7 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     std::cout << "Standard Error:" << std::endl << stderrStr << std::endl;
 
     // check for command execution errors
-    if (returnCode != 0) {
+    if (returnCode != 0 || !stdoutStr.empty() || !stderrStr.empty()) {
         std::cerr << "Gist command failed with code " << returnCode << std::endl;
         std::string errorMsg = stderrStr.empty() ? stdoutStr : stderrStr;
         return {false, "Gist command failed with code " + std::to_string(returnCode) + ": " + errorMsg};
@@ -376,7 +393,7 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     QFileInfo outputFile(QString::fromStdString(outputFilePath));
     if (!outputFile.exists()) {
         std::cerr << "Output file not generated: " << outputFilePath << std::endl;
-        return {false, "Failed to generate output file: " + outputFilePath};
+        return {false, stdoutStr};
     } else {
         std::cout << "Confirmed output file was generated successfully." << std::endl;
     }

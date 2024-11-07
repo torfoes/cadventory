@@ -81,7 +81,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Upload File</string>
+    <string>Choose File</string>
    </property>
   </widget>
   <widget class="QTextEdit" name="logo1_textEdit">
@@ -152,7 +152,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Upload FIle</string>
+    <string>Choose File</string>
    </property>
   </widget>
   <widget class="QTextEdit" name="version_textEdit">
@@ -207,7 +207,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Upload FIle</string>
+    <string>Choose File</string>
    </property>
   </widget>
   <widget class="QTextEdit" name="outputDirectory_textEdit">
@@ -245,9 +245,9 @@
   <widget class="QLabel" name="fileInProcess_label">
    <property name="geometry">
     <rect>
-     <x>200</x>
+     <x>130</x>
      <y>410</y>
-     <width>66</width>
+     <width>231</width>
      <height>18</height>
     </rect>
    </property>

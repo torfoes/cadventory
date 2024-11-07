@@ -16,6 +16,7 @@
 #include "ModelFilterProxyModel.h"
 #include "IndexingWorker.h"
 
+
 class MainWindow;
 
 class LibraryWindow : public QWidget {
@@ -26,7 +27,10 @@ public:
     ~LibraryWindow();
 
     void loadFromLibrary(Library* _library);
+    void reloadLibrary();
     void setMainWindow(MainWindow* mainWindow);
+    MainWindow* mainWindow;
+    QAction *reload;
 
 
 private slots:
@@ -51,7 +55,7 @@ private:
 
     Ui::LibraryWindow ui;
     Library* library;
-    MainWindow* mainWindow;
+
 
     Model* model;
 

@@ -22,6 +22,7 @@ signals:
 private:
     Library* library;
     std::atomic<bool> m_stopRequested;
+    bool previewFlag;
 };
 
 #endif // INDEXINGWORKER_H
