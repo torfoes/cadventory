@@ -20,6 +20,7 @@ struct ModelData {
     std::string library_name;
     bool is_selected;
     bool is_processed;
+    bool is_included;
 };
 
 // Declare ModelData as a Qt metatype
@@ -48,7 +49,8 @@ public:
         AuthorRole,
         FilePathRole,
         LibraryNameRole,
-        IsSelectedRole
+        IsSelectedRole,
+        IsIncludedRole
     };
 
     explicit Model(const std::string& libraryPath, QObject* parent = nullptr);
@@ -97,6 +99,10 @@ public:
 
     // Retrieve selected objects for a given model ID
     std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
+
+    ModelData getModelByFilePath(const std::string& filePath);
+    std::vector<ModelData> getIncludedModels();
+
 
     void beginTransaction();
     void commitTransaction();
