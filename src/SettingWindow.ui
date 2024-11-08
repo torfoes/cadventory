@@ -45,6 +45,42 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QWidget" name="previewWidget" native="true">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>30</y>
+     <width>200</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QLabel" name="timerLabel">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>200</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Timeout Limit                            S</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="previewTimer">
+    <property name="geometry">
+     <rect>
+      <x>85</x>
+      <y>-2</y>
+      <width>88</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
  </widget>
  <resources/>
  <connections>

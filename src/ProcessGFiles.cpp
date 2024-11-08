@@ -138,6 +138,9 @@ void ProcessGFiles::generateThumbnail(
     std::string rt_executable = RT_EXECUTABLE_PATH;
     std::string model_short_name = fs::path(file_path).stem().string();
 
+    QSettings settings;
+    int timeLimit = settings.value("previewTimer", 30 ).toInt();
+
     if (selected_object_name.empty()) {
         std::cerr << "No valid object selected for raytrace in file: " << file_path << "\n";
         return;
@@ -149,7 +152,7 @@ void ProcessGFiles::generateThumbnail(
     std::string rt_command = rt_executable + " -s512 -o \"" + png_file + "\" \"" + file_path + "\" " + selected_object_name;
 
     try {
-        auto [rt_output, rt_error, rt_return_code] = runCommand(rt_command, 30);
+        auto [rt_output, rt_error, rt_return_code] = runCommand(rt_command, timeLimit);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         if (fs::exists(png_file) && fs::file_size(png_file) > 0) {
@@ -256,9 +259,9 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         // Commit transaction
         model->commitTransaction();
 
-        
 
-    
+
+
     } catch (const std::exception& e) {
         std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
     }
@@ -366,7 +369,7 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     // construct the gist command
     std::string gistCommand = std::string(GIST_EXECUTABLE_PATH) + " \"" +
                               inputFilePath + "\" -o \"" + outputFilePath + "\"";
-    
+
     if(!primary_obj.empty()){
         gistCommand += " -t \"" + primary_obj + "\"";
     }
