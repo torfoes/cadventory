@@ -17,7 +17,6 @@
 #include <iostream>
 #include <string>
 
-#include "ReportGeneratorWorker.h"
 #include "config.h"
 #include "ui_reportgenerationwindow.h"
 
@@ -94,6 +93,8 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   oss << std::put_time(&tm, "%m-%d-%Y, %H:%M:%S");
   time = oss.str();
 
+  classified = ui->classified_CheckBox->isChecked();
+
   coverPage();
   tableOfContentsPage();
 
@@ -102,10 +103,9 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   num_file = new int(0);
   tot_num_files = new int(model->getSelectedModels().size());
 
-  QThread* generatingReportThread =
+  generatingReportThread =
       new QThread(this);  // Parent is ReportGenerationWindow
-  ReportGeneratorWorker* reporterWorker =
-      new ReportGeneratorWorker(model, output_directory, nullptr);
+  reporterWorker = new ReportGeneratorWorker(model, output_directory, nullptr);
   // // Move the worker to the thread
   reporterWorker->moveToThread(generatingReportThread);
 
@@ -496,6 +496,18 @@ void ReportGenerationWindow::onSuccessfulGistCall(
   // bool status_newpage = pdfWriter->newPage();
   if (pdfWriter->newPage()) {
     painter->drawPixmap(0, 0, gist);
+    if (classified) {
+      QRect title_rect(800, 800, A4_MAXWIDTH_LS - 1600, A4_MAXHEIGHT_LS - 1600);
+      QFont classified_font("Arial", 32);
+      painter->setPen(QPen(Qt::black, 3));
+      painter->setFont(classified_font);
+      painter->setOpacity(0.3);
+      painter->drawText(title_rect,
+                        Qt::AlignVCenter | Qt::AlignHCenter | Qt::TextWordWrap,
+                        QString::fromStdString("Classified"));
+      painter->setOpacity(1);
+    }
+
   } else {
     std::cerr << "Failed to create new PDF page. (onSuccessfulGistCall)"
               << std::endl;
@@ -605,5 +617,25 @@ ReportGenerationWindow::~ReportGenerationWindow() {
   }
   if (tot_num_files) {
     delete tot_num_files;
+  }
+
+  // Ensure the indexing thread is stopped if it wasn't already
+  if (generatingReportThread && generatingReportThread->isRunning()) {
+    qDebug() << "Waiting for generatingReportThread to finish in destructor";
+    generatingReportThread->wait();
+    qDebug() << "generatingReportThread finished in destructor";
+  }
+
+  // Delete indexingWorker and indexingThread if they exist
+  if (reporterWorker) {
+    delete reporterWorker;
+    reporterWorker = nullptr;
+    qDebug() << "reporterWorker deleted in destructor";
+  }
+
+  if (generatingReportThread) {
+    delete generatingReportThread;
+    generatingReportThread = nullptr;
+    qDebug() << "generatingReportThread deleted in destructor";
   }
 }

@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QWidget>
 
+#include "ReportGeneratorWorker.h"
 #include "Library.h"
 #include "Model.h"
 #include "ProcessGFiles.h"
@@ -40,6 +41,7 @@ class ReportGenerationWindow : public QWidget {
   void coverPage();
   void tableOfContentsPage();
 
+  bool classified;
   int* num_file;
   int* tot_num_files;
   int x = 325;
@@ -50,6 +52,8 @@ class ReportGenerationWindow : public QWidget {
   Library* library;
   Model* model;
   Ui::ReportGenerationWindow* ui;
+  ReportGeneratorWorker* reporterWorker;
+  QThread* generatingReportThread;
   std::string output_directory;
   std::string logo1_filepath;
   std::string logo2_filepath;
