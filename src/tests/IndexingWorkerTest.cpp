@@ -7,6 +7,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <filesystem>
+#include <iostream>
 
 // MockLibrary class for testing purposes without modifying Library.h
 class MockLibrary : public Library {
@@ -14,7 +15,6 @@ public:
     MockLibrary(const char* label, const char* path)
         : Library(label, path) {}
 
-    // Instead of overriding getModels(), set models directly for testing
     QStringList models;
 };
 
@@ -44,6 +44,8 @@ TEST_CASE("IndexingWorker - Process Method", "[IndexingWorker]") {
     createTestDirectories();
     Model model("./temp_test_library");
     MockLibrary library("Test Library", "./temp_test_library");
+
+    // Add mock .g files for testing
     library.models = {"test1.g", "test2.g"};
 
     IndexingWorker worker(&library);
@@ -66,6 +68,7 @@ TEST_CASE("IndexingWorker - Stop Functionality", "[IndexingWorker]") {
     createTestDirectories();
     Model model("./temp_test_library");
     MockLibrary library("Test Library", "./temp_test_library");
+
     library.models = {"test1.g", "test2.g"};
 
     IndexingWorker worker(&library);
@@ -75,5 +78,40 @@ TEST_CASE("IndexingWorker - Stop Functionality", "[IndexingWorker]") {
     worker.process();
 
     REQUIRE(finishedSpy.count() == 1);
+    removeTestDirectories();
+}
+
+TEST_CASE("IndexingWorker - Full Processing of Files", "[IndexingWorker]") {
+    createTestDirectories();
+    Model model("./temp_test_library");
+    MockLibrary library("Test Library", "./temp_test_library");
+
+    // Create actual mock files
+    QString testFile1 = "./temp_test_library/test1.g";
+    QString testFile2 = "./temp_test_library/test2.g";
+    
+    QFile file1(testFile1);
+    file1.open(QIODevice::WriteOnly);
+    file1.write("Mock content for test1.g");
+    file1.close();
+
+    QFile file2(testFile2);
+    file2.open(QIODevice::WriteOnly);
+    file2.write("Mock content for test2.g");
+    file2.close();
+
+    library.models = {testFile1, testFile2};
+
+    IndexingWorker worker(&library);
+    QSignalSpy progressSpy(&worker, &IndexingWorker::progressUpdated);
+    QSignalSpy modelProcessedSpy(&worker, &IndexingWorker::modelProcessed);
+    QSignalSpy finishedSpy(&worker, &IndexingWorker::finished);
+
+    worker.process();
+
+    REQUIRE(progressSpy.count() > 0);
+    REQUIRE(modelProcessedSpy.count() == 2);
+    REQUIRE(finishedSpy.count() == 1);
+
     removeTestDirectories();
 }
