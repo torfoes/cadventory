@@ -105,12 +105,13 @@ set(HEADERS
   src/ReportGenerationWindow.h
   src/ReportGeneratorWorker.h
 )
-
+set(CMAKE_AUTORCC ON)
 # qt_add_executable automatically handles AUTOUIC, AUTOMOC, AUTORCC
 qt_add_executable(cadventory WIN32
   ${SRCS}
   ${UIS}
   ${HEADERS}
+  images.qrc
 )
 
 # Note dependencies and include directories
