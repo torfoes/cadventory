@@ -117,6 +117,8 @@ QVariant Model::data(const QModelIndex& index, int role) const {
         return modelData.is_selected;
     case IsIncludedRole:
         return modelData.is_included;
+    case IsProcessedRole:
+        return modelData.is_processed;
     default:
         return QVariant();
     }
@@ -135,6 +137,7 @@ QHash<int, QByteArray> Model::roleNames() const {
     roles[LibraryNameRole] = "library_name";
     roles[IsSelectedRole] = "is_selected";
     roles[IsIncludedRole] = "is_included";
+    roles[IsProcessedRole] = "is_processed";
     return roles;
 }
 
@@ -842,4 +845,68 @@ void Model::resetDatabase() {
     } else {
         std::cerr << "Failed to delete tables." << std::endl;
     }
+}
+
+std::vector<ModelData> Model::getIncludedModels() {
+    std::vector<ModelData> includedModels;
+    std::string sql = R"(
+        SELECT id, short_name, primary_file, override_info, title, thumbnail,
+               author, file_path, library_name, is_selected, is_processed, is_included
+        FROM models
+        WHERE is_included = 1;
+    )";
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            ModelData model;
+            model.id = sqlite3_column_int(stmt, 0);
+            model.short_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            model.primary_file = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            model.override_info = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            model.title = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
+
+            const void* blob = sqlite3_column_blob(stmt, 5);
+            int blob_size = sqlite3_column_bytes(stmt, 5);
+            if (blob && blob_size > 0) {
+                model.thumbnail.assign(static_cast<const char*>(blob),
+                                       static_cast<const char*>(blob) + blob_size);
+            }
+
+            model.author = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            model.file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
+            model.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            model.is_selected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_processed = sqlite3_column_int(stmt, 10) != 0;
+            model.is_included = sqlite3_column_int(stmt, 11) != 0;
+
+            includedModels.push_back(model);
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "Failed to select included models: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return includedModels;
+}
+
+
+bool Model::isFileIncluded(const std::string& filePath) {
+    std::string sql = "SELECT is_included FROM models WHERE file_path = ?;";
+    sqlite3_stmt* stmt;
+    bool included = false;
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, filePath.c_str(), -1, SQLITE_STATIC);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            included = sqlite3_column_int(stmt, 0) != 0;
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "SQL error in isFileIncluded: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return included;
 }

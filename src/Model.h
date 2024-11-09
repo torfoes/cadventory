@@ -50,7 +50,8 @@ public:
         FilePathRole,
         LibraryNameRole,
         IsSelectedRole,
-        IsIncludedRole
+        IsIncludedRole,
+        IsProcessedRole
     };
 
     explicit Model(const std::string& libraryPath, QObject* parent = nullptr);
@@ -93,6 +94,8 @@ public:
     bool setObjectData(int object_id, const QVariant& value, int role);
     bool updateObjectSelection(int object_id, bool is_selected);
     ObjectData getObjectById(int object_id);
+    bool isFileIncluded(const std::string& filePath);
+
 
     // Retrieve all selected models
     std::vector<ModelData> getSelectedModels();
