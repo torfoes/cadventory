@@ -15,6 +15,8 @@
 #include "ModelCardDelegate.h"
 #include "ModelFilterProxyModel.h"
 #include "IndexingWorker.h"
+#include "FileSystemModelWithCheckboxes.h"
+#include "FileSystemFilterProxyModel.h"
 
 
 class MainWindow;
@@ -48,10 +50,19 @@ private slots:
     void onModelProcessed(int modelId);
     void onProgressUpdated(const QString& currentObject, int percentage);
 
+    // filesystem view slots
+    void onFileSystemItemClicked(const QModelIndex& index);
+    void onInclusionChanged(const QModelIndex& index, bool included);
+    void onIncludeCheckBoxStateChanged(int state);
+    void onReindexButtonClicked();
+    void onIndexingComplete();
+
 
 private:
     void setupModelsAndViews();
     void setupConnections();
+    void includeAllModels();
+
 
     Ui::LibraryWindow ui;
     Library* library;
@@ -59,19 +70,21 @@ private:
 
     Model* model;
 
-    // Proxy models
     ModelFilterProxyModel* availableModelsProxyModel;
     ModelFilterProxyModel* selectedModelsProxyModel;
 
-    // Delegates
     ModelCardDelegate* modelCardDelegate;
 
-    // Selected models list
     QList<int> selectedModelIds;
 
     // Indexing worker and thread
     QThread* indexingThread;
     IndexingWorker* indexingWorker;
+
+    FileSystemModelWithCheckboxes* fileSystemModel;
+    FileSystemFilterProxyModel* fileSystemProxyModel;
+
+
 };
 
 #endif // LIBRARYWINDOW_H

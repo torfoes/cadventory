@@ -21,8 +21,9 @@ void IndexingWorker::process() {
     // Get the previews folder path
     std::string previewsFolder = library->model->getHiddenDirectoryPath() + "/previews";
 
-    auto models = library->getModels();
-    int totalFiles = models.size();
+    // Retrieve models that are included
+    std::vector<ModelData> modelsToProcess = library->model->getIncludedModels();
+    int totalFiles = modelsToProcess.size();
     int processedFiles = 0;
 
     if (totalFiles == 0) {
@@ -31,17 +32,14 @@ void IndexingWorker::process() {
         return;
     }
 
-    for (const auto& filePath : models) {
+    for (const auto& modelData : modelsToProcess) {
         // Check if a stop has been requested
         if (m_stopRequested.load()) {
             qDebug() << "IndexingWorker::process() stopping due to stop request";
             break;
         }
 
-        std::string fullFilePath = library->fullPath + "/" + filePath;
-
-        // Get the modelId for emitting the signal later
-        int modelId = library->model->hashModel(fullFilePath);
+        std::string fullFilePath = modelData.file_path;
 
         // Process the .g file to extract metadata and generate thumbnails
         processor.processGFile(fullFilePath, previewsFolder);
@@ -53,11 +51,11 @@ void IndexingWorker::process() {
         int percentage = (processedFiles * 100) / totalFiles;
 
         // Emit progress signal after processing the file
-        QString currentObject = QString::fromStdString(filePath);
+        QString currentObject = QString::fromStdString(modelData.file_path);
         emit progressUpdated(currentObject, percentage);
 
         // Emit signal indicating that a model has been processed
-        emit modelProcessed(modelId);
+        emit modelProcessed(modelData.id);
     }
 
     // Emit final progress signal to indicate completion

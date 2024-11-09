@@ -8,6 +8,9 @@
 // #include "AdvancedOptionsDialog.h"
 #include "ReportGenerationWindow.h"
 #include "ReportGeneratorWorker.h"
+#include "FileSystemFilterProxyModel.h"
+
+
 #include <QThread>
 #include <QMessageBox>
 #include <QVBoxLayout>
@@ -37,16 +40,11 @@ LibraryWindow::LibraryWindow(QWidget* parent)
     selectedModelsProxyModel(new ModelFilterProxyModel(this)),
     indexingThread(nullptr),
     indexingWorker(nullptr),
-
     modelCardDelegate(new ModelCardDelegate(this)) {
     ui.setupUi(this);
 
-    // Set up models and views
-    setupModelsAndViews();
-
-    // Set up connections
-    setupConnections();
 }
+
 
 LibraryWindow::~LibraryWindow() {
     qDebug() << "LibraryWindow destructor called";
@@ -80,11 +78,12 @@ LibraryWindow::~LibraryWindow() {
 
 void LibraryWindow::loadFromLibrary(Library* _library) {
     library = _library;
-    //setWindowTitle(library->name() + QString(" Library"));
     ui.currentLibrary->setText(library->name());
 
     // Load models from the library
     model = library->model;
+
+    includeAllModels();
 
     // Set the source model for proxy models
     availableModelsProxyModel->setSourceModel(model);
@@ -97,9 +96,15 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
     selectedModelsProxyModel->setFilterRole(Model::IsSelectedRole);
     selectedModelsProxyModel->setFilterFixedString("1"); // Show selected models
 
-    startIndexing();
+    // Now that library is set, set up models and views
+    setupModelsAndViews();
 
+    // Set up connections
+    setupConnections();
+
+    startIndexing();
 }
+
 
 void LibraryWindow::startIndexing() {
     // Create the indexing worker and thread
@@ -110,13 +115,19 @@ void LibraryWindow::startIndexing() {
     indexingWorker->moveToThread(indexingThread);
 
     // Connect signals and slots
+    // connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
+    // connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
+    // connect(indexingWorker, &IndexingWorker::progressUpdated, this, &LibraryWindow::onProgressUpdated);
+    // //connect(indexingThread, &QThread::finished, indexingWorker, &QObject::deleteLater);
+
     connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
     connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
     connect(indexingWorker, &IndexingWorker::progressUpdated, this, &LibraryWindow::onProgressUpdated);
-    //connect(indexingThread, &QThread::finished, indexingWorker, &QObject::deleteLater);
+    connect(indexingWorker, &IndexingWorker::finished, indexingThread, &QThread::quit);
+
+
 
     connect(indexingThread,SIGNAL(finished()),indexingThread,SLOT(deleteLater()));
-
 
 
     // Start the indexing thread
@@ -150,6 +161,7 @@ void LibraryWindow::setupModelsAndViews() {
     QSize itemSize = modelCardDelegate->sizeHint(QStyleOptionViewItem(), QModelIndex());
     ui.availableModelsView->setGridSize(QSize(0, itemSize.height()));
 
+    // Configure selected models view
     ui.selectedModelsView->setModel(selectedModelsProxyModel);
     ui.selectedModelsView->setItemDelegate(modelCardDelegate);
     ui.selectedModelsView->setViewMode(QListView::ListMode);
@@ -161,11 +173,42 @@ void LibraryWindow::setupModelsAndViews() {
     ui.selectedModelsView->setSelectionMode(QAbstractItemView::NoSelection);
     ui.selectedModelsView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // set grid size for selected models view
+    // Set grid size for selected models view
     ui.selectedModelsView->setGridSize(QSize(1, itemSize.height()));
 
-    // Populate search field combo box
-    // Add other fields as needed
+    // Setup file system model with checkboxes
+    QString libraryPath = QString::fromStdString(library->fullPath);
+    fileSystemModel = new FileSystemModelWithCheckboxes(model, libraryPath, this);
+
+    // Create and set up the proxy model to filter .g files
+    fileSystemProxyModel = new FileSystemFilterProxyModel(this);
+    fileSystemProxyModel->setSourceModel(fileSystemModel);
+    fileSystemProxyModel->setRecursiveFilteringEnabled(true);
+
+    // Set the model to the tree view
+    ui.fileSystemTreeView->setModel(fileSystemProxyModel);
+
+    // Set the root index to start at library->fullPath
+    QModelIndex rootIndex = fileSystemModel->index(libraryPath);
+    ui.fileSystemTreeView->setRootIndex(fileSystemProxyModel->mapFromSource(rootIndex));
+
+    // Expand all nodes (optional)
+    ui.fileSystemTreeView->expandAll();
+
+    // Set uniform row heights for consistent appearance
+    ui.fileSystemTreeView->setUniformRowHeights(true);
+
+    // Hide columns other than the name
+    for (int i = 1; i < fileSystemModel->columnCount(); ++i) {
+        ui.fileSystemTreeView->hideColumn(i);
+    }
+
+    // Set icon size (if desired)
+    ui.fileSystemTreeView->setIconSize(QSize(24, 24));
+
+    // Connect signals
+    connect(ui.fileSystemTreeView, &QTreeView::clicked, this, &LibraryWindow::onFileSystemItemClicked);
+    connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
 }
 
 
@@ -183,14 +226,13 @@ void LibraryWindow::setupConnections() {
     // Connect Generate Report button
     connect(ui.generateReportButton, &QPushButton::clicked, this, &LibraryWindow::onGenerateReportButtonClicked);
 
-    // Connect settings clicked signal from delegate
-    // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
-    // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
-
 
     connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
             this, &LibraryWindow::onGeometryBrowserClicked);
 
+    // Connect filesystem view signals
+    connect(ui.fileSystemTreeView, &QTreeView::clicked, this, &LibraryWindow::onFileSystemItemClicked);
+    connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
 
 }
 
@@ -336,5 +378,83 @@ void LibraryWindow::onProgressUpdated(const QString& currentObject, int percenta
         ui.progressBar->setVisible(false);
     } else {
         ui.statusLabel->setText(QString("Processing: %1").arg(currentObject));
+    }
+}
+
+
+
+void LibraryWindow::onFileSystemItemClicked(const QModelIndex& index) {
+    // Map the proxy index to the source index
+    QModelIndex sourceIndex = fileSystemProxyModel->mapToSource(index);
+
+    // QString path = fileSystemModel->filePath(sourceIndex);
+    // ui.selectedItemLabel->setText(QString("Selected Item: %1").arg(path));
+
+    // bool included = fileSystemModel->isIncluded(sourceIndex);
+    // ui.includeCheckBox->setChecked(included);
+
+    // Connect the checkbox change
+    // disconnect(ui.includeCheckBox, &QCheckBox::stateChanged, this, &LibraryWindow::onIncludeCheckBoxStateChanged);
+    // connect(ui.includeCheckBox, &QCheckBox::stateChanged, this, &LibraryWindow::onIncludeCheckBoxStateChanged);
+}
+
+
+void LibraryWindow::onIncludeCheckBoxStateChanged(int state) {
+    QModelIndex proxyIndex = ui.fileSystemTreeView->currentIndex();
+    QModelIndex sourceIndex = fileSystemProxyModel->mapToSource(proxyIndex);
+
+    bool included = (state == Qt::Checked);
+    fileSystemModel->setIncluded(sourceIndex, included);
+}
+
+
+void LibraryWindow::onInclusionChanged(const QModelIndex& index, bool included)
+{
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+}
+
+
+void LibraryWindow::onReindexButtonClicked() {
+    // Stop any ongoing indexing
+    if (indexingThread && indexingThread->isRunning()) {
+        indexingWorker->stop();
+        indexingThread->wait();
+    }
+
+    // Reindex files
+    startIndexing();
+}
+
+void LibraryWindow::onIndexingComplete() {
+    // Refresh model data
+    model->refreshModelData();
+    availableModelsProxyModel->invalidate();
+    selectedModelsProxyModel->invalidate();
+
+    // Update filesystem view checkboxes
+    setupModelsAndViews(); // Or specifically update the filesystem model
+}
+
+void LibraryWindow::includeAllModels() {
+    std::vector<std::string> modelFiles = library->getModels();
+
+    for (const auto& relativePath : modelFiles) {
+        std::string fullPath = library->fullPath + "/" + relativePath;
+        ModelData modelData = model->getModelByFilePath(fullPath);
+
+        if (modelData.id != 0) {
+            if (!modelData.is_included) {
+                modelData.is_included = true;
+                model->updateModel(modelData.id, modelData);
+            }
+        } else {
+            int id = model->hashModel(fullPath);
+            modelData.id = id;
+            modelData.file_path = fullPath;
+            modelData.is_included = true;
+            modelData.is_processed = false;
+            model->insertModel(id, modelData);
+        }
     }
 }

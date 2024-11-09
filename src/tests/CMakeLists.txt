@@ -133,6 +133,10 @@ add_executable(MainWindowTest
     ../ReportGeneratorWorker.h
     ../SettingWindow.h
     ../SettingWindow.cpp
+    ../FileSystemModelWithCheckboxes.cpp
+    ../FileSystemModelWithCheckboxes.h
+    ../FileSystemFilterProxyModel.cpp
+    ../FileSystemFilterProxyModel.h
 )
 
 # Link the Main Window GUI test executable against the necessary libraries
