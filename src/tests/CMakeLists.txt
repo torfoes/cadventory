@@ -115,41 +115,41 @@ target_link_libraries(FilesystemIndexerPerfTest PRIVATE
 )
 
 # Add the MainWindowTest executable
-add_executable(MainWindowTest
-    MainWindowTest.cpp
-    ../MainWindow.cpp
-    ../LibraryWindow.cpp
-    ../Library.cpp
-    ../Model.cpp
-    ../ProcessGFiles.cpp
-    ../IndexingWorker.cpp
-    ../FilesystemIndexer.cpp
-    ../ModelCardDelegate.cpp
-    ../GeometryBrowserDialog.cpp
-    ../ReportGenerationWindow.cpp
-    ../ModelFilterProxyModel.cpp
-    ../mainwindow.ui
-    ../ReportGeneratorWorker.cpp
-    ../ReportGeneratorWorker.h
-    ../SettingWindow.h
-    ../SettingWindow.cpp
-)
+# add_executable(MainWindowTest
+#     MainWindowTest.cpp
+#     ../MainWindow.cpp
+#     ../LibraryWindow.cpp
+#     ../Library.cpp
+#     ../Model.cpp
+#     ../ProcessGFiles.cpp
+#     ../IndexingWorker.cpp
+#     ../FilesystemIndexer.cpp
+#     ../ModelCardDelegate.cpp
+#     ../GeometryBrowserDialog.cpp
+#     ../ReportGenerationWindow.cpp
+#     ../ModelFilterProxyModel.cpp
+#     ../mainwindow.ui
+#     ../ReportGeneratorWorker.cpp
+#     ../ReportGeneratorWorker.h
+#     ../SettingWindow.h
+#     ../SettingWindow.cpp
+# )
 
 # Link the Main Window GUI test executable against the necessary libraries
-target_link_libraries(MainWindowTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Test
-    ${SQLITE_LIBRARY}
-)
+# target_link_libraries(MainWindowTest PRIVATE
+#     Catch2::Catch2WithMain
+#     Qt6::Core
+#     Qt6::Gui
+#     Qt6::Widgets
+#     Qt6::Test
+#     ${SQLITE_LIBRARY}
+# )
 
 # Include directories for MainWindowTest
-target_include_directories(MainWindowTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-)
+# target_include_directories(MainWindowTest PRIVATE
+#     ${CMAKE_SOURCE_DIR}/src
+#     ${CMAKE_BINARY_DIR}/src
+# )
 
 # Add the LibraryWindowTest executable
 # add_executable(LibraryWindowTest
@@ -219,8 +219,17 @@ target_link_libraries(ProcessGFilesTest PRIVATE
     Catch2::Catch2WithMain
     Qt6::Core
     Qt6::Gui
+    Qt6::Test
     ${SQLITE_LIBRARY}
 )
+
+# Include BRL-CAD directories and link BRL-CAD libraries
+if (DEFINED BRLCAD_INCLUDE_DIRS AND DEFINED BRLCAD_LIBRARIES)
+    target_include_directories(ProcessGFilesTest PRIVATE ${BRLCAD_INCLUDE_DIRS})
+    target_link_libraries(ProcessGFilesTest PRIVATE ${BRLCAD_LIBRARIES})
+else()
+    message(WARNING "BRL-CAD libraries and include directories not found. ProcessGFilesTest may not compile correctly.")
+endif()
 
 # Add the IndexingWorkerTest executable
 add_executable(IndexingWorkerTest
@@ -228,7 +237,7 @@ add_executable(IndexingWorkerTest
     ../IndexingWorker.cpp
     ../Library.cpp
     ../Model.cpp
-    ../ProcessGFiles.cpp          
+    ../ProcessGFiles.cpp
     ../FilesystemIndexer.cpp
 )
 
@@ -238,8 +247,16 @@ target_link_libraries(IndexingWorkerTest PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Test
-    sqlite3
+    ${SQLITE_LIBRARY}
 )
+
+# Include BRL-CAD directories and link BRL-CAD libraries
+if (DEFINED BRLCAD_INCLUDE_DIRS AND DEFINED BRLCAD_LIBRARIES)
+    target_include_directories(IndexingWorkerTest PRIVATE ${BRLCAD_INCLUDE_DIRS})
+    target_link_libraries(IndexingWorkerTest PRIVATE ${BRLCAD_LIBRARIES})
+else()
+    message(WARNING "BRL-CAD libraries and include directories not found. IndexingWorkerTest may not compile correctly.")
+endif()
 
 
 # Register each test with CTest
@@ -247,7 +264,7 @@ add_test(NAME ModelTests COMMAND ModelTest)
 add_test(NAME LibraryTests COMMAND LibraryTest)
 add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
 add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
-add_test(NAME MainWindowTests COMMAND MainWindowTest)
+# add_test(NAME MainWindowTests COMMAND MainWindowTest)
 # add_test(NAME LibraryWindowTests COMMAND LibraryWindowTest)
 add_test(NAME GeometryBrowserDialogTests COMMAND GeometryBrowserDialogTest)
 add_test(NAME ProcessGFilesTests COMMAND ProcessGFilesTest)

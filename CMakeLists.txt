@@ -40,33 +40,6 @@ else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-# --- Begin BRL-CAD Configuration ---
-
-set(BRLCAD_DIR "" CACHE PATH "Path to BRL-CAD installation directory")
-
-if(BRLCAD_DIR)
-  set(MGED_EXECUTABLE "${BRLCAD_DIR}/bin/mged")
-  set(RT_EXECUTABLE "${BRLCAD_DIR}/bin/rt")
-  set(GIST_EXECUTABLE "${BRLCAD_DIR}/bin/gist")
-else()
-  find_program(MGED_EXECUTABLE mged)
-  find_program(RT_EXECUTABLE rt)
-  find_program(GIST_EXECUTABLE gist)
-endif()
-
-if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
-  message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
-endif()
-
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
-)
-
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-
-# --- End BRL-CAD Configuration ---
-
 set(SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
@@ -115,6 +88,28 @@ qt_add_executable(cadventory WIN32
   ${UIS}
   ${HEADERS}
 )
+
+# --- Begin BRL-CAD Configuration ---
+
+# Set path to custom CMake module that includes FindBRLCAD.cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# Find BRL-CAD libraries using the custom FindBRLCAD module
+find_package(BRLCAD REQUIRED)
+
+if(BRLCAD_FOUND)
+  # Link BRL-CAD libraries and include directories to cadventory
+  target_include_directories(cadventory PRIVATE ${BRLCAD_INCLUDE_DIRS})
+  target_link_libraries(cadventory PRIVATE ${BRLCAD_LIBRARIES})
+else()
+  message(FATAL_ERROR "Could not find BRL-CAD libraries. Ensure BRLCAD_ROOT is set correctly.")
+endif()
+
+# Make BRL-CAD variables visible to subdirectories
+set(BRLCAD_INCLUDE_DIRS ${BRLCAD_INCLUDE_DIRS} PARENT_SCOPE)
+set(BRLCAD_LIBRARIES ${BRLCAD_LIBRARIES} PARENT_SCOPE)
+
+# --- End BRL-CAD Configuration ---
 
 # Note dependencies and include directories
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
