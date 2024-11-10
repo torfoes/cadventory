@@ -14,6 +14,7 @@
 #include <QThread>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <cmath>
 #include <iostream>
 #include <string>
 
@@ -34,9 +35,9 @@ ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
 
   // change placeholder text for subtitle
   // x models in report
-  subtitle = "Contains " + std::to_string((model->getSelectedModels().size())) + " models.";
+  subtitle = "Contains " + std::to_string((model->getSelectedModels().size())) +
+             " models.";
   ui->subtitle_textEdit->setPlaceholderText(QString::fromStdString(subtitle));
-
 
   connect(ui->outputDirectory_pushButton, &QPushButton::clicked, this,
           &ReportGenerationWindow::onOutputDirectoryButtonClicked);
@@ -99,42 +100,36 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   oss << std::put_time(&tm, "%m-%d-%Y, %H:%M:%S");
   time = oss.str();
 
-  // classified = ui->classified_CheckBox->isChecked();
-
   coverPage();
 
   tableOfContentsPage();
 
-  painter->end();
-  QDesktopServices::openUrl(QUrl(
-      QString::fromStdString(output_directory)));  // open pdf after generation
+  err_vec = new std::vector<std::string>();
 
-  // err_vec = new std::vector<std::string>();
+  num_file = new int(0);
+  tot_num_files = new int(model->getSelectedModels().size());
 
-  // num_file = new int(0);
-  // tot_num_files = new int(model->getSelectedModels().size());
+  generatingReportThread =
+      new QThread(this);  // Parent is ReportGenerationWindow
+  reporterWorker =
+      new ReportGeneratorWorker(model, output_directory, label, nullptr);
+  // // Move the worker to the thread
+  reporterWorker->moveToThread(generatingReportThread);
 
-  // generatingReportThread =
-  //     new QThread(this);  // Parent is ReportGenerationWindow
-  // reporterWorker = new ReportGeneratorWorker(model, output_directory, label,
-  // nullptr);
-  // // // Move the worker to the thread
-  // reporterWorker->moveToThread(generatingReportThread);
+  // // Connect signals and slots
+  connect(generatingReportThread, &QThread::started, reporterWorker,
+          &ReportGeneratorWorker::process);
+  connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
+          &ReportGenerationWindow::onSuccessfulGistCall);
+  connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
+          &ReportGenerationWindow::onFailedGistCall);
+  connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
+          &ReportGenerationWindow::onFinishedGeneratingReport);
+  connect(reporterWorker, &ReportGeneratorWorker::processingGistCall, this,
+          &ReportGenerationWindow::onProcessingGistCall);
 
-  // // // Connect signals and slots
-  // connect(generatingReportThread, &QThread::started, reporterWorker,
-  //         &ReportGeneratorWorker::process);
-  // connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
-  //         &ReportGenerationWindow::onSuccessfulGistCall);
-  // connect(reporterWorker, &ReportGeneratorWorker::failedGistCall, this,
-  //         &ReportGenerationWindow::onFailedGistCall);
-  // connect(reporterWorker, &ReportGeneratorWorker::finishedReport, this,
-  //         &ReportGenerationWindow::onFinishedGeneratingReport);
-  // connect(reporterWorker, &ReportGeneratorWorker::processingGistCall, this,
-  //         &ReportGenerationWindow::onProcessingGistCall);
-
-  // // Start the indexing thread
-  // generatingReportThread->start();
+  // Start the indexing thread
+  generatingReportThread->start();
 }
 
 void ReportGenerationWindow::coverPage() {
@@ -288,10 +283,12 @@ void ReportGenerationWindow::coverPage() {
   painter->setPen(Qt::gray);
   QRect subtitle_rect(mx, my + title_height, title_width, 100);
   // painter->drawRect(subtitle_rect);
-  if(ui->subtitle_textEdit->toPlainText().isEmpty()){
-    painter->drawText(subtitle_rect, Qt::AlignCenter, QString::fromStdString(subtitle));
-  }else{
-    painter->drawText(subtitle_rect, Qt::AlignCenter, ui->subtitle_textEdit->toPlainText());
+  if (ui->subtitle_textEdit->toPlainText().isEmpty()) {
+    painter->drawText(subtitle_rect, Qt::AlignCenter,
+                      QString::fromStdString(subtitle));
+  } else {
+    painter->drawText(subtitle_rect, Qt::AlignCenter,
+                      ui->subtitle_textEdit->toPlainText());
   }
 
   // label
@@ -390,23 +387,19 @@ void ReportGenerationWindow::tableOfContentsPage() {
   // x positions for each column
   int num_item_x = x_tb;
   int model_name_x = num_item_x + 200;
-  int primary_comp_x = model_name_x + 600;
-  int parent_dir_x = primary_comp_x + 600;
-  int tag_rect_x = parent_dir_x + 600;
-  int row_y = y_tb;
+  int long_name_x = model_name_x + 900;
 
   // row height  = 50px
   // 33 models per page of table of contents
+  int row_y = y_tb;
 
   // draw header row in tbale
   QRect num_item_rect = QRect(num_item_x, row_y, 200, 100);
-  QRect model_name_rect = QRect(model_name_x, row_y, 600, 100);
-  QRect primary_comp_rect = QRect(primary_comp_x, row_y, 600, 100);
-  QRect parent_dir_rect = QRect(parent_dir_x, row_y, 600, 100);
-  QRect tag_rect = QRect(tag_rect_x, row_y, 908, 100);
-
+  QRect model_name_rect = QRect(model_name_x, row_y, 900, 100);
+  QRect long_name_rect = QRect(long_name_x, row_y, 1808, 100);
   // every 33 models new page
   int model_count = 0;
+  int page_offset = 2 + (ceil(double(model->getSelectedModels().size()) / 33));
   for (const auto& modelData : model->getSelectedModels()) {
     if (model_count % 33 == 0) {
       row_y = y_tb;
@@ -418,7 +411,7 @@ void ReportGenerationWindow::tableOfContentsPage() {
                           QString::fromStdString("Table of Contents"));
         painter->setPen(Qt::gray);
         painter->setFont(classified_font);
-        painter->drawText(300,300, QString::fromStdString(label));
+        painter->drawText(300, 300, QString::fromStdString(label));
 
         painter->setPen(QPen(Qt::black, 3));
         // draw table
@@ -427,71 +420,38 @@ void ReportGenerationWindow::tableOfContentsPage() {
         // draw table header
         painter->setPen(QPen(Qt::black, 1));
         painter->setFont(table_header_font);
-        num_item_rect = QRect(num_item_x, row_y, 200, 100);
-        model_name_rect = QRect(model_name_x, row_y, 600, 100);
-        primary_comp_rect = QRect(primary_comp_x, row_y, 600, 100);
-        parent_dir_rect = QRect(parent_dir_x, row_y, 600, 100);
-        tag_rect = QRect(tag_rect_x, row_y, 908, 100);
+
         painter->drawRect(num_item_rect);
         painter->drawRect(model_name_rect);
-        painter->drawRect(primary_comp_rect);
-        painter->drawRect(parent_dir_rect);
-        painter->drawRect(tag_rect);
+        painter->drawRect(long_name_rect);
 
         painter->drawText(num_item_rect, Qt::AlignVCenter | Qt::AlignHCenter,
                           QString::fromStdString("#"));
         painter->drawText(model_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("model_name"));
-        painter->drawText(primary_comp_rect,
-                          Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("primary component"));
-        painter->drawText(parent_dir_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("parent directory"));
-        painter->drawText(tag_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("tags"));
+                          QString::fromStdString("short name"));
+        painter->drawText(long_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString("title/long name"));
         row_y += 100;
       } else {
         std::cerr << "Error in creating new page" << std::endl;
       }
     }
 
-    // get primary object
-    std::string primary_obj = "";
-    std::vector<ObjectData> associatedObjects =
-        model->getObjectsForModel(modelData.id);
-
-    if (associatedObjects.empty()) {
-      std::cout << "No associated objects for this model.\n";
-    } else {
-      std::cout << "Associated Objects (" << associatedObjects.size() << "):\n";
-      for (const auto& obj : associatedObjects) {
-        if (obj.is_selected) {
-          primary_obj = obj.name;
-        }
-      }
-    }
     // draw model row
     painter->setFont(table_font);
     num_item_rect = QRect(num_item_x, row_y, 200, 50);
-    model_name_rect = QRect(model_name_x, row_y, 600, 50);
-    primary_comp_rect = QRect(primary_comp_x, row_y, 600, 50);
-    parent_dir_rect = QRect(parent_dir_x, row_y, 600, 50);
-    tag_rect = QRect(tag_rect_x, row_y, 908, 50);
+    model_name_rect = QRect(model_name_x, row_y, 900, 50);
+    long_name_rect = QRect(long_name_x, row_y, 1808, 50);
     painter->drawRect(num_item_rect);
     painter->drawRect(model_name_rect);
-    painter->drawRect(primary_comp_rect);
-    painter->drawRect(parent_dir_rect);
-    painter->drawRect(tag_rect);
-    painter->drawText(num_item_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                      QString::fromStdString(std::to_string(model_count)));
+    painter->drawRect(long_name_rect);
+    painter->drawText(
+        num_item_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+        QString::fromStdString(std::to_string(model_count + page_offset)));
     painter->drawText(model_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
                       QString::fromStdString(modelData.short_name));
-    painter->drawText(primary_comp_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                      QString::fromStdString(primary_obj));
-    painter->drawText(parent_dir_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                      QString::fromStdString(library->fullPath));
-    painter->drawText(tag_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                      QString::fromStdString("tags"));
+    painter->drawText(long_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString(modelData.title));
     row_y += 50;
     model_count++;
   }
@@ -558,15 +518,13 @@ void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
                     errorMessage.toStdString();
   QFont font("Helvetica", 18);
   QFont font_two("Helvetica", 6);
+  std::cout << "err: " << err << std::endl;
   err_vec->push_back(err);
   if (pdfWriter->newPage()) {
-    painter->rotate(-90);
     painter->setFont(font);
-    painter->drawText(100, 100, QString::fromStdString(filepath.toStdString()));
+    painter->drawText(100, 100, filepath);
     painter->setFont(font_two);
-    painter->drawText(100, 150,
-                      QString::fromStdString(errorMessage.toStdString()));
-    painter->rotate(90);
+    painter->drawText(100, 150, errorMessage);
   } else {
     std::cerr << "Failed to create new PDF page. (onFailedGistCall)"
               << std::endl;
