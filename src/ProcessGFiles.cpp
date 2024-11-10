@@ -176,26 +176,24 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         QSettings settings;
         bool previewFlag = settings.value("previewFlag", true).toBool();
 
-
-
         std::string model_short_name = file_path.stem().string();
-        int modelId = model->hashModel(file_path.string());
 
-        ModelData existingModel = model->getModelById(modelId);
+        // Use getModelByFilePath to check if the model already exists
+        ModelData existingModel = model->getModelByFilePath(file_path.string());
 
-        if (existingModel.id == modelId && existingModel.is_processed) {
+        if (existingModel.id != 0 && existingModel.is_processed) {
             std::cout << "Model already processed: " << model_short_name << "\n";
             return;
         }
 
-        // Prepare ModelData
+        // Prepare ModelData (do not set id)
         ModelData modelData;
-        modelData.id = modelId;
         modelData.short_name = model_short_name;
         modelData.primary_file = file_path.filename().string();
         modelData.file_path = file_path.string();
         modelData.library_name = "";
         modelData.is_selected = false;
+        modelData.is_included = true; // Since we're processing included models
 
         // Extract title
         extractTitle(modelData, file_path.string());
@@ -214,22 +212,35 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         }
 
         // Generate thumbnail
-        if(previewFlag){
+        if (previewFlag) {
             generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
         }
 
         modelData.is_processed = true;
 
-        // **Insert or update the model in the database**
-        if (model->modelExists(modelId)) {
-            model->updateModel(modelId, modelData);
+        // Insert or update the model in the database
+        if (existingModel.id != 0) {
+            // Model exists, update it
+            model->updateModel(existingModel.id, modelData);
+            modelData.id = existingModel.id;
         } else {
-            model->insertModel(modelData);
+            // Model does not exist, insert it
+            bool insertSuccess = model->insertModel(modelData);
+            if (!insertSuccess) {
+                std::cerr << "Failed to insert model: " << model_short_name << "\n";
+                return;
+            }
+            // After insertion, retrieve the model to get the assigned id
+            ModelData insertedModel = model->getModelByFilePath(file_path.string());
+            if (insertedModel.id == 0) {
+                std::cerr << "Failed to retrieve inserted model: " << model_short_name << "\n";
+                return;
+            }
+            modelData.id = insertedModel.id;
         }
 
-
         // Delete existing objects if any
-        model->deleteObjectsForModel(modelId);
+        model->deleteObjectsForModel(modelData.id);
 
         // Map from object name to object_id
         std::map<std::string, int> objectNameToId;
@@ -239,12 +250,13 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
 
         // Insert objects and collect mapping
         for (auto& objData : objects) {
+            objData.model_id = modelData.id; // Ensure model_id is set correctly
             int objectId = model->insertObject(objData);
             objectNameToId[objData.name] = objectId;
         }
 
         // Update parent_object_id for each object
-        for (auto& objData : objects) {
+        for (const auto& objData : objects) {
             std::string parentName = parentRelations[objData.name];
             if (!parentName.empty()) {
                 int objectId = objectNameToId[objData.name];
@@ -256,9 +268,6 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         // Commit transaction
         model->commitTransaction();
 
-        
-
-    
     } catch (const std::exception& e) {
         std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
     }
