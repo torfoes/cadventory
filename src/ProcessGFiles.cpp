@@ -224,7 +224,7 @@ void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& p
         if (model->modelExists(modelId)) {
             model->updateModel(modelId, modelData);
         } else {
-            model->insertModel(modelId, modelData);
+            model->insertModel(modelData);
         }
 
 
