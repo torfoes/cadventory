@@ -16,11 +16,13 @@ public slots:
 
 signals:
     void modelProcessed(int modelId);
+    void progressUpdated(const QString& currentObject, int percentage);
     void finished();
 
 private:
     Library* library;
     std::atomic<bool> m_stopRequested;
+    bool previewFlag;
 };
 
 #endif // INDEXINGWORKER_H

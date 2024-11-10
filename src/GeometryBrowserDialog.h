@@ -3,19 +3,15 @@
 
 #include <QDialog>
 #include <QTreeWidget>
-#include <QLabel>
-#include <QPushButton>
-#include <QString>
 #include <map>
-#include <vector>
-#include <string>
-
-class Model;
+#include "Model.h"
 
 class GeometryBrowserDialog : public QDialog {
     Q_OBJECT
+
 public:
-    explicit GeometryBrowserDialog(int modelId, Model* model, QWidget* parent = nullptr);
+    GeometryBrowserDialog(int modelId, Model* model, QWidget* parent = nullptr);
+    QTreeWidget* getTreeWidget() const { return treeWidget; }
 
 private slots:
     void onItemChanged(QTreeWidgetItem* item, int column);
@@ -23,14 +19,20 @@ private slots:
 private:
     void loadObjects();
     void populateTreeWidget();
+    void uncheckAllExcept(QTreeWidgetItem* exceptItem);
+    void uncheckItemRecursively(QTreeWidgetItem* item, QTreeWidgetItem* exceptItem);
 
     int modelId;
     Model* model;
-
     QTreeWidget* treeWidget;
 
-    std::map<std::string, std::vector<std::string>> geometryData;
+    // map object names to their IDs
     std::map<std::string, int> objectNameToIdMap;
+
+    // map parent object names to their children's names
+    std::map<std::string, std::vector<std::string>> geometryData;
+
+    bool isUpdatingCheckState = false;
 };
 
 #endif // GEOMETRYBROWSERDIALOG_H

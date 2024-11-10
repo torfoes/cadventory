@@ -7,7 +7,8 @@
 #include "GeometryBrowserDialog.h"
 #include "ModelView.h"
 // #include "AdvancedOptionsDialog.h"
-
+#include "ReportGenerationWindow.h"
+#include "ReportGeneratorWorker.h"
 #include <QThread>
 #include <QMessageBox>
 #include <QVBoxLayout>
@@ -15,6 +16,7 @@
 #include <QListView>
 #include <QPushButton>
 #include <QComboBox>
+#include <QMenuBar>
 #include <QLineEdit>
 #include <QLabel>
 
@@ -23,6 +25,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+
 
 namespace fs = std::filesystem;
 
@@ -52,6 +55,9 @@ LibraryWindow::~LibraryWindow() {
     // Ensure the indexing thread is stopped if it wasn't already
     if (indexingThread && indexingThread->isRunning()) {
         qDebug() << "Waiting for indexingThread to finish in destructor";
+        indexingWorker->stop();
+        indexingThread->requestInterruption();
+        indexingThread->quit();
         indexingThread->wait();
         qDebug() << "indexingThread finished in destructor";
     }
@@ -68,12 +74,14 @@ LibraryWindow::~LibraryWindow() {
         indexingThread = nullptr;
         qDebug() << "indexingThread deleted in destructor";
     }
+
+
 }
 
 
 void LibraryWindow::loadFromLibrary(Library* _library) {
     library = _library;
-    setWindowTitle(library->name() + QString(" Library"));
+    //setWindowTitle(library->name() + QString(" Library"));
     ui.currentLibrary->setText(library->name());
 
     // Load models from the library
@@ -91,6 +99,7 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
     selectedModelsProxyModel->setFilterFixedString("1"); // Show selected models
 
     startIndexing();
+
 }
 
 void LibraryWindow::startIndexing() {
@@ -104,6 +113,12 @@ void LibraryWindow::startIndexing() {
     // Connect signals and slots
     connect(indexingThread, &QThread::started, indexingWorker, &IndexingWorker::process);
     connect(indexingWorker, &IndexingWorker::modelProcessed, this, &LibraryWindow::onModelProcessed);
+    connect(indexingWorker, &IndexingWorker::progressUpdated, this, &LibraryWindow::onProgressUpdated);
+    //connect(indexingThread, &QThread::finished, indexingWorker, &QObject::deleteLater);
+
+    connect(indexingThread,SIGNAL(finished()),indexingThread,SLOT(deleteLater()));
+
+
 
     // Start the indexing thread
     indexingThread->start();
@@ -113,6 +128,11 @@ void LibraryWindow::startIndexing() {
 
 void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
     this->mainWindow = mainWindow;
+    reload = new QAction(tr("&Reload"),this);
+
+    this->mainWindow->editMenu->addAction(reload);
+    connect(reload,&QAction::triggered,this,&LibraryWindow::reloadLibrary);
+
 }
 
 void LibraryWindow::setupModelsAndViews() {
@@ -168,6 +188,7 @@ void LibraryWindow::setupConnections() {
     // connect(modelCardDelegate, &ModelCardDelegate::settingsClicked, this, &LibraryWindow::onSettingsClicked);
     // connect(ui.backButton, &QPushButton::clicked, this, &LibraryWindow::onBackButtonClicked);
 
+
     connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
             this, &LibraryWindow::onGeometryBrowserClicked);
 
@@ -218,42 +239,15 @@ void LibraryWindow::onSelectedModelClicked(const QModelIndex& index) {
 
 
 void LibraryWindow::onGenerateReportButtonClicked() {
-    std::vector<ModelData> selectedModels = model->getSelectedModels();
-
-    if (selectedModels.empty()) {
-        QMessageBox::information(this, "Report", "No models selected for the report.");
+    if (model->getSelectedModels().empty()) {
+        QMessageBox::information(this, "Report",
+                                 "No models selected for the report.");
         return;
     }
 
-    // Iterate through each selected model
-    for (const auto& modelData : selectedModels) {
-        std::cout << "==============================\n";
-        model->printModel(modelData);
-
-        // retrieve associated objects for the current model
-        std::vector<ObjectData> associatedObjects = model->getObjectsForModel(modelData.id);
-
-        if (associatedObjects.empty()) {
-            std::cout << "No associated objects for this model.\n";
-        } else {
-            std::cout << "Associated Objects (" << associatedObjects.size() << "):\n";
-
-            for (const auto& obj : associatedObjects) {
-                std::cout << "  -------------------------\n";
-                std::cout << "  Object ID: " << obj.object_id << "\n";
-                std::cout << "  Name: " << obj.name << "\n";
-                std::cout << "  Parent Object ID: "
-                          << (obj.parent_object_id != -1 ? std::to_string(obj.parent_object_id) : "None")
-                          << "\n";
-                std::cout << "  Is Selected: " << (obj.is_selected ? "Yes" : "No") << "\n";
-            }
-            std::cout << "  -------------------------\n";
-        }
-
-        std::cout << "==============================\n\n";
-    }
-
-    QMessageBox::information(this, "Report", "Report has been logged to the console.");
+    ReportGenerationWindow* window =
+        new ReportGenerationWindow(nullptr, model, library);
+    window->show();
 }
 
 
@@ -269,6 +263,7 @@ void LibraryWindow::onModelProcessed(int modelId) {
     availableModelsProxyModel->invalidate();
     selectedModelsProxyModel->invalidate();
 }
+
 void LibraryWindow::on_backButton_clicked() {
     qDebug() << "Back button clicked";
 
@@ -286,7 +281,10 @@ void LibraryWindow::on_backButton_clicked() {
 
     // Show the MainWindow
     if (mainWindow) {
-        mainWindow->show();
+        this->mainWindow->editMenu->removeAction(reload);
+        disconnect(reload,0,0,0);
+        this->mainWindow->returnCentralWidget();
+        //mainWindow->show();
         qDebug() << "MainWindow shown";
     } else {
         qDebug() << "mainWindow is null";
@@ -294,6 +292,38 @@ void LibraryWindow::on_backButton_clicked() {
 
 }
 
+
+void LibraryWindow::reloadLibrary() {
+
+    namespace fs = std::filesystem;
+    std::string path = library->fullPath + "/.cadventory/metadata.db";
+    fs::path filePath(path);
+
+    qDebug() << QString::fromStdString(filePath.string());
+
+    // Check if the file exists
+    if (fs::exists(filePath)) {
+        // Try to remove the file
+        try {
+            if (fs::remove(filePath)) {
+                std::cout << "File 'metadata.db' successfully deleted." << std::endl;
+
+
+
+
+
+                //loadFromLibrary(library);
+            } else {
+                std::cout << "Failed to delete 'metadata.db'." << std::endl;
+            }
+        } catch (const fs::filesystem_error& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+        }
+    } else {
+        std::cout << "File 'metadata.db' does not exist." << std::endl;
+}
+
+}
 void LibraryWindow::onModelViewClicked(int modelId) {
     qDebug() << "Model view clicked for model ID:" << modelId;
     ModelView* modelView = new ModelView(modelId, model, this);
@@ -304,7 +334,18 @@ void LibraryWindow::onModelViewClicked(int modelId) {
 void LibraryWindow::onGeometryBrowserClicked(int modelId) {
     qDebug() << "Geometry browser clicked for model ID:" << modelId;
 
-    // Create and show the geometry browser dialog
     GeometryBrowserDialog* dialog = new GeometryBrowserDialog(modelId, model, this);
     dialog->exec();
+
+}
+
+void LibraryWindow::onProgressUpdated(const QString& currentObject, int percentage) {
+    ui.progressBar->setValue(percentage);
+
+    if (percentage >= 100) {
+        ui.statusLabel->setText("Processing complete");
+        ui.progressBar->setVisible(false);
+    } else {
+        ui.statusLabel->setText(QString("Processing: %1").arg(currentObject));
+    }
 }

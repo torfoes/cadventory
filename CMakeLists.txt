@@ -1,5 +1,3 @@
-# CMakeLists.txt
-
 cmake_minimum_required(VERSION 3.25)
 
 project(CADventory VERSION 0.1.0 LANGUAGES CXX)
@@ -20,18 +18,20 @@ endif()
 # Support SQLite built from external or against system
 if (DEFINED CADVENTORY_USE_SQLITE)
   find_package(SQLite3 REQUIRED)
-  set(SQLITE_LIBRARY sqlite3)
+  set(SQLITE_LIBRARY SQLite::SQLite3)
 else()
   include(cmake/sqlite.cmake)
   set(SQLITE_LIBRARY sqlite_static)
 endif()
 
-# Import the static library that was built
-add_library(sqlite_static IMPORTED STATIC GLOBAL)
-add_dependencies(sqlite_static sqlite)
-set_target_properties(sqlite_static PROPERTIES
-  IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
-)
+# Import the static library that was built (assuming sqlite.cmake defines sqlite_STATIC_LIBRARIES and sqlite_INCLUDE_DIR)
+if(NOT DEFINED CADVENTORY_USE_SQLITE)
+  add_library(sqlite_static IMPORTED STATIC GLOBAL)
+  add_dependencies(sqlite_static sqlite)
+  set_target_properties(sqlite_static PROPERTIES
+    IMPORTED_LOCATION "${sqlite_STATIC_LIBRARIES}"
+  )
+endif()
 
 # All warnings for compliance
 if (MSVC)
@@ -80,10 +80,24 @@ set(SRCS
   src/LibraryWindow.cpp
   src/ProcessGFiles.cpp
   src/IndexingWorker.cpp
-  src/librarywindow.ui
+  src/ModelCardDelegate.cpp
+  src/ModelFilterProxyModel.cpp
+  src/GeometryBrowserDialog.cpp
+  src/ReportGenerationWindow.cpp
   src/main.cpp
+  src/ReportGeneratorWorker.cpp
+  src/SettingWindow.cpp
+)
+
+set(UIS
+  src/librarywindow.ui
   src/mainwindow.ui
   src/splash.ui
+  src/reportgenerationwindow.ui
+  src/SettingWindow.ui
+)
+
+set(HEADERS
   src/LibraryWindow.h
   src/MainWindow.h
   src/Library.h
@@ -91,7 +105,6 @@ set(SRCS
   src/ProcessGFiles.h
   src/IndexingWorker.h
   src/ModelCardDelegate.h
-  src/ModelCardDelegate.cpp
   src/ModelFilterProxyModel.h
   src/ModelFilterProxyModel.cpp
   src/modelview.ui
@@ -114,9 +127,28 @@ qt_add_executable(cadventory WIN32 ${SRCS}
 
 # Note dependencies
 add_dependencies(cadventory sqlite_static)
+  src/GeometryBrowserDialog.h
+  src/ReportGenerationWindow.h
+  src/ReportGeneratorWorker.h
+  src/SettingWindow.h
+)
+
+# qt_add_executable automatically handles AUTOUIC, AUTOMOC, AUTORCC
+qt_add_executable(cadventory WIN32
+  ${SRCS}
+  ${UIS}
+  ${HEADERS}
+)
+
+# Note dependencies and include directories
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sqlite/install/include)
-target_link_libraries(cadventory PRIVATE ${LIBS} ${SQLITE_LIBRARY})
+if (DEFINED CADVENTORY_USE_SQLITE)
+  target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui ${SQLITE_LIBRARY})
+else()
+  target_include_directories(cadventory PRIVATE ${sqlite_INCLUDE_DIR})
+  add_dependencies(cadventory sqlite_static)
+  target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui sqlite_static)
+endif()
 
 # Deployment on Windows needs DLLs copied
 install(TARGETS cadventory
@@ -135,7 +167,7 @@ install(FILES doc/CADventory.docx
 if(WIN32)
   # Function to copy Qt DLLs for a given target
   function(copy_qt_dlls target)
-    foreach(qt_module IN ITEMS ${LIBS})
+    foreach(qt_module IN ITEMS Qt6::Core Qt6::Widgets Qt6::Gui)
       if(CMAKE_BUILD_TYPE MATCHES "Debug")
         get_target_property(lib_location ${qt_module} IMPORTED_LOCATION_DEBUG)
       else()

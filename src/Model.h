@@ -20,7 +20,8 @@ struct ModelData {
   std::string file_path;
   std::string library_name;
   std::vector<std::string> tags;
-  bool isSelected;
+  bool is_selected;
+    bool is_processed;
 };
 
 // Declare ModelData as a Qt metatype
@@ -66,11 +67,13 @@ class Model : public QAbstractListModel {
                int role = Qt::EditRole) override;
   Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-  // CRUD operations for models
-  bool insertModel(int id, const ModelData& modelData);
-  bool updateModel(int id, const ModelData& modelData);
-  bool deleteModel(int id);
-  bool modelExists(int id);
+    // CRUD operations for models
+    bool insertModel(int id, const ModelData& modelData);
+    bool updateModel(int id, const ModelData& modelData);
+    bool deleteModel(int id);
+    bool modelExists(int id);
+    bool deleteTables();
+    void resetDatabase();
 
   // Getters
   ModelData getModelById(int id);
@@ -99,6 +102,11 @@ class Model : public QAbstractListModel {
 
   // Retrieve selected objects for a given model ID
   std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
+
+    void beginTransaction();
+    void commitTransaction();
+    bool updateObjectParentId(int object_id, int parent_object_id);
+
 
   // Tag operations
   bool addTagToModel(int modelId, const std::string& tagName);
