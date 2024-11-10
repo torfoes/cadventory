@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QDebug>
+#include <QFileInfo>
 
 FileSystemModelWithCheckboxes::FileSystemModelWithCheckboxes(Model* model, const QString& rootPath, QObject* parent)
     : QFileSystemModel(parent), model(model), rootPath(QDir::cleanPath(rootPath))
@@ -9,10 +10,8 @@ FileSystemModelWithCheckboxes::FileSystemModelWithCheckboxes(Model* model, const
     // Set filters to display directories and files
     setFilter(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
 
-    // Connect the directoryLoaded signal to initializeCheckStates slot
     connect(this, &QFileSystemModel::directoryLoaded, this, &FileSystemModelWithCheckboxes::onDirectoryLoaded);
 
-    // Set the root path and store the root index
     rootIndex = setRootPath(this->rootPath);
 }
 
@@ -22,17 +21,12 @@ FileSystemModelWithCheckboxes::~FileSystemModelWithCheckboxes()
 
 void FileSystemModelWithCheckboxes::initializeCheckStates(const QModelIndex& parentIndex)
 {
-    qDebug() << "initializeCheckStates";
-
     int rowCount = this->rowCount(parentIndex);
-    qDebug() << rowCount;
 
     for (int i = 0; i < rowCount; ++i)
     {
         QModelIndex index = this->index(i, 0, parentIndex);
         QString path = filePath(index);
-
-        qDebug() << "Processing path:" << path;
 
         if (isDir(index))
         {
@@ -41,33 +35,24 @@ void FileSystemModelWithCheckboxes::initializeCheckStates(const QModelIndex& par
         }
         else
         {
-            // For files (e.g., .g files)
-            if (path.endsWith(".g", Qt::CaseInsensitive))
+            QFileInfo fileInfo = this->fileInfo(index);
+            if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
             {
-                qDebug() << "Found .g file:" << path;
-
                 std::string filePathStd = QDir::cleanPath(path).toStdString();
                 ModelData modelData = model->getModelByFilePath(filePathStd);
-
-                qDebug() << "getModelByFilePath returned id:" << modelData.id;
 
                 if (modelData.id == 0)
                 {
                     // Model not found in database, create a new one
-                    modelData.short_name = QFileInfo(path).fileName().toStdString();
+                    modelData.short_name = fileInfo.fileName().toStdString();
                     modelData.file_path = filePathStd;
                     modelData.is_included = true; // Mark as included
                     modelData.is_processed = false; // Not processed
 
-                    qDebug() << "Inserting new model for file:" << path;
-
-                    bool insertSuccess = model->insertModel(modelData);
-
-                    qDebug() << "Insert model success:" << insertSuccess;
+                    model->insertModel(modelData);
 
                     // Fetch the inserted model to get the assigned id
                     modelData = model->getModelByFilePath(filePathStd);
-                    qDebug() << "After insertion, model id is:" << modelData.id;
                 }
 
                 // Update checkStates based on is_included
@@ -76,10 +61,6 @@ void FileSystemModelWithCheckboxes::initializeCheckStates(const QModelIndex& par
                     QMutexLocker locker(&m_checkStatesMutex);
                     m_checkStates[path] = state;
                 }
-            }
-            else
-            {
-                qDebug() << "Skipping non-.g file:" << path;
             }
         }
     }
@@ -90,40 +71,78 @@ QVariant FileSystemModelWithCheckboxes::data(const QModelIndex& index, int role)
     if (role == Qt::CheckStateRole && index.column() == 0)
     {
         QString path = filePath(index);
+        QFileInfo fileInfo = this->fileInfo(index);
 
-        // For directories, determine check state based on children
+        // For directories, determine check state based on .g files only
         if (isDir(index))
         {
-            // Return a tri-state checkbox
             int checkedCount = 0;
             int uncheckedCount = 0;
+            int gFileCount = 0;
 
             int rowCount = this->rowCount(index);
             for (int i = 0; i < rowCount; ++i)
             {
                 QModelIndex childIndex = this->index(i, 0, index);
-                QVariant childData = data(childIndex, Qt::CheckStateRole);
-                Qt::CheckState childState = static_cast<Qt::CheckState>(childData.toInt());
-                if (childState == Qt::Checked)
-                    ++checkedCount;
-                else if (childState == Qt::Unchecked)
-                    ++uncheckedCount;
+                QFileInfo childFileInfo = this->fileInfo(childIndex);
+
+                if (childFileInfo.isDir())
+                {
+                    QVariant childData = data(childIndex, Qt::CheckStateRole);
+                    if (childData.isValid())
+                    {
+                        Qt::CheckState childState = static_cast<Qt::CheckState>(childData.toInt());
+                        if (childState == Qt::Checked)
+                            ++checkedCount;
+                        else if (childState == Qt::Unchecked)
+                            ++uncheckedCount;
+                        else
+                        {
+                            ++checkedCount; // Partially checked counts as both
+                            ++uncheckedCount;
+                        }
+                        ++gFileCount;
+                    }
+                }
+                else if (childFileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
+                {
+                    QMutexLocker locker(&m_checkStatesMutex);
+                    Qt::CheckState childState = Qt::Unchecked;
+                    QString childPath = childFileInfo.absoluteFilePath();
+                    if (m_checkStates.contains(childPath))
+                        childState = m_checkStates[childPath];
+
+                    if (childState == Qt::Checked)
+                        ++checkedCount;
+                    else
+                        ++uncheckedCount;
+
+                    ++gFileCount;
+                }
             }
 
-            if (checkedCount == rowCount)
+            if (gFileCount == 0)
+                return QVariant(); // No .g files or subdirectories with .g files
+
+            if (checkedCount == gFileCount)
                 return Qt::Checked;
-            else if (uncheckedCount == rowCount)
+            else if (uncheckedCount == gFileCount)
                 return Qt::Unchecked;
             else
                 return Qt::PartiallyChecked;
         }
-        else
+        else if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
         {
             QMutexLocker locker(&m_checkStatesMutex);
             if (m_checkStates.contains(path))
                 return m_checkStates[path];
             else
                 return Qt::Unchecked;
+        }
+        else
+        {
+            // For non-.g files, return no checkbox
+            return QVariant();
         }
     }
 
@@ -137,13 +156,27 @@ bool FileSystemModelWithCheckboxes::setData(const QModelIndex& index, const QVar
         QString path = filePath(index);
         Qt::CheckState state = static_cast<Qt::CheckState>(value.toInt());
         bool included = (state == Qt::Checked);
+        QFileInfo fileInfo = this->fileInfo(index);
 
         if (isDir(index))
         {
-            // Update all children
+            // Update all .g files and subdirectories recursively
             updateChildren(index, state);
+
+            // Update this folder's state
+            {
+                QMutexLocker locker(&m_checkStatesMutex);
+                m_checkStates[path] = state;
+            }
+
+            emit dataChanged(index, index, {Qt::CheckStateRole});
+
+            // Update parent check state
+            updateParent(index);
+
+            return true;
         }
-        else
+        else if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
         {
             std::string filePathStd = path.toStdString();
             ModelData modelData = model->getModelByFilePath(filePathStd);
@@ -156,7 +189,7 @@ bool FileSystemModelWithCheckboxes::setData(const QModelIndex& index, const QVar
             else if (included)
             {
                 // Model not found, create a new one
-                modelData.short_name = QFileInfo(path).fileName().toStdString();
+                modelData.short_name = fileInfo.fileName().toStdString();
                 modelData.file_path = filePathStd;
                 modelData.is_included = true;
                 modelData.is_processed = false;
@@ -173,12 +206,12 @@ bool FileSystemModelWithCheckboxes::setData(const QModelIndex& index, const QVar
 
             emit dataChanged(index, index, {Qt::CheckStateRole});
             emit inclusionChanged(index, included);
+
+            // Update parent check state
+            updateParent(index);
+
+            return true;
         }
-
-        // Update parent check state
-        updateParent(index);
-
-        return true;
     }
 
     return QFileSystemModel::setData(index, value, role);
@@ -186,7 +219,26 @@ bool FileSystemModelWithCheckboxes::setData(const QModelIndex& index, const QVar
 
 Qt::ItemFlags FileSystemModelWithCheckboxes::flags(const QModelIndex& index) const
 {
-    return QFileSystemModel::flags(index) | Qt::ItemIsUserCheckable;
+    Qt::ItemFlags defaultFlags = QFileSystemModel::flags(index);
+    QFileInfo fileInfo = this->fileInfo(index);
+
+    if (index.column() == 0)
+    {
+        if (fileInfo.isDir())
+        {
+            // Directory: show checkbox if it contains .g files or subdirectories with .g files
+            QVariant checkStateData = data(index, Qt::CheckStateRole);
+            if (checkStateData.isValid())
+                return defaultFlags | Qt::ItemIsUserCheckable;
+        }
+        else if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
+        {
+            // .g file: show checkbox
+            return defaultFlags | Qt::ItemIsUserCheckable;
+        }
+    }
+
+    return defaultFlags;
 }
 
 void FileSystemModelWithCheckboxes::updateChildren(const QModelIndex& index, Qt::CheckState state)
@@ -196,45 +248,51 @@ void FileSystemModelWithCheckboxes::updateChildren(const QModelIndex& index, Qt:
     {
         QModelIndex childIndex = this->index(i, 0, index);
         QString path = filePath(childIndex);
+        QFileInfo fileInfo = this->fileInfo(childIndex);
 
-        if (isDir(childIndex))
+        if (fileInfo.isDir())
         {
+            // Recursively update subdirectories
             updateChildren(childIndex, state);
-        }
-        else
-        {
-            if (path.endsWith(".g", Qt::CaseInsensitive))
+
             {
-                bool included = (state == Qt::Checked);
-                std::string filePathStd = path.toStdString();
-                ModelData modelData = model->getModelByFilePath(filePathStd);
-
-                if (modelData.id != 0)
-                {
-                    modelData.is_included = included;
-                    model->updateModel(modelData.id, modelData);
-                }
-                else if (included)
-                {
-                    // Model not found, create a new one
-                    modelData.short_name = QFileInfo(path).fileName().toStdString();
-                    modelData.file_path = filePathStd;
-                    modelData.is_included = true;
-                    modelData.is_processed = false;
-                    model->insertModel(modelData);
-
-                    // Fetch the inserted model to get the assigned id
-                    modelData = model->getModelByFilePath(filePathStd);
-                }
-
-                {
-                    QMutexLocker locker(&m_checkStatesMutex);
-                    m_checkStates[path] = state;
-                }
-
-                emit dataChanged(childIndex, childIndex, {Qt::CheckStateRole});
-                emit inclusionChanged(childIndex, included);
+                QMutexLocker locker(&m_checkStatesMutex);
+                m_checkStates[path] = state;
             }
+
+            emit dataChanged(childIndex, childIndex, {Qt::CheckStateRole});
+        }
+        else if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
+        {
+            bool included = (state == Qt::Checked);
+            std::string filePathStd = path.toStdString();
+            ModelData modelData = model->getModelByFilePath(filePathStd);
+
+            if (modelData.id != 0)
+            {
+                modelData.is_included = included;
+                model->updateModel(modelData.id, modelData);
+            }
+            else if (included)
+            {
+                // Model not found, create a new one
+                modelData.short_name = fileInfo.fileName().toStdString();
+                modelData.file_path = filePathStd;
+                modelData.is_included = true;
+                modelData.is_processed = false;
+                model->insertModel(modelData);
+
+                // Fetch the inserted model to get the assigned id
+                modelData = model->getModelByFilePath(filePathStd);
+            }
+
+            {
+                QMutexLocker locker(&m_checkStatesMutex);
+                m_checkStates[path] = state;
+            }
+
+            emit dataChanged(childIndex, childIndex, {Qt::CheckStateRole});
+            emit inclusionChanged(childIndex, included);
         }
     }
 }
@@ -248,32 +306,61 @@ void FileSystemModelWithCheckboxes::updateParent(const QModelIndex& index)
     if (!parentIndex.isValid())
         return;
 
-    int rowCount = this->rowCount(parentIndex);
     int checkedCount = 0;
     int uncheckedCount = 0;
+    int gFileCount = 0;
 
+    int rowCount = this->rowCount(parentIndex);
     for (int i = 0; i < rowCount; ++i)
     {
         QModelIndex siblingIndex = this->index(i, 0, parentIndex);
-        QVariant siblingData = data(siblingIndex, Qt::CheckStateRole);
-        Qt::CheckState siblingState = static_cast<Qt::CheckState>(siblingData.toInt());
-        if (siblingState == Qt::Checked)
-            ++checkedCount;
-        else if (siblingState == Qt::Unchecked)
-            ++uncheckedCount;
+        QFileInfo fileInfo = this->fileInfo(siblingIndex);
+
+        if (fileInfo.isDir())
+        {
+            QVariant siblingData = data(siblingIndex, Qt::CheckStateRole);
+            if (siblingData.isValid())
+            {
+                Qt::CheckState siblingState = static_cast<Qt::CheckState>(siblingData.toInt());
+                if (siblingState == Qt::Checked)
+                    ++checkedCount;
+                else if (siblingState == Qt::Unchecked)
+                    ++uncheckedCount;
+                else
+                {
+                    ++checkedCount;
+                    ++uncheckedCount;
+                }
+                ++gFileCount;
+            }
+        }
+        else if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
+        {
+            QVariant siblingData = data(siblingIndex, Qt::CheckStateRole);
+            Qt::CheckState siblingState = static_cast<Qt::CheckState>(siblingData.toInt());
+            if (siblingState == Qt::Checked)
+                ++checkedCount;
+            else if (siblingState == Qt::Unchecked)
+                ++uncheckedCount;
+            ++gFileCount;
+        }
     }
 
+    if (gFileCount == 0)
+        return;
+
     Qt::CheckState parentState;
-    if (checkedCount == rowCount)
+    if (checkedCount == gFileCount)
         parentState = Qt::Checked;
-    else if (uncheckedCount == rowCount)
+    else if (uncheckedCount == gFileCount)
         parentState = Qt::Unchecked;
     else
         parentState = Qt::PartiallyChecked;
 
+    QString parentPath = filePath(parentIndex);
     {
         QMutexLocker locker(&m_checkStatesMutex);
-        m_checkStates[filePath(parentIndex)] = parentState;
+        m_checkStates[parentPath] = parentState;
     }
 
     emit dataChanged(parentIndex, parentIndex, {Qt::CheckStateRole});
@@ -284,7 +371,6 @@ void FileSystemModelWithCheckboxes::updateParent(const QModelIndex& index)
 
 void FileSystemModelWithCheckboxes::refresh()
 {
-    // Clear the check states
     {
         QMutexLocker locker(&m_checkStatesMutex);
         m_checkStates.clear();
@@ -292,9 +378,6 @@ void FileSystemModelWithCheckboxes::refresh()
 
     // Reset the model
     beginResetModel();
-
-    // Optionally, reset internal data structures or caches
-    // For example, you might clear any custom data you've stored
 
     // Reinitialize the model
     setRootPath(rootPath);
@@ -308,7 +391,6 @@ void FileSystemModelWithCheckboxes::refresh()
 
 void FileSystemModelWithCheckboxes::onDirectoryLoaded(const QString& path)
 {
-    qDebug() << "Directory loaded in FileSystemModelWithCheckboxes:" << path;
     QModelIndex index = this->index(path);
     initializeCheckStates(index);
 }
