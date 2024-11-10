@@ -294,7 +294,7 @@ void LibraryWindow::reloadLibrary() {
     std::string path = library->fullPath + "/.cadventory/metadata.db";
     fs::path filePath(path);
 
-    qDebug() << filePath.string();
+    qDebug() << QString::fromStdString(filePath.string());
 
     // Check if the file exists
     if (fs::exists(filePath)) {
