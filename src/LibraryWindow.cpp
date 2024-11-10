@@ -213,7 +213,7 @@ void LibraryWindow::setupModelsAndViews() {
     // Connect signals
     connect(fileSystemModel, &QFileSystemModel::directoryLoaded, this, &LibraryWindow::onDirectoryLoaded);
     connect(ui.fileSystemTreeView, &QTreeView::clicked, this, &LibraryWindow::onFileSystemItemClicked);
-    // connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
+    connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
 }
 
 
@@ -240,7 +240,7 @@ void LibraryWindow::setupConnections() {
 
     // Connect filesystem view signals
     connect(ui.fileSystemTreeView, &QTreeView::clicked, this, &LibraryWindow::onFileSystemItemClicked);
-    // connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
+    connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
 
 }
 
@@ -352,10 +352,6 @@ void LibraryWindow::reloadLibrary() {
         try {
             if (fs::remove(filePath)) {
                 std::cout << "File 'metadata.db' successfully deleted." << std::endl;
-
-
-
-
 
                 //loadFromLibrary(library);
             } else {
@@ -473,7 +469,6 @@ void LibraryWindow::onDirectoryLoaded(const QString& path) {
     qDebug() << "Directory loaded:" << path;
     fileSystemProxyModel->invalidate();
     ui.fileSystemTreeView->expandAll();
-
 }
 
 

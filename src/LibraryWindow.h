@@ -18,7 +18,6 @@
 #include "FileSystemModelWithCheckboxes.h"
 #include "FileSystemFilterProxyModel.h"
 
-
 class MainWindow;
 
 class LibraryWindow : public QWidget {
@@ -33,7 +32,6 @@ public:
     void setMainWindow(MainWindow* mainWindow);
     MainWindow* mainWindow;
     QAction *reload;
-
 
 private slots:
     void onSearchTextChanged(const QString& text);
@@ -50,7 +48,7 @@ private slots:
     void onModelProcessed(int modelId);
     void onProgressUpdated(const QString& currentObject, int percentage);
 
-    // filesystem view slots
+    // Filesystem view slots
     void onFileSystemItemClicked(const QModelIndex& index);
     void onInclusionChanged(const QModelIndex& index, bool included);
     void onIncludeCheckBoxStateChanged(int state);
@@ -58,18 +56,13 @@ private slots:
     void onIndexingComplete();
     void onDirectoryLoaded(const QString& path);
 
-
-
-
 private:
     void setupModelsAndViews();
     void setupConnections();
     void includeAllModels();
 
-
     Ui::LibraryWindow ui;
     Library* library;
-
 
     Model* model;
 
@@ -84,10 +77,9 @@ private:
     QThread* indexingThread;
     IndexingWorker* indexingWorker;
 
-    QFileSystemModel* fileSystemModel;
+    // Update: Change type to FileSystemModelWithCheckboxes*
+    FileSystemModelWithCheckboxes* fileSystemModel;
     FileSystemFilterProxyModel* fileSystemProxyModel;
-
-
 };
 
 #endif // LIBRARYWINDOW_H
