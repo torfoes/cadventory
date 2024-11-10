@@ -30,8 +30,6 @@ public:
     void loadFromLibrary(Library* _library);
     void reloadLibrary();
     void setMainWindow(MainWindow* mainWindow);
-    MainWindow* mainWindow;
-    QAction *reload;
 
 private slots:
     void onSearchTextChanged(const QString& text);
@@ -51,18 +49,21 @@ private slots:
     // Filesystem view slots
     void onFileSystemItemClicked(const QModelIndex& index);
     void onInclusionChanged(const QModelIndex& index, bool included);
-    void onIncludeCheckBoxStateChanged(int state);
     void onReindexButtonClicked();
     void onIndexingComplete();
     void onDirectoryLoaded(const QString& path);
 
+signals:
+    void startProcessingFile(const QString& filePath);
+
 private:
     void setupModelsAndViews();
     void setupConnections();
-    void includeAllModels();
 
     Ui::LibraryWindow ui;
     Library* library;
+    MainWindow* mainWindow;
+    QAction* reload;
 
     Model* model;
 
@@ -77,7 +78,6 @@ private:
     QThread* indexingThread;
     IndexingWorker* indexingWorker;
 
-    // Update: Change type to FileSystemModelWithCheckboxes*
     FileSystemModelWithCheckboxes* fileSystemModel;
     FileSystemFilterProxyModel* fileSystemProxyModel;
 };
