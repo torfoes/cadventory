@@ -404,186 +404,230 @@
 //     return {true, ""};
 // }
 
-#include "raytrace.h"  // BRL-CAD ray tracing API
-#include "wdb.h"       // BRL-CAD database API
-
-namespace fs = std::filesystem;
-
-ProcessGFiles::ProcessGFiles(Model* model) : model(model) {}
-
-void ProcessGFiles::extractTitle(ModelData& modelData, const std::string& file_path) {
-    struct db_i *dbip = db_open(file_path.c_str(), DB_OPEN_READONLY);
-    if (dbip == DBI_NULL) {
-        std::cerr << "Failed to open database: " << file_path << "\n";
-        modelData.title = "Unknown";
-        return;
-    }
-
-    // Check for title in the database
-    if (dbip->dbi_title != nullptr && strlen(dbip->dbi_title) > 0) {
-        modelData.title = dbip->dbi_title;
-    } else {
-        modelData.title = "Unknown";
-    }
-    db_close(dbip);
-    std::cout << "Title extracted: " << modelData.title << "\n";
-}
 
 
-std::vector<ObjectData> ProcessGFiles::extractObjects(
-    const ModelData& modelData,
-    const std::string& file_path,
-    std::map<std::string, std::string>& parentRelations) {
-
-    std::vector<ObjectData> objects;
-    struct db_i *dbip = db_open(file_path.c_str(), DB_OPEN_READONLY);
-    if (dbip == DBI_NULL) {
-        std::cerr << "Failed to open database: " << file_path << "\n";
-        return objects;
-    }
-
-    // Retrieve top-level objects using `db_walk_tree`
-    struct directory *dp;
-    FOR_ALL_DIRECTORY_START(dp, dbip) {
-        if (dp->d_flags & RT_DIR_COMB) {  // Filter for combinations only
-            ObjectData objectData;
-            objectData.model_id = modelData.id;
-            objectData.name = dp->d_namep;
-            objectData.parent_object_id = -1;
-            objectData.is_selected = false;
-
-            objects.push_back(objectData);
-            parentRelations[dp->d_namep] = "";  // Top-level objects have no parent
-        }
-    } FOR_ALL_DIRECTORY_END;
-
-    db_close(dbip);
-    return objects;
-}
-
-void ProcessGFiles::generateThumbnail(
-    ModelData& modelData,
-    const std::string& file_path,
-    const std::string& previews_folder,
-    const std::string& selected_object_name) {
-
-    struct rt_i *rtip = rt_dirbuild(file_path.c_str(), NULL, 0);
-    if (rtip == RTI_NULL) {
-        std::cerr << "Failed to build directory for ray tracing: " << file_path << "\n";
-        return;
-    }
-
-    if (selected_object_name.empty()) {
-        std::cerr << "No object selected for raytracing in file: " << file_path << "\n";
-        rt_clean(rtip);
-        return;
-    }
-
-    // Load the object for raytracing
-    int id = rt_gettree(rtip, selected_object_name.c_str());
-    if (id < 0) {
-        std::cerr << "Failed to load object: " << selected_object_name << "\n";
-        rt_clean(rtip);
-        return;
-    }
-
-    struct application ap;
-    RT_APPLICATION_INIT(&ap);
-    ap.a_rt_i = rtip;
-    ap.a_onehit = 1;
-
-    VSET(ap.a_ray.r_pt, 0, 0, 0);
-    VSET(ap.a_ray.r_dir, 0, 0, -1);
-
-    int result = rt_shootray(&ap);
-    if (result < 0) {
-        std::cerr << "Raytrace failed for object: " << selected_object_name << "\n";
-    } else {
-        std::cout << "Raytrace successful for object: " << selected_object_name << "\n";
-    }
-
-    rt_clean(rtip);
-}
 
 
-void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
-    try {
-        QSettings settings;
-        bool previewFlag = settings.value("previewFlag", true).toBool();
 
-        std::string model_short_name = file_path.stem().string();
-        int modelId = model->hashModel(file_path.string());
 
-        ModelData existingModel = model->getModelById(modelId);
 
-        if (existingModel.id == modelId && existingModel.is_processed) {
-            std::cout << "Model already processed: " << model_short_name << "\n";
-            return;
-        }
 
-        // Prepare ModelData
-        ModelData modelData;
-        modelData.id = modelId;
-        modelData.short_name = model_short_name;
-        modelData.primary_file = file_path.filename().string();
-        modelData.file_path = file_path.string();
-        modelData.library_name = "";
-        modelData.is_selected = false;
 
-        // Extract title
-        extractTitle(modelData, file_path.string());
+// #include "raytrace.h"  // BRL-CAD ray tracing API
+// #include "wdb.h"       // BRL-CAD database API
 
-        // Extract objects
-        std::map<std::string, std::string> parentRelations;
-        std::vector<ObjectData> objects = extractObjects(modelData, file_path.string(), parentRelations);
+// namespace fs = std::filesystem;
 
-        // Determine selected object name
-        std::string selected_object_name;
-        for (const auto& obj : objects) {
-            if (obj.is_selected) {
-                selected_object_name = obj.name;
-                break;
-            }
-        }
+// ProcessGFiles::ProcessGFiles(Model* model) : model(model) {}
 
-        // Generate thumbnail if enabled
-        if (previewFlag) {
-            generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
-        }
+// // Improved title extraction
+// void ProcessGFiles::extractTitle(ModelData& modelData, const std::string& file_path) {
+//     struct db_i *dbip = db_open(file_path.c_str(), DB_OPEN_READONLY);
+//     if (dbip == DBI_NULL) {
+//         std::cerr << "Failed to open database: " << file_path << "\n";
+//         modelData.title = "Unknown";
+//         return;
+//     }
 
-        modelData.is_processed = true;
+//     if (dbip->dbi_title && strlen(dbip->dbi_title) > 0) {
+//         modelData.title = dbip->dbi_title;
+//     } else {
+//         modelData.title = "Untitled";  // Default title if none is set
+//     }
+//     db_close(dbip);
+//     std::cout << "Title extracted: " << modelData.title << "\n";
+// }
 
-        // Insert or update model and object data in the database
-        if (model->modelExists(modelId)) {
-            model->updateModel(modelId, modelData);
-        } else {
-            model->insertModel(modelId, modelData);
-        }
+// // Improved object extraction (tops and lt equivalent)
+// std::vector<ObjectData> ProcessGFiles::extractObjects(
+//     const ModelData& modelData,
+//     const std::string& file_path,
+//     std::map<std::string, std::string>& parentRelations) {
 
-        // Delete existing objects for the model and add new ones
-        model->deleteObjectsForModel(modelId);
-        std::map<std::string, int> objectNameToId;
+//     std::vector<ObjectData> objects;
+//     struct db_i *dbip = db_open(file_path.c_str(), DB_OPEN_READONLY);
+//     if (dbip == DBI_NULL) {
+//         std::cerr << "Failed to open database: " << file_path << "\n";
+//         return objects;
+//     }
 
-        model->beginTransaction();
-        for (auto& objData : objects) {
-            int objectId = model->insertObject(objData);
-            objectNameToId[objData.name] = objectId;
-        }
+//     struct directory *dp;
+//     std::queue<std::pair<std::string, int>> object_queue; // Object name and depth level
+//     std::set<std::string> processed_objects;
+//     const int max_depth = 2;
 
-        for (auto& objData : objects) {
-            std::string parentName = parentRelations[objData.name];
-            if (!parentName.empty()) {
-                int objectId = objectNameToId[objData.name];
-                int parentObjectId = objectNameToId[parentName];
-                model->updateObjectParentId(objectId, parentObjectId);
-            }
-        }
-        model->commitTransaction();
+//     // Top-level objects
+//     FOR_ALL_DIRECTORY_START(dp, dbip) {
+//         if (dp->d_flags & RT_DIR_COMB) {  // Only combinations
+//             ObjectData objectData;
+//             objectData.model_id = modelData.id;
+//             objectData.name = dp->d_namep;
+//             objectData.parent_object_id = -1;
+//             objectData.is_selected = false;
 
-    } catch (const std::exception& e) {
-        std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
-    }
-}
+//             objects.push_back(objectData);
+//             processed_objects.insert(dp->d_namep);
+//             object_queue.emplace(dp->d_namep, 1);
+//             parentRelations[dp->d_namep] = "";  // Top-level objects have no parent
+//         }
+//     } FOR_ALL_DIRECTORY_END;
+
+//     // Two-level traversal (similar to "lt")
+//     while (!object_queue.empty()) {
+//         auto [current_object, depth] = object_queue.front();
+//         object_queue.pop();
+//         if (depth >= max_depth) continue;
+
+//         struct directory *child_dp;
+//         struct db_full_path path;
+//         db_full_path_init(&path);
+        
+//         if (db_string_to_path(&path, dbip, current_object.c_str()) == 0) {
+//             db_free_full_path(&path);
+//             continue;
+//         }
+
+//         // Iterate through the path to find child objects
+//         for (int i = 1; i < path.fp_len; ++i) {
+//             child_dp = path.fp_names[i];
+//             if (processed_objects.count(child_dp->d_namep) == 0) {
+//                 ObjectData childData;
+//                 childData.model_id = modelData.id;
+//                 childData.name = child_dp->d_namep;
+//                 childData.parent_object_id = -1;
+//                 childData.is_selected = false;
+
+//                 objects.push_back(childData);
+//                 processed_objects.insert(child_dp->d_namep);
+//                 object_queue.emplace(child_dp->d_namep, depth + 1);
+//                 parentRelations[child_dp->d_namep] = current_object;
+//             }
+//         }
+//         db_free_full_path(&path);
+//     }
+
+//     db_close(dbip);
+//     return objects;
+// }
+
+// // Generate thumbnail using raytracing
+// void ProcessGFiles::generateThumbnail(
+//     ModelData& modelData,
+//     const std::string& file_path,
+//     const std::string& previews_folder,
+//     const std::string& selected_object_name) {
+
+//     struct rt_i *rtip = rt_dirbuild(file_path.c_str(), NULL, 0);
+//     if (rtip == RTI_NULL) {
+//         std::cerr << "Failed to build directory for ray tracing: " << file_path << "\n";
+//         return;
+//     }
+
+//     // Attempt to load the selected object
+//     if (selected_object_name.empty() || rt_gettree(rtip, selected_object_name.c_str()) < 0) {
+//         std::cerr << "Failed to load object for raytracing: " << selected_object_name << "\n";
+//         rt_clean(rtip);
+//         return;
+//     }
+
+//     struct application ap;
+//     RT_APPLICATION_INIT(&ap);
+//     ap.a_rt_i = rtip;
+//     ap.a_onehit = 1;
+//     VSET(ap.a_ray.r_pt, 0, 0, 10);   // Set origin point
+//     VSET(ap.a_ray.r_dir, 0, 0, -1);  // Set direction
+
+//     // Raytrace and capture results
+//     int result = rt_shootray(&ap);
+//     if (result < 0) {
+//         std::cerr << "Raytrace failed for object: " << selected_object_name << "\n";
+//     } else {
+//         std::cout << "Raytrace successful for object: " << selected_object_name << "\n";
+//         // Save or process image output here
+//     }
+
+//     rt_clean(rtip);
+// }
+
+// // Process a .g file for metadata and thumbnail generation
+// void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
+//     try {
+//         QSettings settings;
+//         bool previewFlag = settings.value("previewFlag", true).toBool();
+
+//         std::string model_short_name = file_path.stem().string();
+//         int modelId = model->hashModel(file_path.string());
+
+//         ModelData existingModel = model->getModelById(modelId);
+
+//         if (existingModel.id == modelId && existingModel.is_processed) {
+//             std::cout << "Model already processed: " << model_short_name << "\n";
+//             return;
+//         }
+
+//         // Prepare ModelData
+//         ModelData modelData;
+//         modelData.id = modelId;
+//         modelData.short_name = model_short_name;
+//         modelData.primary_file = file_path.filename().string();
+//         modelData.file_path = file_path.string();
+//         modelData.library_name = "";
+//         modelData.is_selected = false;
+
+//         // Extract title
+//         extractTitle(modelData, file_path.string());
+
+//         // Extract objects
+//         std::map<std::string, std::string> parentRelations;
+//         std::vector<ObjectData> objects = extractObjects(modelData, file_path.string(), parentRelations);
+
+//         // Determine selected object name
+//         std::string selected_object_name;
+//         for (const auto& obj : objects) {
+//             if (obj.is_selected) {
+//                 selected_object_name = obj.name;
+//                 break;
+//             }
+//         }
+
+//         // Generate thumbnail if enabled
+//         if (previewFlag) {
+//             generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+//         }
+
+//         modelData.is_processed = true;
+
+//         // Insert or update model and object data in the database
+//         if (model->modelExists(modelId)) {
+//             model->updateModel(modelId, modelData);
+//         } else {
+//             model->insertModel(modelId, modelData);
+//         }
+
+//         // Delete existing objects for the model and add new ones
+//         model->deleteObjectsForModel(modelId);
+//         std::map<std::string, int> objectNameToId;
+
+//         model->beginTransaction();
+//         for (auto& objData : objects) {
+//             int objectId = model->insertObject(objData);
+//             objectNameToId[objData.name] = objectId;
+//         }
+
+//         for (auto& objData : objects) {
+//             std::string parentName = parentRelations[objData.name];
+//             if (!parentName.empty()) {
+//                 int objectId = objectNameToId[objData.name];
+//                 int parentObjectId = objectNameToId[parentName];
+//                 model->updateObjectParentId(objectId, parentObjectId);
+//             }
+//         }
+//         model->commitTransaction();
+
+//     } catch (const std::exception& e) {
+//         std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
+//     }
+// }
 
 std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj) {
     // log the function entry and input parameters
@@ -663,4 +707,206 @@ std::tuple<std::string, std::string, int> ProcessGFiles::runCommand(const std::s
     int return_code = pclose(pipe);
 
     return {output, "", return_code};
+}
+
+
+
+
+
+
+#include "ProcessGFiles.h"
+#include "config.h"
+#include "raytrace.h"
+#include "wdb.h"
+#include "bu/app.h"
+#include <iostream>
+#include <vector>
+#include <map>
+#include <filesystem>
+#include <QSettings>
+
+namespace fs = std::filesystem;
+
+ProcessGFiles::ProcessGFiles(Model* model) : model(model) {
+    bu_setprogname("ProcessGFiles");
+}
+
+void ProcessGFiles::extractTitle(ModelData& modelData, const std::string& file_path) {
+    struct db_i *dbip = db_open(file_path.c_str(), DB_OPEN_READONLY);
+    if (dbip == DBI_NULL) {
+        std::cerr << "Failed to open database: " << file_path << "\n";
+        modelData.title = "Unknown";
+        return;
+    }
+
+    // Check if dbi_title is valid
+    modelData.title = dbip->dbi_title ? dbip->dbi_title : "Untitled";
+    db_close(dbip);
+    std::cout << "Title extracted: " << modelData.title << "\n";
+}
+
+std::vector<ObjectData> ProcessGFiles::extractObjects(
+    const ModelData& modelData,
+    const std::string& file_path,
+    std::map<std::string, std::string>& parentRelations) {
+
+    std::vector<ObjectData> objects;
+    struct db_i *dbip = db_open(file_path.c_str(), DB_OPEN_READONLY);
+    if (dbip == DBI_NULL) {
+        std::cerr << "Failed to open database: " << file_path << "\n";
+        return objects;
+    }
+
+    struct directory *dp;
+    struct directory **children = nullptr;
+    int *bool_ops = nullptr;
+    matp_t *mats = nullptr;
+
+    FOR_ALL_DIRECTORY_START(dp, dbip) {
+        if (dp->d_flags & RT_DIR_COMB) {
+            struct rt_db_internal intern;
+            if (rt_db_get_internal(&intern, dp, dbip, nullptr, &rt_uniresource) < 0) {
+                std::cerr << "Failed to get internal representation of object: " << dp->d_namep << "\n";
+                continue;
+            }
+
+            struct rt_comb_internal *comb = static_cast<struct rt_comb_internal *>(intern.idb_ptr);
+            int childCount = db_comb_children(dbip, comb, &children, &bool_ops, &mats);
+            if (childCount < 0) {
+                std::cerr << "Failed to retrieve children for object: " << dp->d_namep << "\n";
+                rt_db_free_internal(&intern);
+                continue;
+            }
+
+            for (int i = 0; i < childCount; ++i) {
+                struct directory *childDir = children[i];
+                if (childDir && !(childDir->d_flags & RT_DIR_REGION)) {
+                    ObjectData objectData;
+                    objectData.model_id = modelData.id;
+                    objectData.name = childDir->d_namep;
+                    objectData.parent_object_id = -1;
+                    objectData.is_selected = false;
+
+                    objects.push_back(objectData);
+                    parentRelations[childDir->d_namep] = dp->d_namep;
+                }
+            }
+
+            bu_free(children, "children array");
+            children = nullptr;
+            rt_db_free_internal(&intern);
+        }
+    } FOR_ALL_DIRECTORY_END;
+
+    db_close(dbip);
+    return objects;
+}
+
+void ProcessGFiles::generateThumbnail(
+    ModelData& modelData,
+    const std::string& file_path,
+    const std::string& previews_folder,
+    const std::string& selected_object_name) {
+
+    struct rt_i *rtip = rt_dirbuild(file_path.c_str(), nullptr, 0);
+    if (rtip == RTI_NULL) {
+        std::cerr << "Failed to build directory for ray tracing: " << file_path << "\n";
+        return;
+    }
+
+    // Attempt to load the selected object
+    if (selected_object_name.empty()) {
+        std::cerr << "No object selected for raytracing.\n";
+    } else if (rt_gettree(rtip, selected_object_name.c_str()) < 0) {
+        std::cerr << "Failed to load object for raytracing: " << selected_object_name << "\n";
+        rt_clean(rtip);
+        return;
+    } else {
+        std::cout << "Loaded object for raytracing: " << selected_object_name << "\n";
+    }
+
+    struct application ap;
+    RT_APPLICATION_INIT(&ap);
+    ap.a_rt_i = rtip;
+    ap.a_onehit = 1;
+    VSET(ap.a_ray.r_pt, 0, 0, 0);
+    VSET(ap.a_ray.r_dir, 0, 0, -1);
+
+    int result = rt_shootray(&ap);
+    if (result < 0) {
+        std::cerr << "Raytrace failed for object: " << selected_object_name << "\n";
+    } else {
+        std::cout << "Raytrace successful for object: " << selected_object_name << "\n";
+    }
+
+    rt_clean(rtip);
+}
+
+void ProcessGFiles::processGFile(const fs::path& file_path, const std::string& previews_folder) {
+    try {
+        QSettings settings;
+        bool previewFlag = settings.value("previewFlag", true).toBool();
+
+        std::string model_short_name = file_path.stem().string();
+        int modelId = model->hashModel(file_path.string());
+
+        ModelData existingModel = model->getModelById(modelId);
+        if (existingModel.id == modelId && existingModel.is_processed) {
+            std::cout << "Model already processed: " << model_short_name << "\n";
+            return;
+        }
+
+        ModelData modelData;
+        modelData.id = modelId;
+        modelData.short_name = model_short_name;
+        modelData.primary_file = file_path.filename().string();
+        modelData.file_path = file_path.string();
+        modelData.library_name = "";
+        modelData.is_selected = false;
+
+        extractTitle(modelData, file_path.string());
+        std::map<std::string, std::string> parentRelations;
+        std::vector<ObjectData> objects = extractObjects(modelData, file_path.string(), parentRelations);
+
+        std::string selected_object_name;
+        for (const auto& obj : objects) {
+            if (obj.is_selected) {
+                selected_object_name = obj.name;
+                break;
+            }
+        }
+
+        if (previewFlag && !selected_object_name.empty()) {
+            generateThumbnail(modelData, file_path.string(), previews_folder, selected_object_name);
+        } else {
+            std::cerr << "No valid object selected for raytracing or previews disabled.\n";
+        }
+
+        modelData.is_processed = true;
+        if (model->modelExists(modelId)) {
+            model->updateModel(modelId, modelData);
+        } else {
+            model->insertModel(modelId, modelData);
+        }
+
+        model->deleteObjectsForModel(modelId);
+        std::map<std::string, int> objectNameToId;
+        model->beginTransaction();
+        for (auto& objData : objects) {
+            int objectId = model->insertObject(objData);
+            objectNameToId[objData.name] = objectId;
+        }
+        for (auto& objData : objects) {
+            std::string parentName = parentRelations[objData.name];
+            if (!parentName.empty()) {
+                int objectId = objectNameToId[objData.name];
+                int parentObjectId = objectNameToId[parentName];
+                model->updateObjectParentId(objectId, parentObjectId);
+            }
+        }
+        model->commitTransaction();
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error processing file " << file_path << ": " << e.what() << "\n";
+    }
 }
