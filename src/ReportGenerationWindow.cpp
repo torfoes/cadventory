@@ -113,7 +113,7 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
       new QThread(this);  // Parent is ReportGenerationWindow
   reporterWorker =
       new ReportGeneratorWorker(model, output_directory, label, nullptr);
-  // // Move the worker to the thread
+  // Move the worker to the thread
   reporterWorker->moveToThread(generatingReportThread);
 
   // // Connect signals and slots
@@ -215,6 +215,7 @@ void ReportGenerationWindow::coverPage() {
   pdfWriter->setResolution(300);
   pdfWriter->setPageSize(QPageSize(QPageSize::A4));
   pdfWriter->setPageOrientation(QPageLayout::Landscape);
+  pdfWriter->setPageMargins(QMarginsF(0, 0, 0, 0));
   painter = new QPainter(pdfWriter);
 
   // fonts
@@ -383,6 +384,7 @@ void ReportGenerationWindow::tableOfContentsPage() {
   QFont table_font("Arial", 6);
   QFont title_font("Arial", 32);
   QFont classified_font("Arial", 24);
+  QFont page_num_font("Arial", 6);
 
   // x positions for each column
   int num_item_x = x_tb;
@@ -400,11 +402,15 @@ void ReportGenerationWindow::tableOfContentsPage() {
   // every 33 models new page
   int model_count = 0;
   int page_offset = 2 + (ceil(double(model->getSelectedModels().size()) / 33));
+  int page_number = 2;
   for (const auto& modelData : model->getSelectedModels()) {
     if (model_count % 33 == 0) {
-      row_y = y_tb;
       if (pdfWriter->newPage()) {
         // draw title
+        row_y = y_tb;
+        num_item_rect = QRect(num_item_x, row_y, 200, 100);
+        model_name_rect = QRect(model_name_x, row_y, 900, 100);
+        long_name_rect = QRect(long_name_x, row_y, 1808, 100);
         painter->setPen(QPen(Qt::black, 3));
         painter->setFont(title_font);
         painter->drawText(title_rect, Qt::AlignVCenter | Qt::AlignHCenter,
@@ -426,11 +432,17 @@ void ReportGenerationWindow::tableOfContentsPage() {
         painter->drawRect(long_name_rect);
 
         painter->drawText(num_item_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("#"));
+                          QString::fromStdString("Page"));
         painter->drawText(model_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("short name"));
+                          QString::fromStdString("Short Name"));
         painter->drawText(long_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString("title/long name"));
+                          QString::fromStdString("Title/Long Name"));
+
+        painter->setFont(QFont("Arial", 12));
+        painter->drawText(A4_MAXWIDTH_LS - 150, A4_MAXHEIGHT_LS - 75,
+                          QString::fromStdString(std::to_string(page_number)));
+        page_number++;
+
         row_y += 100;
       } else {
         std::cerr << "Error in creating new page" << std::endl;
@@ -450,6 +462,7 @@ void ReportGenerationWindow::tableOfContentsPage() {
         QString::fromStdString(std::to_string(model_count + page_offset)));
     painter->drawText(model_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
                       QString::fromStdString(modelData.short_name));
+
     painter->drawText(long_name_rect, Qt::AlignVCenter | Qt::AlignHCenter,
                       QString::fromStdString(modelData.title));
     row_y += 50;
@@ -502,6 +515,12 @@ void ReportGenerationWindow::onSuccessfulGistCall(
   // bool status_newpage = pdfWriter->newPage();
   if (pdfWriter->newPage()) {
     painter->drawPixmap(0, 0, gist);
+    int page_number = (*num_file) + 2 +
+                      (ceil(double(model->getSelectedModels().size()) / 33));
+    painter->setFont(QFont("Arial", 12));
+    painter->setPen(Qt::white);
+    painter->drawText(A4_MAXWIDTH_LS - 150, A4_MAXHEIGHT_LS - 75,
+                      QString::fromStdString(std::to_string(page_number)));
 
   } else {
     std::cerr << "Failed to create new PDF page. (onSuccessfulGistCall)"
@@ -521,10 +540,18 @@ void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
   std::cout << "err: " << err << std::endl;
   err_vec->push_back(err);
   if (pdfWriter->newPage()) {
+    std::cout << "do i get in here" << std::endl;
+    painter->setPen(Qt::black);
     painter->setFont(font);
     painter->drawText(100, 100, filepath);
     painter->setFont(font_two);
     painter->drawText(100, 150, errorMessage);
+    painter->setFont(QFont("Arial", 12));
+    int page_number = (*num_file) + 2 +
+                      (ceil(double(model->getSelectedModels().size()) / 33));
+    painter->drawText(A4_MAXWIDTH_LS - 150, A4_MAXHEIGHT_LS - 75,
+                      QString::fromStdString(std::to_string(page_number)));
+
   } else {
     std::cerr << "Failed to create new PDF page. (onFailedGistCall)"
               << std::endl;
