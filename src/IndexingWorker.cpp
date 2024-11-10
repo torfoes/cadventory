@@ -51,7 +51,7 @@ void IndexingWorker::process() {
         int percentage = (processedFiles * 100) / totalFiles;
 
         // Emit progress signal after processing the file
-        QString currentObject = QString::fromStdString(modelData.file_path);
+        QString currentObject = QString::fromStdString(modelData.short_name);
         emit progressUpdated(currentObject, percentage);
 
         // Emit signal indicating that a model has been processed
