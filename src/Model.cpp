@@ -938,9 +938,8 @@ std::map<std::string, std::string> Model::getPropertiesForModel(int modelId) {
               << sqlite3_errmsg(db) << std::endl;
   }
 
-  std::vector<std::string> columns = {"short_name", "primary_file",
-                                      "title",      "author",
-                                      "file_path",  "library_name"};
+  std::vector<std::string> columns = {"short_name", "title", "author",
+                                      "file_path", "library_name"};
 
   for (auto it = properties.begin(); it != properties.end();)
     if (std::find(columns.begin(), columns.end(), it->first) == columns.end())

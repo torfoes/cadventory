@@ -18,7 +18,6 @@ ModelView::ModelView(int modelId, Model* model, QWidget* parent)
   geometryBrowser->setWindowFlags(Qt::Widget);
   ui.geometryLayout->addWidget(geometryBrowser);
 
-  ui.libraryName->setText(QString::fromStdString(currModel.library_name));
   ui.modelName->setText(QString::fromStdString(currModel.short_name));
 
   loadPreviewImage();
@@ -35,15 +34,12 @@ ModelView::ModelView(int modelId, Model* model, QWidget* parent)
 }
 
 void ModelView::loadPreviewImage() {
-  QString imagePath = QString("previews/%1.png")
-                          .arg(QString::fromStdString(currModel.short_name));
-  QPixmap previewPixmap(imagePath);
-  if (!previewPixmap.isNull()) {
-    ui.previewLabel->setPixmap(
-        previewPixmap.scaled(ui.previewLabel->size(), Qt::KeepAspectRatio));
-  } else {
-    ui.previewLabel->setText("No preview available");
-  }
+  QPixmap thumbnail;
+  thumbnail.loadFromData(
+      reinterpret_cast<const uchar*>(currModel.thumbnail.data()),
+      currModel.thumbnail.size());
+  thumbnail = thumbnail.scaled(ui.previewLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  ui.previewLabel->setPixmap(thumbnail);
 }
 
 void ModelView::populateProperties() {
@@ -52,6 +48,8 @@ void ModelView::populateProperties() {
   int i = 0;
 
   for (const auto& [key, value] : model->getPropertiesForModel(modelId)) {
+    std::vector<std::string> editableProperties = {"short_name", "author"};
+
     std::cout << "Key: " << key << ":: Value: " << value << "  i" << i++
               << std::endl;
     QListWidgetItem* keyItem =
@@ -61,7 +59,10 @@ void ModelView::populateProperties() {
     QListWidgetItem* valueItem =
         new QListWidgetItem(displayValue, ui.valuesList);
     keyItem->setFlags(keyItem->flags() & ~Qt::ItemIsEditable);
-    valueItem->setFlags(valueItem->flags() | Qt::ItemIsEditable);
+    if (std::find(editableProperties.begin(), editableProperties.end(), key) != editableProperties.end()) {
+      valueItem->setFlags(valueItem->flags() | Qt::ItemIsEditable);
+      valueItem->setForeground(Qt::blue);
+    }
   }
 }
 
