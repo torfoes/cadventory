@@ -54,6 +54,8 @@ class ReportGenerationWindow : public QWidget {
   Ui::ReportGenerationWindow* ui;
   ReportGeneratorWorker* reporterWorker;
   QThread* generatingReportThread;
+  std::string subtitle;
+  std::string label;
   std::string output_directory;
   std::string logo1_filepath;
   std::string logo2_filepath;

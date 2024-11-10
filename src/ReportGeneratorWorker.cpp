@@ -5,8 +5,8 @@
 
 namespace fs = std::filesystem;
 
-ReportGeneratorWorker::ReportGeneratorWorker(Model* model, std::string output_directory ,QObject* parent)
-    : QObject(parent), output_directory(output_directory), model(model){}
+ReportGeneratorWorker::ReportGeneratorWorker(Model* model, std::string output_directory, std::string label, QObject* parent)
+    : QObject(parent), output_directory(output_directory), label(label), model(model){}
 
 void ReportGeneratorWorker::stop() {
   qDebug() << "ReportGeneratorWorker::stop() called";
@@ -46,7 +46,7 @@ void ReportGeneratorWorker::process() {
 
     // Use the generateGistReport method
     auto [success, errorMessage] = processor.generateGistReport(
-        modelData.file_path, path_gist_output, primary_obj);
+        modelData.file_path, path_gist_output, primary_obj, label);
 
     if (success) {
       // emit success

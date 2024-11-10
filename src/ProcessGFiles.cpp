@@ -335,12 +335,13 @@ bool ProcessGFiles::validateObject(const std::string& file_path, const std::stri
 
 #include <iostream> // Ensure this is included for logging
 
-std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj) {
+std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label) {
     // log the function entry and input parameters
     std::cout << "generateGistReport called with:" << std::endl;
     std::cout << "  inputFilePath: " << inputFilePath << std::endl;
     std::cout << "  outputFilePath: " << outputFilePath << std::endl;
     std::cout << "  primary obj: " << primary_obj << std::endl;
+    std::cout << "  label: " << label << std::endl;
     // check if input file exists
     QFileInfo inputFile(QString::fromStdString(inputFilePath));
     if (!inputFile.exists()) {
@@ -356,6 +357,9 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     
     if(!primary_obj.empty()){
         gistCommand += " -t \"" + primary_obj + "\"";
+    }
+    if(!label.empty()){
+        gistCommand += " -c \"" + label + "\"";
     }
     std::cout << "Constructed gistCommand: " << gistCommand << std::endl;
 
