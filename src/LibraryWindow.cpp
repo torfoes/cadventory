@@ -145,6 +145,7 @@ void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
 
 }
 
+
 void LibraryWindow::setupModelsAndViews() {
     // Configure available models view
     ui.availableModelsView->setModel(availableModelsProxyModel);
@@ -178,38 +179,45 @@ void LibraryWindow::setupModelsAndViews() {
 
     // Setup file system model with checkboxes
     QString libraryPath = QString::fromStdString(library->fullPath);
+    qDebug() << "Library Path in setupModelsAndViews:" << libraryPath;
+
+    // Create the FileSystemModelWithCheckboxes
     fileSystemModel = new FileSystemModelWithCheckboxes(model, libraryPath, this);
+    fileSystemModel->setRootPath(libraryPath);
 
     // Create and set up the proxy model to filter .g files
-    fileSystemProxyModel = new FileSystemFilterProxyModel(this);
+    fileSystemProxyModel = new FileSystemFilterProxyModel(libraryPath, this);
     fileSystemProxyModel->setSourceModel(fileSystemModel);
     fileSystemProxyModel->setRecursiveFilteringEnabled(true);
 
     // Set the model to the tree view
     ui.fileSystemTreeView->setModel(fileSystemProxyModel);
 
-    // Set the root index to start at library->fullPath
+    // Set the root index of the view to the mapped root index
     QModelIndex rootIndex = fileSystemModel->index(libraryPath);
-    ui.fileSystemTreeView->setRootIndex(fileSystemProxyModel->mapFromSource(rootIndex));
-
-    // Expand all nodes (optional)
-    ui.fileSystemTreeView->expandAll();
-
-    // Set uniform row heights for consistent appearance
-    ui.fileSystemTreeView->setUniformRowHeights(true);
+    QModelIndex proxyRootIndex = fileSystemProxyModel->mapFromSource(rootIndex);
+    ui.fileSystemTreeView->setRootIndex(proxyRootIndex);
+    qDebug() << "Set root index of fileSystemTreeView to proxyRootIndex.";
 
     // Hide columns other than the name
     for (int i = 1; i < fileSystemModel->columnCount(); ++i) {
         ui.fileSystemTreeView->hideColumn(i);
     }
 
+    // Set uniform row heights for consistent appearance
+    ui.fileSystemTreeView->setUniformRowHeights(true);
+
     // Set icon size (if desired)
     ui.fileSystemTreeView->setIconSize(QSize(24, 24));
 
     // Connect signals
+    connect(fileSystemModel, &QFileSystemModel::directoryLoaded, this, &LibraryWindow::onDirectoryLoaded);
     connect(ui.fileSystemTreeView, &QTreeView::clicked, this, &LibraryWindow::onFileSystemItemClicked);
-    connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
+    // connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
 }
+
+
+
 
 
 void LibraryWindow::setupConnections() {
@@ -232,7 +240,7 @@ void LibraryWindow::setupConnections() {
 
     // Connect filesystem view signals
     connect(ui.fileSystemTreeView, &QTreeView::clicked, this, &LibraryWindow::onFileSystemItemClicked);
-    connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
+    // connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged, this, &LibraryWindow::onInclusionChanged);
 
 }
 
@@ -404,7 +412,7 @@ void LibraryWindow::onIncludeCheckBoxStateChanged(int state) {
     QModelIndex sourceIndex = fileSystemProxyModel->mapToSource(proxyIndex);
 
     bool included = (state == Qt::Checked);
-    fileSystemModel->setIncluded(sourceIndex, included);
+    // fileSystemModel->setIncluded(sourceIndex, included);
 }
 
 
@@ -436,6 +444,7 @@ void LibraryWindow::onIndexingComplete() {
     setupModelsAndViews(); // Or specifically update the filesystem model
 }
 
+
 void LibraryWindow::includeAllModels() {
     std::vector<std::string> modelFiles = library->getModels();
 
@@ -458,3 +467,14 @@ void LibraryWindow::includeAllModels() {
         }
     }
 }
+
+void LibraryWindow::onDirectoryLoaded(const QString& path) {
+    Q_UNUSED(path);
+    qDebug() << "Directory loaded:" << path;
+    fileSystemProxyModel->invalidate();
+    ui.fileSystemTreeView->expandAll();
+
+}
+
+
+

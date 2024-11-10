@@ -1,54 +1,64 @@
-// FileSystemFilterProxyModel.cpp
-
 #include "FileSystemFilterProxyModel.h"
 #include <QFileSystemModel>
 #include <QFileInfo>
+#include <QDir>
+#include <QDebug>
 
-FileSystemFilterProxyModel::FileSystemFilterProxyModel(QObject* parent)
-    : QSortFilterProxyModel(parent)
+FileSystemFilterProxyModel::FileSystemFilterProxyModel(const QString& rootPath, QObject* parent)
+    : QSortFilterProxyModel(parent), rootPath(QDir::cleanPath(rootPath))
 {
     setRecursiveFilteringEnabled(true);
 }
 
-bool FileSystemFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
-{
+bool FileSystemFilterProxyModel::filterAcceptsRow(int sourceRow,
+                                                  const QModelIndex& sourceParent) const {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
-    QFileSystemModel* fsModel = static_cast<QFileSystemModel*>(sourceModel());
+    QFileSystemModel* fsModel = qobject_cast<QFileSystemModel*>(sourceModel());
     if (!fsModel)
         return false;
 
     QFileInfo fileInfo = fsModel->fileInfo(index);
+    QString itemPath = fileInfo.absoluteFilePath();
+
+    if (itemPath == rootPath) {
+        // Accept the root path unconditionally
+        return true;
+    }
+
+    if (!itemPath.startsWith(rootPath))
+        return false;
 
     if (fileInfo.isDir()) {
-        // Accept the directory only if it has accepted children (contains .g files in its subtree)
-        return hasAcceptedChildren(index);
+        // Accept directories that have .g files or directories with .g files
+        if (fsModel->canFetchMore(index)) {
+            // Directory hasn't loaded yet, accept it for now
+            return true;
+        }
+        return hasGFilesRecursively(index);
     } else {
         // Accept the file only if it has a .g extension
         return fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0;
     }
 }
 
-bool FileSystemFilterProxyModel::hasAcceptedChildren(const QModelIndex& sourceIndex, int depth) const
-{
-    const int maxDepth = 1000; // Set an appropriate maximum depth
-    if (depth > maxDepth)
-        return false;
-
-    QFileSystemModel* fsModel = static_cast<QFileSystemModel*>(sourceModel());
+bool FileSystemFilterProxyModel::hasGFilesRecursively(const QModelIndex& index) const {
+    QFileSystemModel* fsModel = qobject_cast<QFileSystemModel*>(sourceModel());
     if (!fsModel)
         return false;
 
-    int rowCount = fsModel->rowCount(sourceIndex);
-    for (int row = 0; row < rowCount; ++row) {
-        QModelIndex childIndex = fsModel->index(row, 0, sourceIndex);
+    if (fsModel->canFetchMore(index)) {
+        return true;
+    }
+
+    int rowCount = fsModel->rowCount(index);
+    for (int i = 0; i < rowCount; ++i) {
+        QModelIndex childIndex = fsModel->index(i, 0, index);
         QFileInfo fileInfo = fsModel->fileInfo(childIndex);
 
         if (fileInfo.isDir()) {
-            // Recursively check if the directory has accepted children
-            if (hasAcceptedChildren(childIndex, depth + 1))
+            if (hasGFilesRecursively(childIndex))
                 return true;
         } else {
-            // Accept the file only if it has a .g extension
             if (fileInfo.suffix().compare("g", Qt::CaseInsensitive) == 0)
                 return true;
         }

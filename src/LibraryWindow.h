@@ -56,6 +56,9 @@ private slots:
     void onIncludeCheckBoxStateChanged(int state);
     void onReindexButtonClicked();
     void onIndexingComplete();
+    void onDirectoryLoaded(const QString& path);
+
+
 
 
 private:
@@ -81,7 +84,7 @@ private:
     QThread* indexingThread;
     IndexingWorker* indexingWorker;
 
-    FileSystemModelWithCheckboxes* fileSystemModel;
+    QFileSystemModel* fileSystemModel;
     FileSystemFilterProxyModel* fileSystemProxyModel;
 
 
