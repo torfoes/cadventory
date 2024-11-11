@@ -1,11 +1,10 @@
-// Model.cpp
-
 #include "Model.h"
 #include <QPixmap>
 #include <QBuffer>
 #include <QImageReader>
 #include <QImageWriter>
 #include <QVariant>
+#include <QDebug>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -16,14 +15,14 @@ namespace fs = std::filesystem;
 Model::Model(const std::string& libraryPath, QObject* parent)
     : QAbstractListModel(parent), db(nullptr)
 {
-    // create a hidden directory inside the library path
+    // Create a hidden directory inside the library path
     fs::path hiddenDir = fs::path(libraryPath) / ".cadventory";
     hiddenDirPath = hiddenDir.string();
     if (!fs::exists(hiddenDir)) {
         fs::create_directory(hiddenDir);
     }
 
-    // set the database path inside the hidden directory
+    // Set the database path inside the hidden directory
     dbPath = (hiddenDir / "metadata.db").string();
 
     if (sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
@@ -45,17 +44,18 @@ Model::~Model() {
 bool Model::createTables() {
     std::string sqlModels = R"(
         CREATE TABLE IF NOT EXISTS models (
-            id INTEGER PRIMARY KEY,
-            short_name TEXT NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            short_name TEXT NOT NULL UNIQUE,
             primary_file TEXT,
             override_info TEXT,
             title TEXT,
             thumbnail BLOB,
             author TEXT,
-            file_path TEXT,
+            file_path TEXT UNIQUE,
             library_name TEXT,
             is_selected INTEGER DEFAULT 0,
-            is_processed INTEGER DEFAULT 0
+            is_processed INTEGER DEFAULT 0,
+            is_included INTEGER DEFAULT 0
         );
     )";
 
@@ -70,7 +70,6 @@ bool Model::createTables() {
             FOREIGN KEY(parent_object_id) REFERENCES objects(object_id)
         );
     )";
-
 
     return executeSQL(sqlModels) && executeSQL(sqlObjects);
 }
@@ -114,6 +113,10 @@ QVariant Model::data(const QModelIndex& index, int role) const {
         return QString::fromStdString(modelData.library_name);
     case IsSelectedRole:
         return modelData.is_selected;
+    case IsIncludedRole:
+        return modelData.is_included;
+    case IsProcessedRole:
+        return modelData.is_processed;
     default:
         return QVariant();
     }
@@ -131,50 +134,78 @@ QHash<int, QByteArray> Model::roleNames() const {
     roles[FilePathRole] = "file_path";
     roles[LibraryNameRole] = "library_name";
     roles[IsSelectedRole] = "is_selected";
+    roles[IsIncludedRole] = "is_included";
+    roles[IsProcessedRole] = "is_processed";
     return roles;
 }
 
-bool Model::insertModel(int id, const ModelData& modelData) {
+bool Model::insertModel(const ModelData& modelData) {
     std::string sql = R"(
-    INSERT OR IGNORE INTO models
-    (id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-)";
-
+        INSERT INTO models
+        (short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed, is_included)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    // Ensure short_name is unique by appending a suffix if necessary
+    std::string short_name = modelData.short_name;
+    int suffix = 1;
+    int maxSuffix = 1000; // Prevent infinite loop
+    while (shortNameExists(short_name)) {
+        if (suffix > maxSuffix) {
+            std::cerr << "Error: Could not generate a unique short_name for " << modelData.short_name << std::endl;
+            return false;
+        }
+        short_name = modelData.short_name + "_" + std::to_string(suffix++);
+        qDebug() << "Generated new short_name:" << QString::fromStdString(short_name);
+    }
+
+    // Ensure file_path is unique
+    if (filePathExists(modelData.file_path)) {
+        std::cerr << "Model with file_path " << modelData.file_path << " already exists." << std::endl;
+        return false;
+    }
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_int(stmt, 1, id);
-        sqlite3_bind_text(stmt, 2, modelData.short_name.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 3, modelData.primary_file.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 4, modelData.override_info.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 5, modelData.title.c_str(), -1, SQLITE_STATIC);
+        // Bind parameters
+        sqlite3_bind_text(stmt, 1, short_name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, modelData.primary_file.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, modelData.override_info.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 4, modelData.title.c_str(), -1, SQLITE_TRANSIENT);
 
         if (!modelData.thumbnail.empty()) {
-            sqlite3_bind_blob(stmt, 6, modelData.thumbnail.data(), static_cast<int>(modelData.thumbnail.size()), SQLITE_STATIC);
+            sqlite3_bind_blob(stmt, 5, modelData.thumbnail.data(), static_cast<int>(modelData.thumbnail.size()), SQLITE_TRANSIENT);
         } else {
-            sqlite3_bind_null(stmt, 6);
+            sqlite3_bind_null(stmt, 5);
         }
 
-        sqlite3_bind_text(stmt, 7, modelData.author.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 8, modelData.file_path.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 9, modelData.library_name.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 10, modelData.is_selected ? 1 : 0);
-        sqlite3_bind_int(stmt, 11, modelData.is_processed ? 1 : 0);
+        sqlite3_bind_text(stmt, 6, modelData.author.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 7, modelData.file_path.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 8, modelData.library_name.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_int(stmt, 9, modelData.is_selected ? 1 : 0);
+        sqlite3_bind_int(stmt, 10, modelData.is_processed ? 1 : 0);
+        sqlite3_bind_int(stmt, 11, modelData.is_included ? 1 : 0);
 
-        if (sqlite3_step(stmt) != SQLITE_DONE) {
+        int rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
             std::cerr << "Insert model failed: " << sqlite3_errmsg(db) << std::endl;
             sqlite3_finalize(stmt);
             return false;
         }
+        int id = static_cast<int>(sqlite3_last_insert_rowid(db));
         sqlite3_finalize(stmt);
 
-        // Update the models vector
+        ModelData modelDataWithId = modelData;
+        modelDataWithId.id = id;
+        modelDataWithId.short_name = short_name;
+
         beginInsertRows(QModelIndex(), models.size(), models.size());
-        models.push_back(modelData);
+        models.push_back(modelDataWithId);
         endInsertRows();
+
+        qDebug() << "Model inserted successfully with id:" << id << ", short_name:" << QString::fromStdString(short_name);
 
         return true;
     } else {
@@ -182,6 +213,53 @@ bool Model::insertModel(int id, const ModelData& modelData) {
         return false;
     }
 }
+
+
+bool Model::shortNameExists(const std::string& short_name) {
+    std::string sql = "SELECT COUNT(*) FROM models WHERE short_name = ?;";
+    sqlite3_stmt* stmt;
+    int count = 0;
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, short_name.c_str(), -1, SQLITE_TRANSIENT);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            count = sqlite3_column_int(stmt, 0);
+            qDebug() << "shortNameExists - count for" << QString::fromStdString(short_name) << ":" << count;
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "SQL error in shortNameExists: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return count > 0;
+}
+
+bool Model::filePathExists(const std::string& file_path) {
+    std::string sql = "SELECT COUNT(*) FROM models WHERE file_path = ?;";
+    sqlite3_stmt* stmt;
+    int count = 0;
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    qDebug() << "Checking if file_path exists:" << QString::fromStdString(file_path);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, file_path.c_str(), -1, SQLITE_TRANSIENT);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            count = sqlite3_column_int(stmt, 0);
+            qDebug() << "filePathExists - count for" << QString::fromStdString(file_path) << ":" << count;
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "SQL error in filePathExists: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return count > 0;
+}
+
 
 bool Model::updateModel(int id, const ModelData& modelData) {
     std::string sql = R"(
@@ -195,15 +273,29 @@ bool Model::updateModel(int id, const ModelData& modelData) {
             file_path = ?,
             library_name = ?,
             is_selected = ?,
-            is_processed = ?
+            is_processed = ?,
+            is_included = ?
         WHERE id = ?;
     )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    // Ensure short_name is unique if it's changed
+    std::string short_name = modelData.short_name;
+    int suffix = 1;
+    while (shortNameExists(short_name) && getModelById(id).short_name != short_name) {
+        short_name = modelData.short_name + "_" + std::to_string(suffix++);
+    }
+
+    // Ensure file_path is unique if it's changed
+    if (filePathExists(modelData.file_path) && getModelById(id).file_path != modelData.file_path) {
+        std::cerr << "Another model with file_path " << modelData.file_path << " already exists." << std::endl;
+        return false;
+    }
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        sqlite3_bind_text(stmt, 1, modelData.short_name.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 1, short_name.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, modelData.primary_file.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, modelData.override_info.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 4, modelData.title.c_str(), -1, SQLITE_STATIC);
@@ -219,9 +311,11 @@ bool Model::updateModel(int id, const ModelData& modelData) {
         sqlite3_bind_text(stmt, 8, modelData.library_name.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 9, modelData.is_selected ? 1 : 0);
         sqlite3_bind_int(stmt, 10, modelData.is_processed ? 1 : 0);
-        sqlite3_bind_int(stmt, 11, id);
+        sqlite3_bind_int(stmt, 11, modelData.is_included ? 1 : 0);
+        sqlite3_bind_int(stmt, 12, id);
 
-        if (sqlite3_step(stmt) != SQLITE_DONE) {
+        int rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
             std::cerr << "Update model failed: " << sqlite3_errmsg(db) << std::endl;
             sqlite3_finalize(stmt);
             return false;
@@ -232,6 +326,7 @@ bool Model::updateModel(int id, const ModelData& modelData) {
         for (int row = 0; row < static_cast<int>(models.size()); ++row) {
             if (models[row].id == id) {
                 models[row] = modelData;
+                models[row].short_name = short_name;
                 QModelIndex modelIndex = index(row);
                 emit dataChanged(modelIndex, modelIndex);
                 break;
@@ -253,7 +348,7 @@ bool Model::deleteModel(int id) {
 
     std::string sql = "DELETE FROM models WHERE id = ?;";
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, id);
@@ -286,7 +381,7 @@ bool Model::modelExists(int id) {
     std::string sql = "SELECT COUNT(*) FROM models WHERE id = ?;";
     sqlite3_stmt* stmt;
     int count = 0;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, id);
@@ -304,12 +399,12 @@ bool Model::modelExists(int id) {
 
 ModelData Model::getModelById(int id) {
     std::string sql = R"(
-        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed
+        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed, is_included
         FROM models WHERE id = ?;
     )";
     sqlite3_stmt* stmt;
     ModelData model;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, id);
@@ -331,6 +426,8 @@ ModelData Model::getModelById(int id) {
             model.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
             model.is_selected = sqlite3_column_int(stmt, 9) != 0;
             model.is_processed = sqlite3_column_int(stmt, 10) != 0;
+            model.is_included = sqlite3_column_int(stmt, 11) != 0;
+
         }
         sqlite3_finalize(stmt);
     } else {
@@ -340,14 +437,87 @@ ModelData Model::getModelById(int id) {
     return model;
 }
 
+ModelData Model::getModelByFilePath(const std::string& filePath) {
+    ModelData model;
+    model.id = 0;
+    std::string sql = R"(
+        SELECT id, short_name, primary_file, override_info, title, thumbnail,
+               author, file_path, library_name, is_selected, is_processed, is_included
+        FROM models WHERE file_path = ?;
+    )";
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        // Use SQLITE_TRANSIENT to ensure SQLite makes its own copy of the data
+        sqlite3_bind_text(stmt, 1, filePath.c_str(), -1, SQLITE_TRANSIENT);
+
+        // Debugging statements
+        qDebug() << "Executing SQL:" << QString::fromStdString(sql);
+        qDebug() << "With filePath:" << QString::fromStdString(filePath);
+
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            model.id = sqlite3_column_int(stmt, 0);
+
+            const char* text;
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            model.short_name = text ? text : "";
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            model.primary_file = text ? text : "";
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            model.override_info = text ? text : "";
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
+            model.title = text ? text : "";
+
+            const void* blob = sqlite3_column_blob(stmt, 5);
+            int blob_size = sqlite3_column_bytes(stmt, 5);
+            if (blob && blob_size > 0) {
+                model.thumbnail.assign(static_cast<const char*>(blob),
+                                       static_cast<const char*>(blob) + blob_size);
+            } else {
+                model.thumbnail.clear();
+            }
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            model.author = text ? text : "";
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
+            model.file_path = text ? text : "";
+
+            text = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            model.library_name = text ? text : "";
+
+            model.is_selected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_processed = sqlite3_column_int(stmt, 10) != 0;
+            model.is_included = sqlite3_column_int(stmt, 11) != 0;
+
+            qDebug() << "Model found with id:" << model.id << "and filePath:" << QString::fromStdString(model.file_path);
+        } else {
+            qDebug() << "No model found with filePath:" << QString::fromStdString(filePath);
+        }
+
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "Failed to select model by file path: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return model;
+}
+
+
+
 void Model::loadModelsFromDatabase() {
     std::vector<ModelData> loadedModels;
     std::string sql = R"(
-        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed
+        SELECT id, short_name, primary_file, override_info, title, thumbnail, author, file_path, library_name, is_selected, is_processed, is_included
         FROM models;
     )";
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -369,6 +539,8 @@ void Model::loadModelsFromDatabase() {
             model.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
             model.is_selected = sqlite3_column_int(stmt, 9) != 0;
             model.is_processed = sqlite3_column_int(stmt, 10) != 0;
+            model.is_included = sqlite3_column_int(stmt, 11) != 0;
+
 
             loadedModels.push_back(model);
         }
@@ -385,6 +557,8 @@ void Model::loadModelsFromDatabase() {
 }
 
 int Model::hashModel(const std::string& modelDir) {
+    qDebug() << "hashModel called with modelDir:" << QString::fromStdString(modelDir);
+
     std::ifstream file(modelDir, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Could not open file for hashing: " << modelDir << std::endl;
@@ -396,8 +570,13 @@ int Model::hashModel(const std::string& modelDir) {
     std::string fileContents = buffer.str();
 
     std::hash<std::string> hasher;
-    return static_cast<int>(hasher(fileContents));
+    int hashValue = static_cast<int>(hasher(fileContents));
+
+    qDebug() << "Hash value for" << QString::fromStdString(modelDir) << ":" << hashValue;
+
+    return hashValue;
 }
+
 
 std::string Model::getHiddenDirectoryPath() const {
     return hiddenDirPath;
@@ -405,7 +584,7 @@ std::string Model::getHiddenDirectoryPath() const {
 
 bool Model::executeSQL(const std::string& sql) {
     char* errMsg = nullptr;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
     int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         std::cerr << "SQL error in executeSQL: " << errMsg << std::endl;
@@ -430,7 +609,7 @@ bool Model::setData(const QModelIndex& index, const QVariant& value, int role) {
 
         std::string sql = "UPDATE models SET is_selected = ? WHERE id = ?;";
         sqlite3_stmt* stmt;
-        std::lock_guard<std::mutex> lock(db_mutex);
+        std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
             sqlite3_bind_int(stmt, 1, modelData.is_selected ? 1 : 0);
@@ -449,11 +628,34 @@ bool Model::setData(const QModelIndex& index, const QVariant& value, int role) {
 
         emit dataChanged(index, index, {IsSelectedRole});
         return true;
+    } else if (role == IsIncludedRole) {
+        modelData.is_included = value.toBool();
+
+        std::string sql = "UPDATE models SET is_included = ? WHERE id = ?;";
+        sqlite3_stmt* stmt;
+        std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+            sqlite3_bind_int(stmt, 1, modelData.is_included ? 1 : 0);
+            sqlite3_bind_int(stmt, 2, modelData.id);
+
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                std::cerr << "Failed to update is_included in database: " << sqlite3_errmsg(db) << std::endl;
+                sqlite3_finalize(stmt);
+                return false;
+            }
+            sqlite3_finalize(stmt);
+        } else {
+            std::cerr << "SQL error in setData when updating is_included: " << sqlite3_errmsg(db) << std::endl;
+            return false;
+        }
+
+        emit dataChanged(index, index, {IsIncludedRole});
+        return true;
     }
 
     return false;
 }
-
 
 
 Qt::ItemFlags Model::flags(const QModelIndex& index) const {
@@ -471,7 +673,7 @@ int Model::insertObject(const ObjectData& obj) {
     )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "SQL error in insertObject: " << sqlite3_errmsg(db) << std::endl;
@@ -504,7 +706,7 @@ int Model::insertObject(const ObjectData& obj) {
 bool Model::deleteObjectsForModel(int model_id) {
     std::string sql = "DELETE FROM objects WHERE model_id = ?;";
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, model_id);
@@ -532,7 +734,7 @@ std::vector<ObjectData> Model::getObjectsForModel(int model_id) {
     )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, model_id);
@@ -573,7 +775,7 @@ bool Model::updateObjectSelection(int object_id, bool is_selected) {
     std::string sql = "UPDATE objects SET is_selected = ? WHERE object_id = ?;";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "SQL error in updateObjectSelection: " << sqlite3_errmsg(db) << std::endl;
@@ -604,7 +806,7 @@ bool Model::updateObject(const ObjectData& obj) {
     )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "SQL error in updateObject: " << sqlite3_errmsg(db) << std::endl;
@@ -640,7 +842,7 @@ ObjectData Model::getObjectById(int object_id) {
     )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, object_id);
@@ -673,7 +875,7 @@ ObjectData Model::getObjectById(int object_id) {
 
 std::vector<ModelData> Model::getSelectedModels() {
     std::vector<ModelData> selectedModels;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     for (const auto& modelData : models) {
         if (modelData.is_selected) {
@@ -693,7 +895,7 @@ std::vector<ObjectData> Model::getSelectedObjectsForModel(int model_id) {
     )";
 
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(stmt, 1, model_id);
@@ -733,7 +935,7 @@ void Model::commitTransaction() {
 bool Model::updateObjectParentId(int object_id, int parent_object_id) {
     std::string sql = "UPDATE objects SET parent_object_id = ? WHERE object_id = ?;";
     sqlite3_stmt* stmt;
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "SQL error in updateObjectParentId: " << sqlite3_errmsg(db) << std::endl;
@@ -768,4 +970,68 @@ void Model::resetDatabase() {
     } else {
         std::cerr << "Failed to delete tables." << std::endl;
     }
+}
+
+std::vector<ModelData> Model::getIncludedModels() {
+    std::vector<ModelData> includedModels;
+    std::string sql = R"(
+        SELECT id, short_name, primary_file, override_info, title, thumbnail,
+               author, file_path, library_name, is_selected, is_processed, is_included
+        FROM models
+        WHERE is_included = 1;
+    )";
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            ModelData model;
+            model.id = sqlite3_column_int(stmt, 0);
+            model.short_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            model.primary_file = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            model.override_info = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            model.title = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
+
+            const void* blob = sqlite3_column_blob(stmt, 5);
+            int blob_size = sqlite3_column_bytes(stmt, 5);
+            if (blob && blob_size > 0) {
+                model.thumbnail.assign(static_cast<const char*>(blob),
+                                       static_cast<const char*>(blob) + blob_size);
+            }
+
+            model.author = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            model.file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
+            model.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            model.is_selected = sqlite3_column_int(stmt, 9) != 0;
+            model.is_processed = sqlite3_column_int(stmt, 10) != 0;
+            model.is_included = sqlite3_column_int(stmt, 11) != 0;
+
+            includedModels.push_back(model);
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "Failed to select included models: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return includedModels;
+}
+
+
+bool Model::isFileIncluded(const std::string& filePath) {
+    std::string sql = "SELECT is_included FROM models WHERE file_path = ?;";
+    sqlite3_stmt* stmt;
+    bool included = false;
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, filePath.c_str(), -1, SQLITE_STATIC);
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            included = sqlite3_column_int(stmt, 0) != 0;
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "SQL error in isFileIncluded: " << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return included;
 }

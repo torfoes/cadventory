@@ -6,6 +6,7 @@
 #include <string>
 #include <mutex>
 #include <sqlite3.h>
+#include <QMetaType>
 
 // ModelData structure
 struct ModelData {
@@ -20,6 +21,7 @@ struct ModelData {
     std::string library_name;
     bool is_selected;
     bool is_processed;
+    bool is_included;
 };
 
 // Declare ModelData as a Qt metatype
@@ -48,23 +50,25 @@ public:
         AuthorRole,
         FilePathRole,
         LibraryNameRole,
-        IsSelectedRole
+        IsSelectedRole,
+        IsIncludedRole,
+        IsProcessedRole
     };
 
     explicit Model(const std::string& libraryPath, QObject* parent = nullptr);
-    ~Model();
+    ~Model() override;
 
-    // override QAbstractListModel methods
+    // Override QAbstractListModel methods
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    // added methods for data modification and item flags
+    // Data modification and item flags
     bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
     // CRUD operations for models
-    bool insertModel(int id, const ModelData& modelData);
+    bool insertModel(const ModelData& modelData);
     bool updateModel(int id, const ModelData& modelData);
     bool deleteModel(int id);
     bool modelExists(int id);
@@ -77,10 +81,7 @@ public:
     // Utility methods
     int hashModel(const std::string& modelDir);
     void refreshModelData();
-
     std::string getHiddenDirectoryPath() const;
-
-    // Update the model list from the database
     void loadModelsFromDatabase();
 
     // Methods for objects
@@ -91,6 +92,7 @@ public:
     bool setObjectData(int object_id, const QVariant& value, int role);
     bool updateObjectSelection(int object_id, bool is_selected);
     ObjectData getObjectById(int object_id);
+    bool isFileIncluded(const std::string& filePath);
 
     // Retrieve all selected models
     std::vector<ModelData> getSelectedModels();
@@ -98,22 +100,23 @@ public:
     // Retrieve selected objects for a given model ID
     std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
 
+    ModelData getModelByFilePath(const std::string& filePath);
+    std::vector<ModelData> getIncludedModels();
+
     void beginTransaction();
     void commitTransaction();
     bool updateObjectParentId(int object_id, int parent_object_id);
-
-
 
 private:
     // Database related
     bool createTables();
     bool executeSQL(const std::string& sql);
+    bool shortNameExists(const std::string& short_name);
+    bool filePathExists(const std::string& file_path);
     sqlite3* db;
     std::string dbPath;
-    std::mutex db_mutex;
-
+    std::recursive_mutex db_mutex;
     std::string hiddenDirPath;
-
     std::vector<ModelData> models;
 };
 

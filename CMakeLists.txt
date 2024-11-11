@@ -84,6 +84,8 @@ set(SRCS
   src/main.cpp
   src/ReportGeneratorWorker.cpp
   src/SettingWindow.cpp
+  src/FileSystemModelWithCheckboxes.cpp
+  src/FileSystemFilterProxyModel.cpp
 )
 
 set(UIS
@@ -107,6 +109,8 @@ set(HEADERS
   src/ReportGenerationWindow.h
   src/ReportGeneratorWorker.h
   src/SettingWindow.h
+  src/FileSystemModelWithCheckboxes.h
+  src/FileSystemFilterProxyModel.h
 )
 set(CMAKE_AUTORCC ON)
 # qt_add_executable automatically handles AUTOUIC, AUTOMOC, AUTORCC
