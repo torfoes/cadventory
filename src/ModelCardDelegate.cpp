@@ -79,7 +79,7 @@ bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
 
         if (iconRect(option).contains(pos)) {
             int modelId = index.data(Model::IdRole).toInt();
-            emit geometryBrowserClicked(modelId);
+            emit modelViewClicked(modelId);
 
             // accept the event and prevent further processing
             event->accept();

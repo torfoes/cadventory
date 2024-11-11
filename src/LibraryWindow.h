@@ -40,7 +40,9 @@ private slots:
     void on_backButton_clicked();
 
     void onSettingsClicked(int modelId);
+
     void onGeometryBrowserClicked(int modelId);
+    void onModelViewClicked(int modelId);
 
     void startIndexing();
     void onModelProcessed(int modelId);

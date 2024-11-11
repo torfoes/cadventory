@@ -1,7 +1,11 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <sqlite3.h>
+
 #include <QAbstractListModel>
+#include <mutex>
+#include <string>
 #include <vector>
 #include <string>
 #include <mutex>
@@ -10,18 +14,19 @@
 
 // ModelData structure
 struct ModelData {
-    int id;
-    std::string short_name;
-    std::string primary_file;
-    std::string override_info;
-    std::string title;
-    std::vector<char> thumbnail;
-    std::string author;
-    std::string file_path;
-    std::string library_name;
-    bool is_selected;
-    bool is_processed;
-    bool is_included;
+  int id;
+  std::string short_name;
+  std::string primary_file;
+  std::string override_info;
+  std::string title;
+  std::vector<char> thumbnail;
+  std::string author;
+  std::string file_path;
+  std::string library_name;
+  bool is_selected;
+  bool is_processed;
+  bool is_included;
+  std::vector<std::string> tags;
 };
 
 // Declare ModelData as a Qt metatype
@@ -29,15 +34,15 @@ Q_DECLARE_METATYPE(ModelData)
 
 // ObjectData structure
 struct ObjectData {
-    int object_id;
-    int model_id;
-    std::string name;
-    int parent_object_id;
-    bool is_selected;
+  int object_id;
+  int model_id;
+  std::string name;
+  int parent_object_id;
+  bool is_selected;
 };
 
 class Model : public QAbstractListModel {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
     enum ModelRoles {
@@ -75,14 +80,18 @@ public:
     bool deleteTables();
     void resetDatabase();
 
-    // Getters
-    ModelData getModelById(int id);
+  // Getters
+  ModelData getModelById(int id);
 
-    // Utility methods
-    int hashModel(const std::string& modelDir);
-    void refreshModelData();
-    std::string getHiddenDirectoryPath() const;
-    void loadModelsFromDatabase();
+  // Utility methods
+  int hashModel(const std::string& modelDir);
+  void refreshModelData();
+  void printModel(const ModelData& modelData);
+
+  std::string getHiddenDirectoryPath() const;
+
+  // Update the model list from the database
+  void loadModelsFromDatabase();
 
     // Methods for objects
     int insertObject(const ObjectData& obj);
@@ -94,8 +103,8 @@ public:
     ObjectData getObjectById(int object_id);
     bool isFileIncluded(const std::string& filePath);
 
-    // Retrieve all selected models
-    std::vector<ModelData> getSelectedModels();
+  // Retrieve all selected models
+  std::vector<ModelData> getSelectedModels();
 
     // Retrieve selected objects for a given model ID
     std::vector<ObjectData> getSelectedObjectsForModel(int model_id);
@@ -106,6 +115,24 @@ public:
     void beginTransaction();
     void commitTransaction();
     bool updateObjectParentId(int object_id, int parent_object_id);
+
+
+  // Tag operations
+  bool addTagToModel(int modelId, const std::string& tagName);
+  int getTagId(const std::string& tagName);
+  std::vector<std::string> getAllTags();
+  std::vector<std::string> getTagsForModel(int modelId);
+  bool removeTagFromModel(int modelId, const std::string& tagName);
+  bool removeAllTagsFromModel(int modelId);
+
+  // Properties operations
+  bool setPropertyForModel(int modelId, const std::string& key,
+                           const std::string& value);
+  std::map<std::string, std::string> getPropertiesForModel(int model_id);
+
+  // Simplifying executions
+  sqlite3_stmt* prepareStatement(const std::string& sql);
+  bool executePreparedStatement(sqlite3_stmt* stmt);
 
 private:
     // Database related
@@ -120,4 +147,4 @@ private:
     std::vector<ModelData> models;
 };
 
-#endif // MODEL_H
+#endif  // MODEL_H

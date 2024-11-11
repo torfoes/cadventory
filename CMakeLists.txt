@@ -84,6 +84,7 @@ set(SRCS
   src/main.cpp
   src/ReportGeneratorWorker.cpp
   src/SettingWindow.cpp
+  src/ModelView.cpp
   src/FileSystemModelWithCheckboxes.cpp
   src/FileSystemFilterProxyModel.cpp
 )
@@ -94,6 +95,7 @@ set(UIS
   src/splash.ui
   src/reportgenerationwindow.ui
   src/SettingWindow.ui
+  src/modelview.ui
 )
 
 set(HEADERS

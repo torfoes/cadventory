@@ -28,7 +28,7 @@ TEST_CASE("ProcessGFiles - File Processing with annual_gift_man.g", "[ProcessGFi
 
     SECTION("Process annual_gift_man.g file") {
         if (std::filesystem::exists(validFilePath)) {
-            processor.processGFile(validFilePath, "output_folder");
+            processor.processGFile(validFilePath, "output_folder", "(unknown lib)");
 
             // Check if output (e.g., preview or thumbnail) was generated
             REQUIRE(std::filesystem::exists("output_folder/annual_gift_man.png")); // Adjust path as needed
@@ -45,7 +45,7 @@ TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
     std::string filePath = "../src/tests/annual_gift_man.g";
     
     REQUIRE(std::filesystem::exists(filePath));
-    processor.processGFile(filePath, "output_folder");
+    processor.processGFile(filePath, "output_folder", "(unknown lib)");
 
     SECTION("Check thumbnail exists for annual_gift_man.g") {
         std::string previewPath = "output_folder/annual_gift_man.png"; // Update based on expected path

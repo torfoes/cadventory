@@ -3,6 +3,8 @@
 #include "ProcessGFiles.h"
 #include "MainWindow.h"
 #include "GeometryBrowserDialog.h"
+#include "ModelView.h"
+// #include "AdvancedOptionsDialog.h"
 #include "ReportGenerationWindow.h"
 #include "ReportGeneratorWorker.h"
 #include "FileSystemFilterProxyModel.h"
@@ -225,6 +227,10 @@ void LibraryWindow::setupConnections() {
     // Connect geometry browser clicked signal
     connect(modelCardDelegate, &ModelCardDelegate::geometryBrowserClicked,
             this, &LibraryWindow::onGeometryBrowserClicked);
+
+    connect(modelCardDelegate, &ModelCardDelegate::modelViewClicked,
+            this, &LibraryWindow::onModelViewClicked);
+
 }
 
 void LibraryWindow::onSearchTextChanged(const QString& text) {
@@ -242,6 +248,8 @@ void LibraryWindow::onSearchFieldChanged(const QString& field) {
     // Re-apply filter
     availableModelsProxyModel->invalidate();
 }
+
+
 
 void LibraryWindow::onAvailableModelClicked(const QModelIndex& index) {
     // Toggle selection state
@@ -342,7 +350,14 @@ void LibraryWindow::reloadLibrary() {
         }
     } else {
         std::cout << "File 'metadata.db' does not exist." << std::endl;
-    }
+}
+
+}
+void LibraryWindow::onModelViewClicked(int modelId) {
+    qDebug() << "Model view clicked for model ID:" << modelId;
+    ModelView* modelView = new ModelView(modelId, model, this);
+    modelView->exec();
+
 }
 
 void LibraryWindow::onGeometryBrowserClicked(int modelId) {
