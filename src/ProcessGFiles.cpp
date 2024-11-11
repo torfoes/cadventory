@@ -364,7 +364,7 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     std::cout << "Constructed gistCommand: " << gistCommand << std::endl;
 
     // execute the command
-    auto [stdoutStr, stderrStr, returnCode] = runCommand(gistCommand, 120);
+    auto [stdoutStr, stderrStr, returnCode] = runCommand(gistCommand, 999999);
 
     // log command execution results
     std::cout << "Command execution completed with returnCode: " << returnCode << std::endl;
