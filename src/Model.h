@@ -19,9 +19,9 @@ struct ModelData {
   std::string author;
   std::string file_path;
   std::string library_name;
-  std::vector<std::string> tags;
   bool is_selected;
-    bool is_processed;
+  bool is_processed;
+  std::vector<std::string> tags;
 };
 
 // Declare ModelData as a Qt metatype

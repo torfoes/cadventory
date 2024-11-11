@@ -67,9 +67,6 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # --- End BRL-CAD Configuration ---
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-
-include_directories(${QT_INCLUDE_DIRS} ${SQLITE3_INCLUDE_DIRS} ${sqlite_INCLUDE_DIR})
 set(SRCS
   src/CADventory.cpp
   src/FilesystemIndexer.cpp
@@ -87,6 +84,7 @@ set(SRCS
   src/main.cpp
   src/ReportGeneratorWorker.cpp
   src/SettingWindow.cpp
+  src/ModelView.cpp
 )
 
 set(UIS
@@ -95,6 +93,7 @@ set(UIS
   src/splash.ui
   src/reportgenerationwindow.ui
   src/SettingWindow.ui
+  src/modelview.ui
 )
 
 set(HEADERS
@@ -106,27 +105,6 @@ set(HEADERS
   src/IndexingWorker.h
   src/ModelCardDelegate.h
   src/ModelFilterProxyModel.h
-  src/ModelFilterProxyModel.cpp
-  src/modelview.ui
-  src/ModelView.cpp
-  src/ModelView.h
-)
-set(LIBS
-  Qt6::Core
-  Qt6::Widgets
-  Qt6::Gui
-)
-
-qt_add_executable(cadventory WIN32 ${SRCS}
-    src/ModelCardDelegate.h src/ModelCardDelegate.cpp
-    src/ModelFilterProxyModel.h src/ModelFilterProxyModel.cpp
-    src/GeometryBrowserDialog.h src/GeometryBrowserDialog.cpp
-    src/ModelView.h src/ModelView.cpp
-    )
-
-
-# Note dependencies
-add_dependencies(cadventory sqlite_static)
   src/GeometryBrowserDialog.h
   src/ReportGenerationWindow.h
   src/ReportGeneratorWorker.h

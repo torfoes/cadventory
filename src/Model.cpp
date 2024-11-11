@@ -471,7 +471,7 @@ void Model::printModel(const ModelData& modelData) {
   std::cout << "Author: " << modelData.author << std::endl;
   std::cout << "File Path: " << modelData.file_path << std::endl;
   std::cout << "Library Name: " << modelData.library_name << std::endl;
-  std::cout << "Is Selected: " << (modelData.isSelected ? "Yes" : "No")
+  std::cout << "Is Selected: " << (modelData.is_selected ? "Yes" : "No")
             << std::endl;
   std::cout << "Thumbnail Size: " << modelData.thumbnail.size() << " bytes"
             << std::endl;

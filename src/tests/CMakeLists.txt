@@ -15,7 +15,7 @@ include_directories(
 # Find the required Qt modules
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Test)
 
-qt6_wrap_ui(UIS_HEADERS ../src/mainwindow.ui ../src/librarywindow.ui)
+qt6_wrap_ui(UIS_HEADERS ../src/mainwindow.ui ../src/librarywindow.ui ../src/reportgenerationwindow.ui ../src/SettingWindow.ui ../src/modelview.ui)
 
 # Include FetchContent module
 include(FetchContent)
@@ -133,6 +133,9 @@ add_executable(MainWindowTest
     ../ReportGeneratorWorker.h
     ../SettingWindow.h
     ../SettingWindow.cpp
+    ../ModelView.cpp
+    ../ModelView.h
+    ../modelview.ui
 )
 
 # Link the Main Window GUI test executable against the necessary libraries
