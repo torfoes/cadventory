@@ -197,10 +197,9 @@ bool Model::insertModel(const ModelData& modelData) {
         int id = static_cast<int>(sqlite3_last_insert_rowid(db));
         sqlite3_finalize(stmt);
 
-        // Update the models vector
         ModelData modelDataWithId = modelData;
         modelDataWithId.id = id;
-        modelDataWithId.short_name = short_name; // Update with unique short_name
+        modelDataWithId.short_name = short_name;
 
         beginInsertRows(QModelIndex(), models.size(), models.size());
         models.push_back(modelDataWithId);
@@ -222,16 +221,12 @@ bool Model::shortNameExists(const std::string& short_name) {
     int count = 0;
     std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
-    // Debug statement
-    qDebug() << "Checking if short_name exists:" << QString::fromStdString(short_name);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        // Use SQLITE_TRANSIENT instead of SQLITE_STATIC
         sqlite3_bind_text(stmt, 1, short_name.c_str(), -1, SQLITE_TRANSIENT);
 
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             count = sqlite3_column_int(stmt, 0);
-            // Debug statement
             qDebug() << "shortNameExists - count for" << QString::fromStdString(short_name) << ":" << count;
         }
         sqlite3_finalize(stmt);
@@ -248,11 +243,9 @@ bool Model::filePathExists(const std::string& file_path) {
     int count = 0;
     std::lock_guard<std::recursive_mutex> lock(db_mutex);
 
-    // Debug statement
     qDebug() << "Checking if file_path exists:" << QString::fromStdString(file_path);
 
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-        // Use SQLITE_TRANSIENT instead of SQLITE_STATIC
         sqlite3_bind_text(stmt, 1, file_path.c_str(), -1, SQLITE_TRANSIENT);
 
         if (sqlite3_step(stmt) == SQLITE_ROW) {
