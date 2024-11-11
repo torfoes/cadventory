@@ -138,6 +138,9 @@ void ProcessGFiles::generateThumbnail(
     std::string rt_executable = RT_EXECUTABLE_PATH;
     std::string model_short_name = fs::path(file_path).stem().string();
 
+    QSettings settings;
+    int timeLimit = settings.value("previewTimer", 30 ).toInt();
+
     if (selected_object_name.empty()) {
         std::cerr << "No valid object selected for raytrace in file: " << file_path << "\n";
         return;
@@ -149,7 +152,7 @@ void ProcessGFiles::generateThumbnail(
     std::string rt_command = rt_executable + " -s512 -o \"" + png_file + "\" \"" + file_path + "\" " + selected_object_name;
 
     try {
-        auto [rt_output, rt_error, rt_return_code] = runCommand(rt_command, 30);
+        auto [rt_output, rt_error, rt_return_code] = runCommand(rt_command, timeLimit);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         if (fs::exists(png_file) && fs::file_size(png_file) > 0) {
@@ -357,12 +360,13 @@ bool ProcessGFiles::validateObject(const std::string& file_path, const std::stri
 
 #include <iostream> // Ensure this is included for logging
 
-std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj) {
+std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label) {
     // log the function entry and input parameters
     std::cout << "generateGistReport called with:" << std::endl;
     std::cout << "  inputFilePath: " << inputFilePath << std::endl;
     std::cout << "  outputFilePath: " << outputFilePath << std::endl;
     std::cout << "  primary obj: " << primary_obj << std::endl;
+    std::cout << "  label: " << label << std::endl;
     // check if input file exists
     QFileInfo inputFile(QString::fromStdString(inputFilePath));
     if (!inputFile.exists()) {
@@ -375,14 +379,17 @@ std::tuple<bool, std::string> ProcessGFiles::generateGistReport(const std::strin
     // construct the gist command
     std::string gistCommand = std::string(GIST_EXECUTABLE_PATH) + " \"" +
                               inputFilePath + "\" -o \"" + outputFilePath + "\"";
-    
+
     if(!primary_obj.empty()){
         gistCommand += " -t \"" + primary_obj + "\"";
+    }
+    if(!label.empty()){
+        gistCommand += " -c \"" + label + "\"";
     }
     std::cout << "Constructed gistCommand: " << gistCommand << std::endl;
 
     // execute the command
-    auto [stdoutStr, stderrStr, returnCode] = runCommand(gistCommand, 120);
+    auto [stdoutStr, stderrStr, returnCode] = runCommand(gistCommand, 999999);
 
     // log command execution results
     std::cout << "Command execution completed with returnCode: " << returnCode << std::endl;

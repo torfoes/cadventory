@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>533</width>
-    <height>471</height>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,7 +75,7 @@
    <property name="geometry">
     <rect>
      <x>400</x>
-     <y>200</y>
+     <y>310</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -88,7 +88,7 @@
    <property name="geometry">
     <rect>
      <x>120</x>
-     <y>200</y>
+     <y>310</y>
      <width>271</width>
      <height>31</height>
     </rect>
@@ -103,21 +103,21 @@
   <widget class="QLabel" name="logo1_label">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>200</y>
+     <x>30</x>
+     <y>310</y>
      <width>81</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Logo 1:</string>
+    <string>Top Logo:</string>
    </property>
   </widget>
   <widget class="QTextEdit" name="logo2_textEdit">
    <property name="geometry">
     <rect>
      <x>120</x>
-     <y>240</y>
+     <y>350</y>
      <width>271</width>
      <height>31</height>
     </rect>
@@ -132,21 +132,21 @@
   <widget class="QLabel" name="logo2_label">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>240</y>
-     <width>81</width>
+     <x>20</x>
+     <y>350</y>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Logo 2:</string>
+    <string>Bottom Logo:</string>
    </property>
   </widget>
   <widget class="QPushButton" name="logo2_pushButton">
    <property name="geometry">
     <rect>
      <x>400</x>
-     <y>240</y>
+     <y>350</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -159,7 +159,7 @@
    <property name="geometry">
     <rect>
      <x>120</x>
-     <y>130</y>
+     <y>240</y>
      <width>271</width>
      <height>61</height>
     </rect>
@@ -175,7 +175,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>130</y>
+     <y>240</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -188,7 +188,7 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>340</y>
+     <y>450</y>
      <width>141</width>
      <height>26</height>
     </rect>
@@ -201,7 +201,7 @@
    <property name="geometry">
     <rect>
      <x>400</x>
-     <y>290</y>
+     <y>400</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -214,7 +214,7 @@
    <property name="geometry">
     <rect>
      <x>120</x>
-     <y>280</y>
+     <y>390</y>
      <width>271</width>
      <height>41</height>
     </rect>
@@ -230,13 +230,13 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>280</y>
+     <y>390</y>
      <width>81</width>
      <height>41</height>
     </rect>
    </property>
    <property name="text">
-    <string>Output Directory</string>
+    <string>Output Directory:</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -246,7 +246,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>410</y>
+     <y>490</y>
      <width>231</width>
      <height>18</height>
     </rect>
@@ -259,7 +259,7 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>440</y>
+     <y>520</y>
      <width>118</width>
      <height>23</height>
     </rect>
@@ -269,6 +269,64 @@
    </property>
    <property name="textVisible">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="label_textEdit">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>130</y>
+     <width>271</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="placeholderText">
+    <string>Label</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_label">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>130</y>
+     <width>81</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Label:</string>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="subtitle_textEdit">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>170</y>
+     <width>271</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="placeholderText">
+    <string>Subtitle</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="subtitle_label">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>170</y>
+     <width>81</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Subtitle:</string>
    </property>
   </widget>
  </widget>

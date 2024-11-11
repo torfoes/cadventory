@@ -18,6 +18,10 @@ public:
 private slots:
     void on_buttonBox_accepted();
 
+    void on_buttonBox_rejected();
+
+    void on_enablePreview_checkStateChanged(const Qt::CheckState &state);
+
 private:
     void loadSettings();
     void saveSettings();
