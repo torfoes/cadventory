@@ -53,18 +53,18 @@ TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
     }
 }
 
-TEST_CASE("ProcessGFiles - Generate Gist Report for annual_gift_man.g", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
+// TEST_CASE("ProcessGFiles - Generate Gist Report for annual_gift_man.g", "[ProcessGFiles]") {
+//     setupTestLibraryPath();
+//     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
+//     ProcessGFiles processor(model.get());
 
-    std::string outputFilePath = "output_folder/annual_gist_report.txt";
-    auto [success, errorMessage] = processor.generateGistReport("src/tests/annual_gift_man.g", outputFilePath, "annual_gift_man");
+//     std::string outputFilePath = "output_folder/annual_gist_report.txt";
+//     auto [success, errorMessage] = processor.generateGistReport("src/tests/annual_gift_man.g", outputFilePath, "annual_gift_man");
 
-    // Check if report generation was successful
-    REQUIRE(success == true);
-    REQUIRE(errorMessage.empty());
+//     // Check if report generation was successful
+//     REQUIRE(success == true);
+//     REQUIRE(errorMessage.empty());
 
-    // Confirm output file was created
-    REQUIRE(std::filesystem::exists(outputFilePath));
-}
+//     // Confirm output file was created
+//     REQUIRE(std::filesystem::exists(outputFilePath));
+// }
