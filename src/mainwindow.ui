@@ -20,7 +20,7 @@
       <x>0</x>
       <y>0</y>
       <width>876</width>
-      <height>560</height>
+      <height>580</height>
      </rect>
     </property>
    </widget>
@@ -30,7 +30,7 @@
       <x>0</x>
       <y>0</y>
       <width>876</width>
-      <height>560</height>
+      <height>580</height>
      </rect>
     </property>
     <widget class="QWidget" name="gridLayoutWidget">
@@ -142,7 +142,7 @@
        <x>10</x>
        <y>470</y>
        <width>781</width>
-       <height>71</height>
+       <height>72</height>
       </rect>
      </property>
      <property name="font">
@@ -160,7 +160,7 @@
        <x>10</x>
        <y>500</y>
        <width>781</width>
-       <height>71</height>
+       <height>72</height>
       </rect>
      </property>
      <property name="font">
