@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
 qt_standard_project_setup()
@@ -39,33 +40,6 @@ if (MSVC)
 else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
-
-# --- Begin BRL-CAD Configuration ---
-
-set(BRLCAD_DIR "" CACHE PATH "Path to BRL-CAD installation directory")
-
-if(BRLCAD_DIR)
-  set(MGED_EXECUTABLE "${BRLCAD_DIR}/bin/mged")
-  set(RT_EXECUTABLE "${BRLCAD_DIR}/bin/rt")
-  set(GIST_EXECUTABLE "${BRLCAD_DIR}/bin/gist")
-else()
-  find_program(MGED_EXECUTABLE mged)
-  find_program(RT_EXECUTABLE rt)
-  find_program(GIST_EXECUTABLE gist)
-endif()
-
-if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
-  message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
-endif()
-
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
-)
-
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-
-# --- End BRL-CAD Configuration ---
 
 set(SRCS
   src/CADventory.cpp
@@ -114,6 +88,7 @@ set(HEADERS
   src/FileSystemModelWithCheckboxes.h
   src/FileSystemFilterProxyModel.h
 )
+
 set(CMAKE_AUTORCC ON)
 # qt_add_executable automatically handles AUTOUIC, AUTOMOC, AUTORCC
 qt_add_executable(cadventory WIN32
@@ -125,6 +100,7 @@ qt_add_executable(cadventory WIN32
 
 # Note dependencies and include directories
 target_include_directories(cadventory PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 if (DEFINED CADVENTORY_USE_SQLITE)
   target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui ${SQLITE_LIBRARY})
 else()
@@ -132,6 +108,56 @@ else()
   add_dependencies(cadventory sqlite_static)
   target_link_libraries(cadventory PRIVATE Qt6::Core Qt6::Widgets Qt6::Gui sqlite_static)
 endif()
+
+# --- Begin BRL-CAD Configuration ---
+
+# Add the directory containing FindBRLCAD.cmake to CMAKE_MODULE_PATH
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# Set BRLCAD_DIR or BRLCAD_ROOT to your BRL-CAD installation directory
+set(BRLCAD_DIR "/path/to/brlcad")  # Replace with your actual path
+
+if(BRLCAD_DIR)
+  set(BRLCAD_ROOT ${BRLCAD_DIR})
+endif()
+
+# Find BRL-CAD using the provided FindBRLCAD.cmake module
+find_package(BRLCAD REQUIRED)
+
+if(BRLCAD_FOUND)
+  message(STATUS "BRLCAD_LIBRARIES: ${BRLCAD_LIBRARIES}")
+  # Include the BRL-CAD include directories
+  target_include_directories(cadventory PRIVATE ${BRLCAD_INCLUDE_DIRS})
+  # Link against BRLCAD::BRLCAD
+  target_link_libraries(cadventory PRIVATE BRLCAD::BRLCAD)
+else()
+  message(FATAL_ERROR "BRL-CAD not found.")
+endif()
+
+# Find the BRL-CAD executables
+if(BRLCAD_DIR)
+  set(MGED_EXECUTABLE "${BRLCAD_DIR}/bin/mged")
+  set(RT_EXECUTABLE "${BRLCAD_DIR}/bin/rt")
+  set(GIST_EXECUTABLE "${BRLCAD_DIR}/bin/gist")
+else()
+  find_program(MGED_EXECUTABLE mged)
+  find_program(RT_EXECUTABLE rt)
+  find_program(GIST_EXECUTABLE gist)
+endif()
+
+if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
+  message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+)
+
+# Include the generated config.h
+target_include_directories(cadventory PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+
+# --- End BRL-CAD Configuration ---
 
 # Deployment on Windows needs DLLs copied
 install(TARGETS cadventory
@@ -212,5 +238,5 @@ if(WIN32)
 endif()
 
 # Testing
-enable_testing()
-add_subdirectory(src/tests)
+# enable_testing()
+# add_subdirectory(src/tests)

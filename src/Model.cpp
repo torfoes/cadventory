@@ -527,8 +527,8 @@ ModelData Model::getModelByFilePath(const std::string& filePath) {
     sqlite3_bind_text(stmt, 1, filePath.c_str(), -1, SQLITE_TRANSIENT);
 
     // Debugging statements
-    qDebug() << "Executing SQL:" << QString::fromStdString(sql);
-    qDebug() << "With filePath:" << QString::fromStdString(filePath);
+    // qDebug() << "Executing SQL:" << QString::fromStdString(sql);
+    // qDebug() << "With filePath:" << QString::fromStdString(filePath);
 
     if (sqlite3_step(stmt) == SQLITE_ROW) {
       model.id = sqlite3_column_int(stmt, 0);
