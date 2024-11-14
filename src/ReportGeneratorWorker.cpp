@@ -45,7 +45,7 @@ void ReportGeneratorWorker::process() {
     emit processingGistCall(QString::fromStdString(modelData.file_path));
 
     // Use the generateGistReport method
-    auto [success, errorMessage] = processor.generateGistReport(
+    auto [success, errorMessage, command] = processor.generateGistReport(
         modelData.file_path, path_gist_output, primary_obj, label);
 
     if (success) {
@@ -56,7 +56,7 @@ void ReportGeneratorWorker::process() {
 
       // emit failed
       std::string fpath = modelData.file_path;
-      emit failedGistCall(QString::fromStdString(fpath), QString::fromStdString(errorMessage));
+      emit failedGistCall(QString::fromStdString(fpath), QString::fromStdString(errorMessage), QString::fromStdString(command));
     }
     num_file++;
   }

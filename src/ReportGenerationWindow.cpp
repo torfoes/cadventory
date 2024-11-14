@@ -532,9 +532,11 @@ void ReportGenerationWindow::onSuccessfulGistCall(
   (*num_file)++;
 }
 void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
-                                              const QString& errorMessage) {
-  std::string err = "Model: " + filepath.toStdString() + "\nError:\n" +
-                    errorMessage.toStdString();
+                                              const QString& errorMessage,
+                                              const QString& command) {
+  std::string err = "\nModel: " + filepath.toStdString() + "\nError:\n" +
+                    errorMessage.toStdString() + "Command:\n" +
+                    command.toStdString();
   QFont font("Helvetica", 18);
   QFont font_two("Helvetica", 6);
   std::cout << "err: " << err << std::endl;
