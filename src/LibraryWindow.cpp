@@ -199,8 +199,6 @@ void LibraryWindow::setupModelsAndViews() {
     // Connect signals
     connect(fileSystemModel, &QFileSystemModel::directoryLoaded,
             this, &LibraryWindow::onDirectoryLoaded);
-    connect(ui.fileSystemTreeView, &QTreeView::clicked,
-            this, &LibraryWindow::onFileSystemItemClicked);
     connect(fileSystemModel, &FileSystemModelWithCheckboxes::inclusionChanged,
             this, &LibraryWindow::onInclusionChanged);
 }
@@ -379,10 +377,6 @@ void LibraryWindow::onProgressUpdated(const QString& currentObject, int percenta
     }
 }
 
-void LibraryWindow::onFileSystemItemClicked(const QModelIndex& index) {
-    // No additional actions needed since checkbox changes are handled in setData()
-}
-
 void LibraryWindow::onInclusionChanged(const QModelIndex& index, bool included) {
     Q_UNUSED(index);
     availableModelsProxyModel->invalidate();
@@ -392,17 +386,6 @@ void LibraryWindow::onInclusionChanged(const QModelIndex& index, bool included) 
         // Start indexing to process newly included models
         startIndexing();
     }
-}
-
-void LibraryWindow::onReindexButtonClicked() {
-    // Stop any ongoing indexing
-    if (indexingThread && indexingThread->isRunning()) {
-        indexingWorker->stop();
-        indexingThread->wait();
-    }
-
-    // Reindex files
-    startIndexing();
 }
 
 void LibraryWindow::onIndexingComplete() {

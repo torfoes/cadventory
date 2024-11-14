@@ -49,14 +49,9 @@ private slots:
     void onProgressUpdated(const QString& currentObject, int percentage);
 
     // Filesystem view slots
-    void onFileSystemItemClicked(const QModelIndex& index);
     void onInclusionChanged(const QModelIndex& index, bool included);
-    void onReindexButtonClicked();
     void onIndexingComplete();
     void onDirectoryLoaded(const QString& path);
-
-signals:
-    void startProcessingFile(const QString& filePath);
 
 private:
     void setupModelsAndViews();
