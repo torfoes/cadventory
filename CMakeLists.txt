@@ -114,18 +114,18 @@ endif()
 # Add the directory containing FindBRLCAD.cmake to CMAKE_MODULE_PATH
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-# Set BRLCAD_DIR or BRLCAD_ROOT to your BRL-CAD installation directory
-set(BRLCAD_DIR "/path/to/brlcad")  # Replace with your actual path
-
-if(BRLCAD_DIR)
-  set(BRLCAD_ROOT ${BRLCAD_DIR})
+# Optionally set BRLCAD_ROOT to your BRL-CAD installation directory
+if(NOT BRLCAD_ROOT)
+  set(BRLCAD_ROOT "" CACHE PATH "Path to BRL-CAD installation")
 endif()
 
 # Find BRL-CAD using the provided FindBRLCAD.cmake module
 find_package(BRLCAD REQUIRED)
 
 if(BRLCAD_FOUND)
+  message(STATUS "BRL-CAD found.")
   message(STATUS "BRLCAD_LIBRARIES: ${BRLCAD_LIBRARIES}")
+  message(STATUS "BRLCAD_INCLUDE_DIRS: ${BRLCAD_INCLUDE_DIRS}")
   # Include the BRL-CAD include directories
   target_include_directories(cadventory PRIVATE ${BRLCAD_INCLUDE_DIRS})
   # Link against BRLCAD::BRLCAD
@@ -135,18 +135,12 @@ else()
 endif()
 
 # Find the BRL-CAD executables
-if(BRLCAD_DIR)
-  set(MGED_EXECUTABLE "${BRLCAD_DIR}/bin/mged")
-  set(RT_EXECUTABLE "${BRLCAD_DIR}/bin/rt")
-  set(GIST_EXECUTABLE "${BRLCAD_DIR}/bin/gist")
-else()
-  find_program(MGED_EXECUTABLE mged)
-  find_program(RT_EXECUTABLE rt)
-  find_program(GIST_EXECUTABLE gist)
-endif()
+set(MGED_EXECUTABLE "${BRLCAD_ROOT}/bin/mged")
+set(RT_EXECUTABLE "${BRLCAD_ROOT}/bin/rt")
+set(GIST_EXECUTABLE "${BRLCAD_ROOT}/bin/gist")
 
-if(NOT MGED_EXECUTABLE OR NOT RT_EXECUTABLE OR NOT GIST_EXECUTABLE)
-  message(FATAL_ERROR "Could not find BRL-CAD executables. Please set BRLCAD_DIR or ensure executables are in your PATH.")
+if(NOT EXISTS "${MGED_EXECUTABLE}" OR NOT EXISTS "${RT_EXECUTABLE}" OR NOT EXISTS "${GIST_EXECUTABLE}")
+  message(FATAL_ERROR "Could not find BRL-CAD executables. Please ensure BRLCAD_ROOT is set correctly.")
 endif()
 
 configure_file(
