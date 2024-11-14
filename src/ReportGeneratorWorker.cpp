@@ -42,22 +42,22 @@ void ReportGeneratorWorker::process() {
       }
     }
 
-    emit processingGistCall(QString::fromStdString(modelData.file_path));
+    // emit processingGistCall(QString::fromStdString(modelData.file_path));
 
-    // Use the generateGistReport method
-    auto [success, errorMessage] = processor.generateGistReport(
-        modelData.file_path, path_gist_output, primary_obj, label);
+    // // Use the generateGistReport method
+    // auto [success, errorMessage] = processor.generateGistReport(
+    //     modelData.file_path, path_gist_output, primary_obj, label);
 
-    if (success) {
-      // emit success
-        emit successfulGistCall(QString::fromStdString(path_gist_output));
-    } else {
-      // Handle the error
+    // if (success) {
+    //   // emit success
+    //     emit successfulGistCall(QString::fromStdString(path_gist_output));
+    // } else {
+    //   // Handle the error
 
-      // emit failed
-      std::string fpath = modelData.file_path;
-      emit failedGistCall(QString::fromStdString(fpath), QString::fromStdString(errorMessage));
-    }
+    //   // emit failed
+    //   std::string fpath = modelData.file_path;
+    //   emit failedGistCall(QString::fromStdString(fpath), QString::fromStdString(errorMessage));
+    // }
     num_file++;
   }
 
