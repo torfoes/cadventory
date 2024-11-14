@@ -18,7 +18,10 @@ public:
 private:
     void extractTitle(ModelData& modelData, struct ged* gedp);
     void extractObjects(ModelData& modelData, struct ged* gedp);
-    void insertChildObjects(ModelData& modelData, struct ged* gedp, const ObjectData& parentObjData);
+    void insertChildObjects(ModelData& modelData, struct ged* gedp, const ObjectData& parentObjData, const std::string& selected_object_name);
+
+    // Thumbnail generation and command utility methods
+    bool generateThumbnail(ModelData& modelData, const std::string& selected_object_name);
 
     Model* model;
 };
