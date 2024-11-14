@@ -39,12 +39,9 @@ void IndexingWorker::process() {
             break;
         }
 
-        std::string fullFilePath = modelData.file_path;
 
-        // Process the .g file to extract metadata and generate thumbnails
-        processor.processGFile(fullFilePath, previewsFolder, library->shortName);
+        processor.processGFile(modelData);
 
-        // Increment processed files count
         processedFiles++;
 
         // Calculate percentage

@@ -7,32 +7,22 @@
 #include <vector>
 
 #include "Model.h"
+#include <brlcad/rt/geom.h>
 
 class ProcessGFiles {
 public:
-    explicit ProcessGFiles(Model* model, bool debug = false);
+    explicit ProcessGFiles(Model* model);
 
-    void processGFile(const std::filesystem::path& file_path,
-                      const std::string& previews_folder,
-                      const std::string& library_name = "(unknown)");
+    void processGFile(const ModelData& modelData);
 
 private:
     void extractTitle(ModelData& modelData, struct ged* gedp);
+    void extractObjects(ModelData& modelData, struct ged* gedp);
+    void insertChildObjects(ModelData& modelData, struct ged* gedp, const ObjectData& parentObjData);
 
-    // void extractObjects(ModelData& modelData, struct ged* gedp);
-
-    // void generateThumbnail(ModelData& modelData, const std::string& file_path,
-    //                        const std::string& previews_folder,
-    //                        const std::string& selected_object_name);
-
-    // Member variables
     Model* model;
-
-    // Member variables for traversal
-    // std::vector<ObjectData> objects;
-    // std::map<std::string, std::string> parentRelations;
-    // int current_model_id;
-    // std::string selected_object_name;
 };
+
+void db_tree_list_comb_children(const union tree *tree, std::vector<std::string>& children);
 
 #endif  // PROCESSGFILES_H
