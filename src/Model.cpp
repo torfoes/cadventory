@@ -1334,3 +1334,53 @@ bool Model::isFileIncluded(const std::string& filePath) {
 
   return included;
 }
+
+
+std::vector<ModelData> Model::getIncludedNotProcessedModels() {
+    std::vector<ModelData> notProcessedModels;
+
+    const char* sql = R"(
+        SELECT id, short_name, primary_file, override_info, title,
+               thumbnail, author, file_path, library_name, is_selected,
+               is_processed, is_included
+        FROM models
+        WHERE is_included = 1 AND is_processed = 0;
+    )";
+
+    sqlite3_stmt* stmt;
+    std::lock_guard<std::recursive_mutex> lock(db_mutex);
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            ModelData modelData;
+            modelData.id = sqlite3_column_int(stmt, 0);
+            modelData.short_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            modelData.primary_file = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            modelData.override_info = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            modelData.title = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
+
+            const void* thumbnailBlob = sqlite3_column_blob(stmt, 5);
+            int thumbnailSize = sqlite3_column_bytes(stmt, 5);
+            if (thumbnailBlob && thumbnailSize > 0) {
+                const char* blobPtr = static_cast<const char*>(thumbnailBlob);
+                modelData.thumbnail.assign(blobPtr, blobPtr + thumbnailSize);
+            }
+
+            modelData.author = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            modelData.file_path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
+            modelData.library_name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            modelData.is_selected = sqlite3_column_int(stmt, 9) == 1;
+            modelData.is_processed = sqlite3_column_int(stmt, 10) == 1;
+            modelData.is_included = sqlite3_column_int(stmt, 11) == 1;
+
+            notProcessedModels.push_back(modelData);
+        }
+
+        sqlite3_finalize(stmt);
+    } else {
+        std::cerr << "[Model::getIncludedNotProcessedModels] SQL error: "
+                  << sqlite3_errmsg(db) << std::endl;
+    }
+
+    return notProcessedModels;
+}
