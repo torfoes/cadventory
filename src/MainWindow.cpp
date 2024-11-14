@@ -152,13 +152,11 @@ void MainWindow::openLibrary()
 
 void MainWindow::addLibraryButton(const char* label, const char* /*path*/)
 {
-    /* when we have more than this many buttons, we go smaller */
     const size_t LAYOUT_SHIFT = 20;
     const size_t COLUMNS = 5;
     static const QSize SMALLER_SIZE = QSize(128, 64);
     static const QSize DEFAULT_SIZE = QSize(128, 128);
 
-    /* count how many buttons we got */
     size_t buttons = 0;
     QLayoutItem* item;
     for (size_t i = 0; i < (size_t)ui.gridLayout->count(); ++i) {
@@ -172,25 +170,44 @@ void MainWindow::addLibraryButton(const char* label, const char* /*path*/)
             buttons++;
     }
 
-    /* start making a new button */
+    // Start making a new button
     QPushButton *newButton = new QPushButton(label, this);
+    
+    // Set icon (assuming you have a standard folder icon for all buttons)
+    newButton->setIcon(QIcon(":/src/assets/folder_icon.png")); // Adjust icon path if necessary
+    newButton->setIconSize(QSize(64, 64)); // Set a larger icon size to take up the top area
+
+    // Set button size based on the button count
     if (buttons >= LAYOUT_SHIFT) {
         newButton->setFixedSize(SMALLER_SIZE);
     } else {
         newButton->setFixedSize(DEFAULT_SIZE);
     }
+
+    // Update font size for the label
     QFont font = newButton->font();
-    font.setPointSize(20);
+    font.setPointSize(8); // Smaller font size to fit below the icon
     newButton->setFont(font);
 
+    // Apply style to make the button look like a folder icon with text below
+    newButton->setFlat(true); // Make the button flat to remove borders
+    newButton->setStyleSheet(
+        "QPushButton {"
+        "   border: none;"
+        "   background-color: transparent;"
+        "   padding-top: 5px;" // Adjust to position text just below the icon
+        "   text-align: center;"
+        "}");
+
+    // Connect the button’s signal
     connect(newButton, &QPushButton::released, this, &MainWindow::openLibrary);
 
-    /* add our new button */
+    // Add the button to the grid layout
     int row = (buttons) / COLUMNS;
     int column = (buttons) % COLUMNS;
     ui.gridLayout->addWidget(newButton, row, column);
 
-    /* once we have a lot of buttons, make them all smaller */
+    // If button count exceeds the limit, resize all buttons
     if (buttons == LAYOUT_SHIFT) {
         for (int i = 0; i < ui.gridLayout->count(); ++i) {
             QLayoutItem* item = ui.gridLayout->itemAt(i);

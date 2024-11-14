@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>src/assets/brlcad_logo.png</file>
+        <file>src/assets/folder_icon.png</file>
     </qresource>
 </RCC>
