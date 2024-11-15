@@ -279,6 +279,7 @@ void FileSystemModelWithCheckboxes::updateChildren(const QModelIndex& index, Qt:
                 modelData.short_name = fileInfo.fileName().toStdString();
                 modelData.file_path = filePathStd;
                 modelData.is_included = true;
+                modelData.is_selected = false;
                 modelData.is_processed = false;
                 model->insertModel(modelData);
 
