@@ -23,6 +23,11 @@ void ReportGeneratorWorker::process() {
   std::vector<ModelData> selectedModels = model->getSelectedModels();
 
   for (const auto& modelData : selectedModels) {
+    if(QThread::currentThread()->isInterruptionRequested()){
+      std::cout << "gen report interrupted" << std::endl;
+      qDebug() << "ReportGeneratorWorker::process() stopping due to interruption request";
+      break;
+    }
     std::string path_gist_output =
         output_directory + "/" + std::to_string(num_file) + ".png";
 
@@ -42,22 +47,23 @@ void ReportGeneratorWorker::process() {
       }
     }
 
-    // emit processingGistCall(QString::fromStdString(modelData.file_path));
 
-    // // Use the generateGistReport method
-    // auto [success, errorMessage] = processor.generateGistReport(
-    //     modelData.file_path, path_gist_output, primary_obj, label);
+    emit processingGistCall(QString::fromStdString(modelData.file_path));
 
-    // if (success) {
-    //   // emit success
-    //     emit successfulGistCall(QString::fromStdString(path_gist_output));
-    // } else {
-    //   // Handle the error
+    // Use the generateGistReport method
+    auto [success, errorMessage, command] = processor.generateGistReport(
+        modelData.file_path, path_gist_output, primary_obj, label);
 
-    //   // emit failed
-    //   std::string fpath = modelData.file_path;
-    //   emit failedGistCall(QString::fromStdString(fpath), QString::fromStdString(errorMessage));
-    // }
+    if (success) {
+      // emit success
+        emit successfulGistCall(QString::fromStdString(path_gist_output));
+    } else {
+      // Handle the error
+
+      // emit failed
+      // std::string fpath = modelData.file_path;
+      emit failedGistCall(QString::fromStdString(modelData.file_path), QString::fromStdString(errorMessage), QString::fromStdString(command));
+    }
     num_file++;
   }
 

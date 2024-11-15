@@ -407,6 +407,7 @@ bool ProcessGFiles::generateThumbnail(ModelData& modelData, const std::string& s
 
     return true;
 }
+
 std::tuple<bool, std::string, std::string> ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label)
 {
     std::string gistCommand;

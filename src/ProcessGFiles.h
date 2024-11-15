@@ -15,7 +15,6 @@ public:
     void processGFile(const ModelData& modelData);
     std::tuple<bool, std::string, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
 
-
 private:
     void extractTitle(ModelData& modelData, struct ged* gedp);
     void extractObjects(ModelData& modelData, struct ged* gedp);

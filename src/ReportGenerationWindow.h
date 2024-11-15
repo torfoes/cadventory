@@ -28,13 +28,14 @@ class ReportGenerationWindow : public QWidget {
   ~ReportGenerationWindow();
 
  private slots:
+  void onPauseReportButtonClicked();
   void onGenerateReportButtonClicked();
   void onOutputDirectoryButtonClicked();
   void onLogo1ButtonClicked();
   void onLogo2ButtonClicked();
   void onProcessingGistCall(const QString& file);
   void onSuccessfulGistCall(const QString& path_gist_output);
-  void onFailedGistCall(const QString& filepath, const QString& errorMessage);
+  void onFailedGistCall(const QString& filepath, const QString& errorMessage, const QString& command);
   void onFinishedGeneratingReport();
 
  private:
