@@ -442,7 +442,7 @@ std::tuple<bool, std::string, std::string> ProcessGFiles::generateGistReport(con
     qDebug() << "[ProcessGFiles::generateGistReport] Running gist command:" << QString::fromStdString(gistCommand);
 
     QSettings settings;
-    int timeLimitMs = settings.value("gistReportTimer", 300).toInt() * 1000;
+    int timeLimitMs = settings.value("gistReportTimer", 10000).toInt() * 1000;
 
     QProcess process;
     process.setProgram(gistExecutable);
