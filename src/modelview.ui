@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Model View</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -82,7 +82,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>320</y>
+     <y>220</y>
      <width>121</width>
      <height>16</height>
     </rect>
@@ -146,7 +146,7 @@
      <x>29</x>
      <y>120</y>
      <width>331</width>
-     <height>181</height>
+     <height>81</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -161,13 +161,26 @@
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>340</y>
-     <width>331</width>
-     <height>271</height>
+     <x>20</x>
+     <y>240</y>
+     <width>371</width>
+     <height>371</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="geometryLayout"/>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>100</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(edit blue entries)</string>
+   </property>
   </widget>
  </widget>
  <resources/>
