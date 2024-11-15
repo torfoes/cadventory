@@ -29,7 +29,7 @@ class ProcessGFiles {
   explicit ProcessGFiles(Model* model, bool debug = false);
 
     void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
-    std::tuple<bool, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
+    std::tuple<bool, std::string, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
 
   void processGFile(const std::filesystem::path& file_path,
                     const std::string& previews_folder,

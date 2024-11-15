@@ -1,6 +1,7 @@
 #ifndef ReportGeneratorWorker_H
 #define ReportGeneratorWorker_H
 
+#include <QThread>
 #include <QObject>
 #include <atomic>
 #include "Model.h"
@@ -17,7 +18,7 @@ public slots:
 signals:
     void processingGistCall(const QString& file);
     void successfulGistCall(const QString& path_gist_output);
-    void failedGistCall(const QString& filepath, const QString& errorMessage);
+    void failedGistCall(const QString& filepath, const QString& errorMessage, const QString& command);
     void finishedReport();
     void finished();
 
