@@ -534,7 +534,8 @@ void ReportGenerationWindow::onSuccessfulGistCall(
               << std::endl;
   }
 
-  int progress = (*num_file) * 100 / (*tot_num_files);
+  int progress = (*num_file + 1) * 100 / (*tot_num_files);
+  // std::cout << "progress: " << progress << std::endl;
   ui->progressBar->setValue(progress);
   (*num_file)++;
 }
