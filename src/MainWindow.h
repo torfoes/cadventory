@@ -43,13 +43,14 @@ public:
     QMenu * helpMenu;
     SettingWindow *settingWindow;
     void returnCentralWidget();
+    void resetting();
 
 public slots:
     void updateStatusLabel(const char* status);
 
 private slots:
     void on_addLibraryButton_clicked();
-    void on_homeLibraryButton_clicked();
+
 
 protected:
     size_t saveState();

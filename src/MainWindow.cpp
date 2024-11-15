@@ -39,9 +39,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
         std::cout << "Loaded " << loaded << " previously registered libraries" << std::endl;
     }
 
-    QString home = QDir::homePath();
-    addLibrary("Local Home", home.toStdString().c_str());
-    std::cout << "Loaded local home [" << home.toStdString().c_str() << "] library" << std::endl;
+
 
     fileMenu = new QMenu(tr("&File"),this);
     editMenu = new QMenu(tr("&Edit"),this);
@@ -54,12 +52,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 
     QAction *set = new QAction(tr("&General Settings"),this);
+    QAction *reset = new QAction(tr("&Reset"),this);
 
     windowMenu->addAction(set);
+    fileMenu->addAction(reset);
 
     QAction *test = new QAction(tr("&test"),this);
 
-    fileMenu->addAction(test);
     windowMenu->addAction(test);
     viewMenu->addAction(test);
     helpMenu->addAction(test);
@@ -73,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     settingWindow = new SettingWindow(this);
     connect(set,&QAction::triggered,this,&MainWindow::showSettingsWindow);
+    connect(reset,&QAction::triggered,this,&MainWindow::resetting);
 
 }
 
@@ -227,8 +227,7 @@ size_t MainWindow::saveState()
     settings.beginWriteArray("libraries");
     size_t index = 0;
     for (auto lib : libraries) {
-        if (QString(lib->name()) == QString("Local Home"))
-            continue;
+
         settings.setArrayIndex(index++);
         settings.setValue("name", lib->name());
         settings.setValue("path", lib->path());
@@ -247,9 +246,7 @@ size_t MainWindow::loadState()
         QString name = settings.value("name").toString();
         QString path = settings.value("path").toString();
 
-        if (name == "Local Home") {
-            continue;
-        }
+
         addLibrary(name.toStdString().c_str(), path.toStdString().c_str());
     }
     settings.endArray();
@@ -257,13 +254,6 @@ size_t MainWindow::loadState()
     return size;
 }
 
-void MainWindow::on_homeLibraryButton_clicked()
-{
-    QPushButton* button = ui.homeLibraryButton;
-    if (button) {
-        openLibrary();
-    }
-}
 
 void MainWindow::clearLibraries()
 {
@@ -287,4 +277,28 @@ void MainWindow::returnCentralWidget()
     setWindowTitle( QString("Main Window"));
     ui.origin->show();
 
+}
+
+
+void MainWindow::resetting()
+{
+
+    //ui->gridLayout->
+
+    //qDeleteAll(ui->gridLayout->findChildren<QWidget *>(QString(), Qt::FindDirectChildrenOnly));
+
+    for (int i = ui.gridLayout->count(); i>0 ; --i) {
+        QLayoutItem* item = ui.gridLayout->takeAt(i);
+        if (item && item->widget()) {
+            delete item->widget();
+            delete item;
+
+        }
+    }
+
+     QLayoutItem* item = ui.gridLayout->takeAt(0);
+    ui.gridLayout->addWidget(item->widget(),366,158);
+QSettings settings;
+settings.clear();
+settings.sync();
 }
