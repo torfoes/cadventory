@@ -12,8 +12,9 @@
 class ProcessGFiles {
 public:
     explicit ProcessGFiles(Model* model);
-
     void processGFile(const ModelData& modelData);
+    std::tuple<bool, std::string, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
+
 
 private:
     void extractTitle(ModelData& modelData, struct ged* gedp);
@@ -22,7 +23,6 @@ private:
 
     // Thumbnail generation and command utility methods
     bool generateThumbnail(ModelData& modelData, const std::string& selected_object_name);
-    bool generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
 
 
     Model* model;
