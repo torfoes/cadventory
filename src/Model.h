@@ -80,18 +80,18 @@ public:
     bool deleteTables();
     void resetDatabase();
 
-  // Getters
-  ModelData getModelById(int id);
+    // Getters
+    ModelData getModelById(int id);
 
-  // Utility methods
-  int hashModel(const std::string& modelDir);
-  void refreshModelData();
-  void printModel(const ModelData& modelData);
+    // Utility methods
+    int hashModel(const std::string& modelDir);
+    void refreshModelData();
+    void printModel(const ModelData& modelData);
 
-  std::string getHiddenDirectoryPath() const;
+    std::string getHiddenDirectoryPath() const;
 
-  // Update the model list from the database
-  void loadModelsFromDatabase();
+    // Update the model list from the database
+    void loadModelsFromDatabase();
 
     // Methods for objects
     int insertObject(const ObjectData& obj);
@@ -103,8 +103,10 @@ public:
     ObjectData getObjectById(int object_id);
     bool isFileIncluded(const std::string& filePath);
 
-  // Retrieve all selected models
-  std::vector<ModelData> getSelectedModels();
+    // Retrieve all selected models
+    std::vector<ModelData> getSelectedModels();
+    std::vector<ModelData> getIncludedNotProcessedModels();
+
 
     // Retrieve selected objects for a given model ID
     std::vector<ObjectData> getSelectedObjectsForModel(int model_id);

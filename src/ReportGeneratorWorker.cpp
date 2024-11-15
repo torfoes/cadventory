@@ -47,6 +47,7 @@ void ReportGeneratorWorker::process() {
       }
     }
 
+
     emit processingGistCall(QString::fromStdString(modelData.file_path));
 
     // Use the generateGistReport method

@@ -7,61 +7,72 @@
 namespace fs = std::filesystem;
 
 IndexingWorker::IndexingWorker(Library* library, QObject* parent)
-    : QObject(parent), library(library), m_stopRequested(false) {}
+    : QObject(parent),
+    library(library),
+    m_stopRequested(false),
+    m_reindexRequested(false) {}
+
 
 void IndexingWorker::stop() {
     qDebug() << "IndexingWorker::stop() called";
     m_stopRequested.store(true);
 }
 
+void IndexingWorker::requestReindex() {
+    qDebug() << "Indexing reindex requested";
+    m_reindexRequested.store(true);
+}
+
 void IndexingWorker::process() {
     qDebug() << "IndexingWorker::process() started";
-    ProcessGFiles processor(library->model);
 
-    // Get the previews folder path
-    std::string previewsFolder = library->model->getHiddenDirectoryPath() + "/previews";
+    while (true) {
+        // Reset reindex request for this iteration
+        m_reindexRequested.store(false);
 
-    // Retrieve models that are included
-    std::vector<ModelData> modelsToProcess = library->model->getIncludedModels();
-    int totalFiles = modelsToProcess.size();
-    int processedFiles = 0;
+        ProcessGFiles processor(library->model);
 
-    if (totalFiles == 0) {
-        emit progressUpdated("No files to process", 100);
-        emit finished();
-        return;
-    }
+        // Retrieve models that need processing
+        std::vector<ModelData> modelsToProcess = library->model->getIncludedNotProcessedModels();
+        int totalFiles = modelsToProcess.size();
+        int processedFiles = 0;
 
-    for (const auto& modelData : modelsToProcess) {
-        // Check if a stop has been requested
-        if (m_stopRequested.load()) {
-            qDebug() << "IndexingWorker::process() stopping due to stop request";
-            break;
+        if (totalFiles == 0) {
+            emit progressUpdated("No files to process", 100);
+            // If no models to process, check if reindex was requested
+            if (!m_reindexRequested.load()) {
+                emit finished();
+                qDebug() << "IndexingWorker::process() finished with no models to process";
+                return;
+            }
+            // If reindex was requested, continue to the next iteration
+            continue;
         }
 
-        std::string fullFilePath = modelData.file_path;
+        for (const auto& modelData : modelsToProcess) {
+            if (m_stopRequested.load()) {
+                qDebug() << "IndexingWorker::process() stopping due to stop request";
+                break;
+            }
+            int percentage = (processedFiles * 100) / totalFiles;
 
-        // Process the .g file to extract metadata and generate thumbnails
-        processor.processGFile(fullFilePath, previewsFolder, library->shortName);
+            // Emit progress signal before processing the file
+            QString currentObject = QString::fromStdString(modelData.short_name);
+            emit progressUpdated(currentObject, percentage);
+            emit modelProcessed(modelData.id);
 
-        // Increment processed files count
-        processedFiles++;
+            processor.processGFile(modelData);
+            processedFiles++;
+        }
 
-        // Calculate percentage
-        int percentage = (processedFiles * 100) / totalFiles;
+        // Emit final progress signal to indicate completion
+        emit progressUpdated("Processing complete", 100);
 
-        // Emit progress signal after processing the file
-        QString currentObject = QString::fromStdString(modelData.short_name);
-        emit progressUpdated(currentObject, percentage);
-
-        // Emit signal indicating that a model has been processed
-        emit modelProcessed(modelData.id);
+        // Check if a reindex was requested during processing
+        if (!m_reindexRequested.load()) {
+            emit finished();
+            qDebug() << "IndexingWorker::process() finished";
+            return;
+        }
     }
-
-    // Emit final progress signal to indicate completion
-    emit progressUpdated("Processing complete", 100);
-
-    // Emit finished signal to indicate processing is complete
-    emit finished();
-    qDebug() << "IndexingWorker::process() finished";
 }

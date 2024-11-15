@@ -1,67 +1,32 @@
 #ifndef PROCESSGFILES_H
 #define PROCESSGFILES_H
 
-#include <QFileInfo>
-#include <QProcess>
-#include <QSettings>
-#include <algorithm>
-#include <array>
-#include <chrono>
-#include <cstdio>
-#include <cstdlib>
 #include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <map>
-#include <mutex>
-#include <queue>
-#include <regex>
-#include <set>
-#include <sstream>
-#include <thread>
+#include <string>
 #include <vector>
 
 #include "Model.h"
-#include "config.h"
+#include <brlcad/rt/geom.h>
 
 class ProcessGFiles {
- public:
-  explicit ProcessGFiles(Model* model, bool debug = false);
-
-    void processGFile(const std::filesystem::path& file_path, const std::string& previews_folder);
+public:
+    explicit ProcessGFiles(Model* model);
+    void processGFile(const ModelData& modelData);
     std::tuple<bool, std::string, std::string> generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
 
-  void processGFile(const std::filesystem::path& file_path,
-                    const std::string& previews_folder,
-                    const std::string& library_name = "(unknown)");
+private:
+    void extractTitle(ModelData& modelData, struct ged* gedp);
+    void extractObjects(ModelData& modelData, struct ged* gedp);
+    void insertChildObjects(ModelData& modelData, struct ged* gedp, const ObjectData& parentObjData, const std::string& selected_object_name);
 
- private:
-  // Helper methods
-  void debugPrint(const std::string& message);
-  void debugError(const std::string& message);
-  bool isModelProcessed(int modelId);
-  void extractTitle(ModelData& modelData, const std::string& file_path);
+    // Thumbnail generation and command utility methods
+    bool generateThumbnail(ModelData& modelData, const std::string& selected_object_name);
 
-  std::vector<ObjectData> extractObjects(
-      const ModelData& modelData, const std::string& file_path,
-      std::map<std::string, std::string>& parentRelations);
 
-  void generateThumbnail(ModelData& modelData, const std::string& file_path,
-                         const std::string& previews_folder,
-                         const std::string& selected_object_name);
-
-  // Command execution helpers
-  std::tuple<std::string, std::string, int> runCommand(
-      const std::string& command, int timeout_seconds = 10);
-  std::vector<std::string> parseTopsOutput(const std::string& tops_output);
-  std::vector<std::string> parseLtOutput(const std::string& lt_output);
-  bool validateObject(const std::string& file_path,
-                      const std::string& object_name);
-  std::vector<std::string> splitStringByWhitespace(const std::string& input);
-
-  Model* model;
-  bool debug;
-  std::mutex db_mutex;
+    Model* model;
 };
+
+void db_tree_list_comb_children(const union tree *tree, std::vector<std::string>& children);
 
 #endif  // PROCESSGFILES_H
