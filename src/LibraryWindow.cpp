@@ -98,15 +98,16 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 
 void LibraryWindow::startIndexing() {
     if (indexingThread && indexingThread->isRunning()) {
-        // Indexing is already in progress
+        if (indexingWorker) {
+            indexingWorker->requestReindex();
+        }
         return;
     }
 
     // Create the indexing worker and thread
-    indexingThread = new QThread(this); // Parent is LibraryWindow
+    indexingThread = new QThread(this);
     indexingWorker = new IndexingWorker(library);
 
-    // Move the worker to the thread
     indexingWorker->moveToThread(indexingThread);
 
     // Connect signals and slots
@@ -121,6 +122,7 @@ void LibraryWindow::startIndexing() {
     // Start the indexing thread
     indexingThread->start();
 }
+
 
 void LibraryWindow::setMainWindow(MainWindow* mainWindow) {
     this->mainWindow = mainWindow;
@@ -382,11 +384,10 @@ void LibraryWindow::onInclusionChanged(const QModelIndex& index, bool included) 
     availableModelsProxyModel->invalidate();
     selectedModelsProxyModel->invalidate();
 
-    if (included) {
-        // Start indexing to process newly included models
-        startIndexing();
-    }
+    startIndexing();
+    model->refreshModelData();
 }
+
 
 void LibraryWindow::onIndexingComplete() {
     qDebug() << "Indexing complete";
@@ -405,8 +406,7 @@ void LibraryWindow::onIndexingComplete() {
 }
 
 void LibraryWindow::onDirectoryLoaded(const QString& path) {
-    Q_UNUSED(path);
-    qDebug() << "Directory loaded:" << path;
     fileSystemProxyModel->invalidate();
     ui.fileSystemTreeView->expandAll();
 }
+

@@ -13,6 +13,7 @@ public:
 
 public slots:
     void process();
+    void requestReindex();
 
 signals:
     void modelProcessed(int modelId);
@@ -22,6 +23,7 @@ signals:
 private:
     Library* library;
     std::atomic<bool> m_stopRequested;
+    std::atomic<bool> m_reindexRequested;
     bool previewFlag;
 };
 
