@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>533</width>
-    <height>558</height>
+    <height>621</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -246,7 +246,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>490</y>
+     <y>510</y>
      <width>231</width>
      <height>18</height>
     </rect>
@@ -254,12 +254,15 @@
    <property name="text">
     <string/>
    </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
   </widget>
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>520</y>
+     <y>540</y>
      <width>118</width>
      <height>23</height>
     </rect>
@@ -327,6 +330,19 @@
    </property>
    <property name="text">
     <string>Subtitle:</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pauseReport_pushButton">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>580</y>
+     <width>141</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Stop</string>
    </property>
   </widget>
  </widget>

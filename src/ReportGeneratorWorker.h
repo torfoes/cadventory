@@ -1,6 +1,7 @@
 #ifndef ReportGeneratorWorker_H
 #define ReportGeneratorWorker_H
 
+#include <QThread>
 #include <QObject>
 #include <atomic>
 #include "Model.h"

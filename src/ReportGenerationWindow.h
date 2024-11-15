@@ -28,6 +28,7 @@ class ReportGenerationWindow : public QWidget {
   ~ReportGenerationWindow();
 
  private slots:
+  void onPauseReportButtonClicked();
   void onGenerateReportButtonClicked();
   void onOutputDirectoryButtonClicked();
   void onLogo1ButtonClicked();

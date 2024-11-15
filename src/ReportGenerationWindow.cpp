@@ -49,6 +49,14 @@ ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
           &ReportGenerationWindow::onLogo2ButtonClicked);
   connect(ui->generateReport_pushButton, &QPushButton::clicked, this,
           &ReportGenerationWindow::onGenerateReportButtonClicked);
+  connect(ui->pauseReport_pushButton, &QPushButton::clicked, this,
+          &ReportGenerationWindow::onPauseReportButtonClicked);  
+}
+void ReportGenerationWindow::onPauseReportButtonClicked() {
+  generatingReportThread->requestInterruption();
+  std::cout << "interruption requested " << std::endl;
+  ui->fileInProcess_label->setText(QString::fromStdString("Generation Stopped..."));
+
 }
 
 void ReportGenerationWindow::onGenerateReportButtonClicked() {
@@ -512,7 +520,6 @@ void ReportGenerationWindow::onSuccessfulGistCall(
   // Load the generated PNG image
   QPixmap gist(path_gist_output);
 
-  // bool status_newpage = pdfWriter->newPage();
   if (pdfWriter->newPage()) {
     painter->drawPixmap(0, 0, gist);
     int page_number = (*num_file) + 2 +
@@ -542,7 +549,6 @@ void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
   std::cout << "err: " << err << std::endl;
   err_vec->push_back(err);
   if (pdfWriter->newPage()) {
-    std::cout << "do i get in here" << std::endl;
     painter->setPen(Qt::black);
     painter->setFont(font);
     painter->drawText(100, 100, filepath);
