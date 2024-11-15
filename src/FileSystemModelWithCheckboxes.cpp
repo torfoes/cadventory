@@ -46,8 +46,9 @@ void FileSystemModelWithCheckboxes::initializeCheckStates(const QModelIndex& par
                     // Model not found in database, create a new one
                     modelData.short_name = fileInfo.fileName().toStdString();
                     modelData.file_path = filePathStd;
-                    modelData.is_included = true; // Mark as included
-                    modelData.is_processed = false; // Not processed
+                    modelData.is_included = true;
+                    modelData.is_selected = true;
+                    modelData.is_processed = false;
 
                     model->insertModel(modelData);
 
@@ -193,6 +194,8 @@ bool FileSystemModelWithCheckboxes::setData(const QModelIndex& index, const QVar
                 modelData.file_path = filePathStd;
                 modelData.is_included = true;
                 modelData.is_processed = false;
+                modelData.is_selected = false;
+
                 model->insertModel(modelData);
 
                 // Fetch the inserted model to get the assigned id
