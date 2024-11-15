@@ -47,7 +47,7 @@ void FileSystemModelWithCheckboxes::initializeCheckStates(const QModelIndex& par
                     modelData.short_name = fileInfo.fileName().toStdString();
                     modelData.file_path = filePathStd;
                     modelData.is_included = true;
-                    modelData.is_selected = true;
+                    modelData.is_selected = false;
                     modelData.is_processed = false;
 
                     model->insertModel(modelData);
