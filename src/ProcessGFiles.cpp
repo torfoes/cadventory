@@ -407,3 +407,74 @@ bool ProcessGFiles::generateThumbnail(ModelData& modelData, const std::string& s
 
     return true;
 }
+
+bool ProcessGFiles::generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label)
+{
+    qDebug() << "[ProcessGFiles::generateGistReport] Started for inputFilePath:" << QString::fromStdString(inputFilePath)
+    << ", outputFilePath:" << QString::fromStdString(outputFilePath)
+    << ", primary_obj:" << QString::fromStdString(primary_obj)
+    << ", label:" << QString::fromStdString(label);
+
+    QFileInfo inputFile(QString::fromStdString(inputFilePath));
+    if (!inputFile.exists()) {
+        qDebug() << "[ProcessGFiles::generateGistReport] Input file does not exist:" << QString::fromStdString(inputFilePath);
+        return false;
+    }
+
+    QString gistExecutable = QStringLiteral(GIST_EXECUTABLE_PATH);
+    QStringList arguments;
+    arguments << QString::fromStdString(inputFilePath)
+              << "-o" << QString::fromStdString(outputFilePath);
+
+    if (!primary_obj.empty()) {
+        arguments << "-t" << QString::fromStdString(primary_obj);
+    }
+    if (!label.empty()) {
+        arguments << "-c" << QString::fromStdString(label);
+    }
+
+    qDebug() << "[ProcessGFiles::generateGistReport] Running gist command:" << gistExecutable << arguments.join(" ");
+
+    QSettings settings;
+    int timeLimitMs = settings.value("gistReportTimer", 300).toInt() * 1000;
+
+    QProcess process;
+    process.setProgram(gistExecutable);
+    process.setArguments(arguments);
+    process.setProcessChannelMode(QProcess::MergedChannels);
+
+    process.start();
+    if (!process.waitForStarted()) {
+        qDebug() << "[ProcessGFiles::generateGistReport] Failed to start the gist process for command:" << gistExecutable << arguments;
+        return false;
+    }
+
+    bool finishedInTime = process.waitForFinished(timeLimitMs);
+
+    if (!finishedInTime) {
+        // The process did not finish in the allotted time
+        qDebug() << "[ProcessGFiles::generateGistReport] Gist command timed out after" << timeLimitMs / 1000 << "seconds.";
+        process.kill();
+        process.waitForFinished();
+        return false;
+    }
+
+    int exitCode = process.exitCode();
+    if (exitCode != 0) {
+        qDebug() << "[ProcessGFiles::generateGistReport] The gist process finished with a non-zero exit code:" << exitCode;
+        qDebug() << "[ProcessGFiles::generateGistReport] Process output:" << process.readAllStandardOutput();
+        return false;
+    }
+
+    // Check if the output file was generated
+    QFileInfo outputFile(QString::fromStdString(outputFilePath));
+    if (!outputFile.exists() || outputFile.size() == 0) {
+        qDebug() << "[ProcessGFiles::generateGistReport] Output file not generated or empty at path:" << QString::fromStdString(outputFilePath);
+        return false;
+    }
+
+    qDebug() << "[ProcessGFiles::generateGistReport] Gist report generated successfully for file:" << QString::fromStdString(inputFilePath)
+             << "Output path:" << QString::fromStdString(outputFilePath);
+
+    return true;
+}

@@ -22,6 +22,8 @@ private:
 
     // Thumbnail generation and command utility methods
     bool generateThumbnail(ModelData& modelData, const std::string& selected_object_name);
+    bool generateGistReport(const std::string& inputFilePath, const std::string& outputFilePath, const std::string& primary_obj, const std::string& label);
+
 
     Model* model;
 };
