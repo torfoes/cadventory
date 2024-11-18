@@ -33,19 +33,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
               << "  defaults delete org.brlcad.CADventory" << std::endl;
     std::cout << "To reset via app, run with --no-gui option." << std::endl;
 
-    // Load previously saved libraries
-    size_t loaded = loadState();
-    if (loaded) {
-        std::cout << "Loaded " << loaded << " previously registered libraries" << std::endl;
-    }
-
-
 
     fileMenu = new QMenu(tr("&File"),this);
     editMenu = new QMenu(tr("&Edit"),this);
     viewMenu = new QMenu(tr("&View"),this);
     windowMenu = new QMenu(tr("&Window"),this);
     helpMenu = new QMenu(tr("&Help"),this);
+    removelib = new QMenu(tr("&Remove library"),this);
 
     ui.librarywidget->hide();
 
@@ -56,10 +50,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     windowMenu->addAction(set);
     fileMenu->addAction(reset);
+    fileMenu->addMenu(removelib);
+
 
     QAction *test = new QAction(tr("&test"),this);
 
-    windowMenu->addAction(test);
+
+
+
     viewMenu->addAction(test);
     helpMenu->addAction(test);
 
@@ -73,6 +71,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     settingWindow = new SettingWindow(this);
     connect(set,&QAction::triggered,this,&MainWindow::showSettingsWindow);
     connect(reset,&QAction::triggered,this,&MainWindow::resetting);
+
+
+
+    // Load previously saved libraries
+    size_t loaded = loadState();
+    if (loaded) {
+        std::cout << "Loaded " << loaded << " previously registered libraries" << std::endl;
+    }
 
 }
 
@@ -101,6 +107,13 @@ void MainWindow::addLibrary(const char* label, const char* path)
 
     QString libCount = QString("Scanned ") + QString::number(files) + QString(" file(s) in ") + label;
     this->updateStatusLabel(libCount.toStdString().c_str());
+
+
+    QAction *lib = new QAction(tr(label),this);
+    removelib->addAction(lib);
+
+    connect(lib,&QAction::triggered,this, &MainWindow::removeLibrary);
+
 
     // Add a button for the new library
     addLibraryButton(label, path);
@@ -283,9 +296,6 @@ void MainWindow::returnCentralWidget()
 void MainWindow::resetting()
 {
 
-    //ui->gridLayout->
-
-    //qDeleteAll(ui->gridLayout->findChildren<QWidget *>(QString(), Qt::FindDirectChildrenOnly));
 
     for (int i = ui.gridLayout->count(); i>0 ; --i) {
         QLayoutItem* item = ui.gridLayout->takeAt(i);
@@ -296,9 +306,72 @@ void MainWindow::resetting()
         }
     }
 
-     QLayoutItem* item = ui.gridLayout->takeAt(0);
-    ui.gridLayout->addWidget(item->widget(),366,158);
+    for (Library* lib : libraries) {
+        delete lib;
+    }
+
+    libraries.erase(
+        std::remove_if(
+            libraries.begin(),
+            libraries.end(),
+            [](Library* lib) {
+                return true;  // Remove all
+            }),
+        libraries.end()
+        );
+
+    QLayoutItem* item = ui.gridLayout->takeAt(0);
+    ui.gridLayout->addWidget(item->widget(),0,0);
 QSettings settings;
 settings.clear();
 settings.sync();
 }
+
+void MainWindow::removeLibrary()
+{
+
+    QAction* action = qobject_cast<QAction*>(sender());
+
+    if (!action)
+        return;
+
+    QString lookupKey = action->text();
+    Library* foundLibrary = nullptr;
+
+    for (Library* lib : libraries) {
+
+        if (QString(lib->name()) == lookupKey) {
+            foundLibrary = lib;
+            break;
+        }
+    }
+
+    if (foundLibrary) {
+
+
+        for (size_t i = (size_t)ui.gridLayout->count()-1; i > (size_t)0 ; --i) {
+            QLayoutItem* item = ui.gridLayout->itemAt(i);
+
+            QPushButton* button = qobject_cast<QPushButton*>(item->widget());
+            if (button && button->text() == QString::fromLocal8Bit(foundLibrary->name())){
+                ui.gridLayout->removeWidget(button);
+                delete button;
+
+                qDebug() << ui.gridLayout->count();
+                break;
+
+            }
+        }
+
+        delete action;
+        libraries.erase(std::remove(libraries.begin(), libraries.end(), foundLibrary), libraries.end());
+
+        saveState();
+
+    } else {
+        QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);
+    }
+
+
+}
+

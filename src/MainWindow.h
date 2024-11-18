@@ -41,6 +41,7 @@ public:
     QMenu * viewMenu;
     QMenu * windowMenu;
     QMenu * helpMenu;
+    QMenu * removelib;
     SettingWindow *settingWindow;
     void returnCentralWidget();
     void resetting();
@@ -57,6 +58,7 @@ protected:
     size_t loadState();
 
     void addLibraryButton(const char* label = nullptr, const char* path = nullptr);
+    void removeLibrary();
 
 private:
     Ui::MainWindow ui;
