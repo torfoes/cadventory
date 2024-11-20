@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     this->setFixedSize(QSize(876, 600));
     ui.setupUi(this);
+    setWindowTitle(QString("CADventory"));
 
     // Adjust the + button label position
     QLayoutItem* item = ui.gridLayout->itemAt(0);

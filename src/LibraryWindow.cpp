@@ -334,7 +334,7 @@ void LibraryWindow::reloadLibrary() {
     if (fs::exists(filePath)) {
         // Try to remove the file
         try {
-            if (fs::remove(filePath)) {
+
                 std::cout << "File 'metadata.db' successfully deleted." << std::endl;
                 // Reload the library
                 model->resetDatabase();
@@ -342,9 +342,8 @@ void LibraryWindow::reloadLibrary() {
                 availableModelsProxyModel->invalidate();
                 selectedModelsProxyModel->invalidate();
                 fileSystemModel->refresh(); // Custom method to refresh the model
-            } else {
-                std::cout << "Failed to delete 'metadata.db'." << std::endl;
-            }
+                this->loadFromLibrary(library);
+
         } catch (const fs::filesystem_error& e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }
