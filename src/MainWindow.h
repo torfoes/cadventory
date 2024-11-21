@@ -41,21 +41,24 @@ public:
     QMenu * viewMenu;
     QMenu * windowMenu;
     QMenu * helpMenu;
+    QMenu * removelib;
     SettingWindow *settingWindow;
     void returnCentralWidget();
+    void resetting();
 
 public slots:
     void updateStatusLabel(const char* status);
 
 private slots:
     void on_addLibraryButton_clicked();
-    void on_homeLibraryButton_clicked();
+
 
 protected:
     size_t saveState();
     size_t loadState();
 
     void addLibraryButton(const char* label = nullptr, const char* path = nullptr);
+    void removeLibrary();
 
 private:
     Ui::MainWindow ui;

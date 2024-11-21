@@ -5,8 +5,8 @@
 
 namespace fs = std::filesystem;
 
-ReportGeneratorWorker::ReportGeneratorWorker(Model* model, std::string output_directory ,QObject* parent)
-    : QObject(parent), output_directory(output_directory), model(model){}
+ReportGeneratorWorker::ReportGeneratorWorker(Model* model, std::string output_directory, std::string label, QObject* parent)
+    : QObject(parent), output_directory(output_directory), label(label), model(model){}
 
 void ReportGeneratorWorker::stop() {
   qDebug() << "ReportGeneratorWorker::stop() called";
@@ -23,6 +23,11 @@ void ReportGeneratorWorker::process() {
   std::vector<ModelData> selectedModels = model->getSelectedModels();
 
   for (const auto& modelData : selectedModels) {
+    if(QThread::currentThread()->isInterruptionRequested()){
+      std::cout << "gen report interrupted" << std::endl;
+      qDebug() << "ReportGeneratorWorker::process() stopping due to interruption request";
+      break;
+    }
     std::string path_gist_output =
         output_directory + "/" + std::to_string(num_file) + ".png";
 
@@ -42,11 +47,12 @@ void ReportGeneratorWorker::process() {
       }
     }
 
+
     emit processingGistCall(QString::fromStdString(modelData.file_path));
 
     // Use the generateGistReport method
-    auto [success, errorMessage] = processor.generateGistReport(
-        modelData.file_path, path_gist_output, primary_obj);
+    auto [success, errorMessage, command] = processor.generateGistReport(
+        modelData.file_path, path_gist_output, primary_obj, label);
 
     if (success) {
       // emit success
@@ -55,8 +61,8 @@ void ReportGeneratorWorker::process() {
       // Handle the error
 
       // emit failed
-      std::string fpath = modelData.file_path;
-      emit failedGistCall(QString::fromStdString(fpath), QString::fromStdString(errorMessage));
+      // std::string fpath = modelData.file_path;
+      emit failedGistCall(QString::fromStdString(modelData.file_path), QString::fromStdString(errorMessage), QString::fromStdString(command));
     }
     num_file++;
   }

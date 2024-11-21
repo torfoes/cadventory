@@ -55,7 +55,9 @@ void ModelCardDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opt
     painter->drawText(textR.adjusted(0, 20, 0, 0), Qt::AlignLeft | Qt::AlignTop, title);
     painter->drawText(textR.adjusted(0, 40, 0, 0), Qt::AlignLeft | Qt::AlignTop, author);
 
-    QIcon icon = QApplication::style()->standardIcon(QStyle::SP_DialogOpenButton);
+    // QIcon icon = QApplication::style()->standardIcon(QStyle::SP_DialogOpenButton);
+    QIcon icon(":/src/assets/file-sliders.svg");
+
     icon.paint(painter, iconR, Qt::AlignCenter, QIcon::Normal, QIcon::On);
 
     painter->restore();
@@ -79,7 +81,7 @@ bool ModelCardDelegate::editorEvent(QEvent* event, QAbstractItemModel* model,
 
         if (iconRect(option).contains(pos)) {
             int modelId = index.data(Model::IdRole).toInt();
-            emit geometryBrowserClicked(modelId);
+            emit modelViewClicked(modelId);
 
             // accept the event and prevent further processing
             event->accept();

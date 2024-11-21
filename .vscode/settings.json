@@ -87,6 +87,15 @@
     "print": "cpp",
     "queue": "cpp",
     "stack": "cpp",
+    "source_location": "cpp",
+    "qvariant": "cpp",
+    "qapplication": "cpp",
+    "qpushbutton": "cpp",
+    "qwidget": "cpp",
+    "qvboxlayout": "cpp",
+    "qlabel": "cpp",
+    "qlistview": "cpp",
+    "qhboxlayout": "cpp",
     "source_location": "cpp"
   }
 }

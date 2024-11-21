@@ -15,7 +15,7 @@ include_directories(
 # Find the required Qt modules
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Test)
 
-qt6_wrap_ui(UIS_HEADERS ../src/mainwindow.ui ../src/librarywindow.ui)
+qt6_wrap_ui(UIS_HEADERS ../src/mainwindow.ui ../src/librarywindow.ui ../src/reportgenerationwindow.ui ../src/SettingWindow.ui ../src/modelview.ui)
 
 # Include FetchContent module
 include(FetchContent)
@@ -114,26 +114,32 @@ target_link_libraries(FilesystemIndexerPerfTest PRIVATE
     ${SQLITE_LIBRARY}
 )
 
-# Add the MainWindowTest executable
-# add_executable(MainWindowTest
-#     MainWindowTest.cpp
-#     ../MainWindow.cpp
-#     ../LibraryWindow.cpp
-#     ../Library.cpp
-#     ../Model.cpp
-#     ../ProcessGFiles.cpp
-#     ../IndexingWorker.cpp
-#     ../FilesystemIndexer.cpp
-#     ../ModelCardDelegate.cpp
-#     ../GeometryBrowserDialog.cpp
-#     ../ReportGenerationWindow.cpp
-#     ../ModelFilterProxyModel.cpp
-#     ../mainwindow.ui
-#     ../ReportGeneratorWorker.cpp
-#     ../ReportGeneratorWorker.h
-#     ../SettingWindow.h
-#     ../SettingWindow.cpp
-# )
+add_executable(MainWindowTest
+    MainWindowTest.cpp
+    ../MainWindow.cpp
+    ../LibraryWindow.cpp
+    ../Library.cpp
+    ../Model.cpp
+    ../ProcessGFiles.cpp
+    ../IndexingWorker.cpp
+    ../FilesystemIndexer.cpp
+    ../ModelCardDelegate.cpp
+    ../GeometryBrowserDialog.cpp
+    ../ReportGenerationWindow.cpp
+    ../ModelFilterProxyModel.cpp
+    ../mainwindow.ui
+    ../ReportGeneratorWorker.cpp
+    ../ReportGeneratorWorker.h
+    ../SettingWindow.h
+    ../SettingWindow.cpp
+    ../FileSystemModelWithCheckboxes.cpp
+    ../FileSystemModelWithCheckboxes.h
+    ../FileSystemFilterProxyModel.cpp
+    ../FileSystemFilterProxyModel.h
+    ../ModelView.cpp
+    ../ModelView.h
+    ../modelview.ui
+)
 
 # Link the Main Window GUI test executable against the necessary libraries
 # target_link_libraries(MainWindowTest PRIVATE

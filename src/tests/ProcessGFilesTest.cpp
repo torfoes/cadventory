@@ -30,7 +30,7 @@ TEST_CASE("ProcessGFiles - File Processing with annual_gift_man.g", "[ProcessGFi
 
     SECTION("Process annual_gift_man.g file") {
         if (std::filesystem::exists(validFilePath)) {
-            processor.processGFile(validFilePath, "output_folder");
+            processor.processGFile(validFilePath, "output_folder", "(unknown lib)");
 
             // Verify that the thumbnail was generated as expected
             REQUIRE(std::filesystem::exists("output_folder/annual_gift_man.png"));
@@ -47,6 +47,9 @@ TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
     ProcessGFiles processor(model.get());
     std::string filePath = "../src/tests/annual_gift_man.g";
 
+    REQUIRE(std::filesystem::exists(filePath));
+    processor.processGFile(filePath, "output_folder", "(unknown lib)");
+
     if (std::filesystem::exists(filePath)) {
         processor.processGFile(filePath, "output_folder");
 
@@ -59,7 +62,7 @@ TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
     }
 }
 
-// Test gist report generation
+
 TEST_CASE("ProcessGFiles - Generate Gist Report for annual_gift_man.g", "[ProcessGFiles]") {
     setupTestLibraryPath();
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
@@ -72,3 +75,4 @@ TEST_CASE("ProcessGFiles - Generate Gist Report for annual_gift_man.g", "[Proces
     REQUIRE(errorMessage.empty());
     REQUIRE(std::filesystem::exists(outputFilePath));
 }
+

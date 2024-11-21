@@ -22,6 +22,7 @@ public:
 
 signals:
     void geometryBrowserClicked(int modelId);
+    void modelViewClicked(int modelId);
 
 private:
     QRect previewRect(const QStyleOptionViewItem& option) const;
