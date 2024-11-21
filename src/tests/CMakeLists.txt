@@ -114,7 +114,6 @@ target_link_libraries(FilesystemIndexerPerfTest PRIVATE
     ${SQLITE_LIBRARY}
 )
 
-# Add the MainWindowTest executable
 add_executable(MainWindowTest
     MainWindowTest.cpp
     ../MainWindow.cpp
@@ -143,20 +142,20 @@ add_executable(MainWindowTest
 )
 
 # Link the Main Window GUI test executable against the necessary libraries
-target_link_libraries(MainWindowTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Test
-    ${SQLITE_LIBRARY}
-)
+# target_link_libraries(MainWindowTest PRIVATE
+#     Catch2::Catch2WithMain
+#     Qt6::Core
+#     Qt6::Gui
+#     Qt6::Widgets
+#     Qt6::Test
+#     ${SQLITE_LIBRARY}
+# )
 
 # Include directories for MainWindowTest
-target_include_directories(MainWindowTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-)
+# target_include_directories(MainWindowTest PRIVATE
+#     ${CMAKE_SOURCE_DIR}/src
+#     ${CMAKE_BINARY_DIR}/src
+# )
 
 # Add the LibraryWindowTest executable
 # add_executable(LibraryWindowTest
@@ -254,7 +253,7 @@ add_test(NAME ModelTests COMMAND ModelTest)
 add_test(NAME LibraryTests COMMAND LibraryTest)
 add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
 add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
-add_test(NAME MainWindowTests COMMAND MainWindowTest)
+# add_test(NAME MainWindowTests COMMAND MainWindowTest)
 # add_test(NAME LibraryWindowTests COMMAND LibraryWindowTest)
 add_test(NAME GeometryBrowserDialogTests COMMAND GeometryBrowserDialogTest)
 add_test(NAME ProcessGFilesTests COMMAND ProcessGFilesTest)

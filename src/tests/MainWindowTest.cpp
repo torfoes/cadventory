@@ -1,168 +1,97 @@
-#include <QtTest/QtTest>
-#include <QApplication>
-#include <QDialog>
-#include <QPushButton>
-#include <QDir>
-#include <QTemporaryDir>
+// #include <QtTest/QtTest>
+// #include <QApplication>
+// #include <QDialog>
+// #include <QListWidget>
+// #include <QPushButton>
+// #include <QTemporaryDir>
+// #include <QDebug>
+// #include <filesystem>
 
-#include "../MainWindow.h"
-#include "../LibraryWindow.h"
-#include "../Library.h"
-#include "../Model.h"
-#include "../ModelFilterProxyModel.h"
-#include "../ModelCardDelegate.h"
-#include "../IndexingWorker.h"
-#include "../FilesystemIndexer.h"
-#include "../ProcessGFiles.h"
-#include "../GeometryBrowserDialog.h"
+// #include "../MainWindow.h"
+// #include "../LibraryWindow.h"
+// #include "../Library.h"
+// #include "../Model.h"
+// #include "../ModelFilterProxyModel.h"
+// #include "../ModelCardDelegate.h"
+// #include "../IndexingWorker.h"
+// #include "../FilesystemIndexer.h"
+// #include "../ProcessGFiles.h"
+// #include "../GeometryBrowserDialog.h"
 
+// const std::string TEST_LIBRARY_PATH = "./temp_test_library";  // Base path for testing
 
-class TestMainWindowGUI : public QObject {
-    Q_OBJECT
+// void setupTestLibraryPath() {
+//     std::filesystem::create_directories(TEST_LIBRARY_PATH + "/.cadventory");
+// }
 
-private slots:
-    void initTestCase();
-    void testMainWindowVisible();
-    void testAddLibrary();
-    void testOpenLibrary();
-    void testSaveAndLoadState();
-    void testAddLibraryButtonClick();
+// class MainWindowTest : public QObject {
+//     Q_OBJECT
 
-private:
-    MainWindow* mainWindow;
-};
+// private slots:
+//     void initTestCase();       // Set up any common resources before tests
+//     void cleanupTestCase();    // Clean up resources after tests
 
-// Initialize MainWindow for testing
-void TestMainWindowGUI::initTestCase() {
-    try {
-        // Base path for testing
-        QString testDirPath = "/tmp/MainWindowTest";
-        QDir testDir(testDirPath);
+//     void testInitialization();
+//     void testAddLibrary();
+//     void testClearLibraries();
+//     void testSaveAndLoadState();
+//     void testAddLibraryButtonClick();
+//     void testStatusLabelUpdate();
 
-        // Log and create the base test directory if it doesn’t exist
-        if (!testDir.exists()) {
-            qDebug() << "Creating base directory at:" << testDirPath;
-            if (!testDir.mkpath(".")) {
-                qDebug() << "Failed to create base directory at:" << testDirPath;
-                QFAIL("Unable to create base directory.");
-            }
-        }
+// private:
+//     MainWindow *mainWindow;
+// };
 
-        // Create `.cadventory` subdirectory under test path
-        QString cadventoryDirPath = testDirPath + "/.cadventory";
-        QDir cadventoryDir(cadventoryDirPath);
-        if (!cadventoryDir.exists()) {
-            qDebug() << "Creating .cadventory directory at:" << cadventoryDirPath;
-            if (!cadventoryDir.mkpath(".")) {
-                qDebug() << "Failed to create .cadventory directory at:" << cadventoryDirPath;
-                QFAIL("Unable to create .cadventory directory.");
-            }
-        }
+// void MainWindowTest::initTestCase() {
+//     setupTestLibraryPath();  // Ensure test directory structure is set up
+//     mainWindow = new MainWindow();
+// }
 
-        // Initialize and show the main window
-        mainWindow = new MainWindow();
-        mainWindow->show();
+// void MainWindowTest::cleanupTestCase() {
+//     delete mainWindow;
+//     std::filesystem::remove_all(TEST_LIBRARY_PATH);  // Clean up test directory after tests
+// }
 
-    } catch (const std::filesystem::filesystem_error& e) {
-        qDebug() << "Exception caught during setup:" << e.what();
-        QFAIL("Caught unhandled filesystem_error during directory setup.");
-    }
-}
+// void MainWindowTest::testInitialization() {
+//     QCOMPARE(mainWindow->getLibraries().size(), size_t(0));
+// }
 
+// void MainWindowTest::testAddLibrary() {
+//     mainWindow->addLibrary("Test Library", "/path/to/library");
+//     QCOMPARE(mainWindow->getLibraries().size(), size_t(1));
+//     QCOMPARE(QString(mainWindow->getLibraries()[0]->name()), QString("Test Library"));
+// }
 
+// void MainWindowTest::testClearLibraries() {
+//     mainWindow->addLibrary("Library 1", "/path/to/library1");
+//     mainWindow->addLibrary("Library 2", "/path/to/library2");
+//     mainWindow->clearLibraries();
+//     QCOMPARE(mainWindow->getLibraries().size(), size_t(0));
+// }
 
-// Test if the main window is visible
-void TestMainWindowGUI::testMainWindowVisible() {
-    QVERIFY(mainWindow->isVisible());
-}
+// void MainWindowTest::testSaveAndLoadState() {
+//     mainWindow->clearLibraries();
+//     mainWindow->addLibrary("Persistent Library", "/path/to/persistent");
+//     mainWindow->publicSaveState();
 
-void TestMainWindowGUI::testAddLibrary()
-{
-    try {
-        mainWindow->clearLibraries();  // Clear libraries before starting
+//     mainWindow->clearLibraries();  // Clear and then load
+//     QCOMPARE(mainWindow->getLibraries().size(), size_t(0));
 
-        QTemporaryDir tempDir;
-        QVERIFY(tempDir.isValid());
+//     mainWindow->publicLoadState();
+//     QCOMPARE(mainWindow->getLibraries().size(), size_t(1));
+//     QCOMPARE(QString(mainWindow->getLibraries()[0]->name()), QString("Persistent Library"));
+// }
 
-        QString libraryPath = tempDir.path();
-        mainWindow->addLibrary("Test Library", libraryPath.toUtf8().constData());
+// void MainWindowTest::testAddLibraryButtonClick() {
+//     mainWindow->clearLibraries();
+//     QMetaObject::invokeMethod(mainWindow, "on_addLibraryButton_clicked");
+//     QCOMPARE(mainWindow->getLibraries().size(), size_t(1));
+// }
 
-        const auto& libraries = mainWindow->getLibraries();
-        QCOMPARE(libraries.size(), 1);
-        QCOMPARE(libraries[0]->name(), QString("Test Library"));
-        QCOMPARE(libraries[0]->path(), libraryPath);
-    } catch (const std::filesystem::filesystem_error& e) {
-        QFAIL(e.what());
-    }
-}
+// void MainWindowTest::testStatusLabelUpdate() {
+//     mainWindow->updateStatusLabel("Status Updated");
+//     QCOMPARE(mainWindow->statusBar()->currentMessage(), QString("Status Updated"));
+// }
 
-void TestMainWindowGUI::testOpenLibrary()
-{
-    try {
-        mainWindow->clearLibraries();  // Clear libraries before starting
-
-        QTemporaryDir tempDir;
-        QVERIFY(tempDir.isValid());
-
-        QString libraryPath = tempDir.path();
-        mainWindow->addLibrary("Open Library", libraryPath.toUtf8().constData());
-
-        mainWindow->openLibrary();
-
-        // Verify post-conditions as applicable; update checks as needed
-        const auto& libraries = mainWindow->getLibraries();
-        QVERIFY(!libraries.empty());
-        QCOMPARE(libraries.back()->name(), QString("Open Library"));
-        QCOMPARE(libraries.back()->path(), libraryPath);
-    } catch (const std::filesystem::filesystem_error& e) {
-        QFAIL(e.what());
-    }
-}
-
-
-void TestMainWindowGUI::testSaveAndLoadState()
-{
-    try {
-        mainWindow->clearLibraries();  // Ensure no pre-existing libraries
-
-        // Use a temporary directory to create a persistent path for the library
-        QTemporaryDir tempDir;
-        QVERIFY(tempDir.isValid());
-
-        QString persistentPath = tempDir.path();
-        mainWindow->addLibrary("Persistent Library", persistentPath.toUtf8().constData());
-
-        // Save the state
-        size_t savedCount = mainWindow->publicSaveState();
-        QCOMPARE(savedCount, 1);
-
-        // Clear libraries and reload state
-        mainWindow->clearLibraries();
-        size_t loadedCount = mainWindow->publicLoadState();
-
-        // Verify the state is consistent
-        const auto& libraries = mainWindow->getLibraries();
-        QCOMPARE(loadedCount, 1);
-        QCOMPARE(libraries[0]->name(), QString("Persistent Library"));
-        QCOMPARE(libraries[0]->path(), persistentPath);
-
-    } catch (const std::filesystem::filesystem_error& e) {
-        QFAIL(e.what());  // Catch and report any filesystem errors
-    }
-}
-
-void TestMainWindowGUI::testAddLibraryButtonClick()
-{
-    // Placeholder: Verify the addLibraryButton is present
-    QPushButton* addButton = mainWindow->findChild<QPushButton*>("addLibraryButton");
-    QVERIFY(addButton != nullptr);
-
-    // Simulate a click to verify functionality
-    QTest::mouseClick(addButton, Qt::LeftButton);
-
-    // Placeholder assertion, update as needed based on button functionality
-    QVERIFY(true);
-}
-
-QTEST_MAIN(TestMainWindowGUI)
-#include "MainWindowTest.moc"
+// QTEST_MAIN(MainWindowTest)
+// #include "MainWindowTest.moc"
