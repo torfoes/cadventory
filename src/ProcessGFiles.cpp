@@ -473,7 +473,7 @@ std::tuple<bool, std::string, std::string> ProcessGFiles::generateGistReport(con
         std::string processOutput = process.readAllStandardOutput().toStdString();
         qDebug() << "[ProcessGFiles::generateGistReport]" << QString::fromStdString(errorMessage);
         qDebug() << "[ProcessGFiles::generateGistReport] Process output:" << QString::fromStdString(processOutput);
-        return {false, errorMessage, gistCommand};
+        return {false, processOutput, gistCommand};
     }
 
     // Check if the output file was generated
