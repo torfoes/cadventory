@@ -40,7 +40,7 @@ TEST_CASE("ProcessGFiles - File Processing with annual_gift_man.g", "[ProcessGFi
     }
 }
 
-// Test thumbnail generation for `annual_gift_man.g`
+Test thumbnail generation for `annual_gift_man.g`
 TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
     setupTestLibraryPath();
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
