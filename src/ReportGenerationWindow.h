@@ -42,11 +42,10 @@ class ReportGenerationWindow : public QWidget {
   void coverPage();
   void tableOfContentsPage();
 
-  bool classified;
-  int* num_file;
+  int* num_file; // tracks progress, incremented each time a model is processed
   int* tot_num_files;
-  int x = 325;
-  int y = 400;
+  int x = 325; // table of contents starting x
+  int y = 400; // table of contents starting y
   std::string time;
   QPdfWriter* pdfWriter;
   QPainter* painter;
@@ -58,12 +57,12 @@ class ReportGenerationWindow : public QWidget {
   std::string subtitle;
   std::string label;
   std::string output_directory;
-  std::string logo1_filepath;
-  std::string logo2_filepath;
+  std::string logo1_filepath; // top logo
+  std::string logo2_filepath; // bottom logo
   std::string title;
   std::string username;
   std::string version;
-  std::vector<std::string>* err_vec;
+  std::vector<std::string>* err_vec; // vector of errors to display
 };
 
 #endif  // REPORTGENERATIONWINDOW_H

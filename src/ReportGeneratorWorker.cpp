@@ -8,11 +8,6 @@ namespace fs = std::filesystem;
 ReportGeneratorWorker::ReportGeneratorWorker(Model* model, std::string output_directory, std::string label, QObject* parent)
     : QObject(parent), output_directory(output_directory), label(label), model(model){}
 
-void ReportGeneratorWorker::stop() {
-  qDebug() << "ReportGeneratorWorker::stop() called";
-  m_stopRequested.store(true);
-}
-
 void ReportGeneratorWorker::process() {
   qDebug() << "ReportGeneratorWorker::process() started";
   ProcessGFiles processor(model);
@@ -67,8 +62,6 @@ void ReportGeneratorWorker::process() {
     num_file++;
   }
 
-  // Emit final progress signal to indicate completion
-  // emit progressUpdated("Processing complete", 100);
 
   // Emit finished signal to indicate processing is complete
   emit finishedReport();

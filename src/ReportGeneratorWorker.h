@@ -11,7 +11,6 @@ class ReportGeneratorWorker : public QObject {
     Q_OBJECT
 public:
     explicit ReportGeneratorWorker(Model* model = nullptr, std::string output_directory = "", std::string label = "", QObject* parent = nullptr);
-    void stop();
 public slots:
     void process();
 
@@ -26,7 +25,6 @@ private:
     std::string label;
     std::string output_directory;
     Model* model;
-    std::atomic<bool> m_stopRequested;
 };
 
 #endif // ReportGeneratorWorker_H

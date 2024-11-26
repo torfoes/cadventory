@@ -52,13 +52,15 @@ ReportGenerationWindow::ReportGenerationWindow(QWidget* parent, Model* model,
   connect(ui->pauseReport_pushButton, &QPushButton::clicked, this,
           &ReportGenerationWindow::onPauseReportButtonClicked);  
 }
+// interruption request, stops process after processing a gist model
+// does not forcefully interrupt
 void ReportGenerationWindow::onPauseReportButtonClicked() {
   generatingReportThread->requestInterruption();
   std::cout << "interruption requested " << std::endl;
   ui->fileInProcess_label->setText(QString::fromStdString("Generation Stopped..."));
 
 }
-
+// initiate generate report procedure
 void ReportGenerationWindow::onGenerateReportButtonClicked() {
   // need output directory
   if (output_directory.empty()) {
@@ -92,7 +94,7 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
                  "\n";  // Append each string with a newline
     }
 
-    // Create and show the popup
+    // Create and show the popup of any model.working folders
     QMessageBox msgBox(this);
     msgBox.setText(
         "Found Model.working folders, please move or remove these folders "
@@ -101,7 +103,7 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
     msgBox.exec();
     return;
   }
-
+  // get time
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
   std::ostringstream oss;
@@ -118,13 +120,13 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   tot_num_files = new int(model->getSelectedModels().size());
 
   generatingReportThread =
-      new QThread(this);  // Parent is ReportGenerationWindow
+      new QThread(this);  // Thread's parent is ReportGenerationWindow
   reporterWorker =
       new ReportGeneratorWorker(model, output_directory, label, nullptr);
   // Move the worker to the thread
   reporterWorker->moveToThread(generatingReportThread);
 
-  // // Connect signals and slots
+  // Connect signals and slots
   connect(generatingReportThread, &QThread::started, reporterWorker,
           &ReportGeneratorWorker::process);
   connect(reporterWorker, &ReportGeneratorWorker::successfulGistCall, this,
@@ -139,7 +141,7 @@ void ReportGenerationWindow::onGenerateReportButtonClicked() {
   // Start the indexing thread
   generatingReportThread->start();
 }
-
+//generate cover page
 void ReportGenerationWindow::coverPage() {
   /* portrait mode
 
@@ -320,7 +322,7 @@ void ReportGenerationWindow::coverPage() {
   painter->drawText(date_rect, Qt::AlignRight,
                     QString::fromStdString(time.substr(0, time.find(","))));
 }
-
+// generate table of contents page(s)
 void ReportGenerationWindow::tableOfContentsPage() {
   /* portrait mode
   QFont font("Helvetica", 18);
@@ -477,6 +479,7 @@ void ReportGenerationWindow::tableOfContentsPage() {
     model_count++;
   }
 }
+// open file explorer to choose output directory
 void ReportGenerationWindow::onOutputDirectoryButtonClicked() {
   QString temp_dir_1 = QFileDialog::getExistingDirectory(
       this, tr("Choose Directory to store Output"));
@@ -493,6 +496,7 @@ void ReportGenerationWindow::onOutputDirectoryButtonClicked() {
   ui->outputDirectory_textEdit->setPlainText(temp_dir_1);
   output_directory = temp_dir_1.toStdString();
 }
+// open file explorer to choose top logo 
 void ReportGenerationWindow::onLogo1ButtonClicked() {
   QString top_logo_path =
       QFileDialog::getOpenFileName(this, tr("Choose first logo for report."),
@@ -500,6 +504,7 @@ void ReportGenerationWindow::onLogo1ButtonClicked() {
   ui->logo1_textEdit->setPlainText(top_logo_path);
   logo1_filepath = top_logo_path.toStdString();
 }
+// open file explorer to choose bottom logo
 void ReportGenerationWindow::onLogo2ButtonClicked() {
   QString bottom_logo_path =
       QFileDialog::getOpenFileName(this, tr("Choose second logo for report."),
@@ -508,6 +513,7 @@ void ReportGenerationWindow::onLogo2ButtonClicked() {
   logo2_filepath = bottom_logo_path.toStdString();
 }
 
+// update text to model currently being processed in ui
 void ReportGenerationWindow::onProcessingGistCall(const QString& file) {
   std::string cur_file =
       "Processing: " +
@@ -515,6 +521,7 @@ void ReportGenerationWindow::onProcessingGistCall(const QString& file) {
   ui->fileInProcess_label->setText(QString::fromStdString(cur_file));
 }
 
+// append gist output to pdf
 void ReportGenerationWindow::onSuccessfulGistCall(
     const QString& path_gist_output) {
   // Load the generated PNG image
@@ -539,6 +546,10 @@ void ReportGenerationWindow::onSuccessfulGistCall(
   ui->progressBar->setValue(progress);
   (*num_file)++;
 }
+
+
+// on failed gist call, write to error vector containing model, command, and error output
+// additionally write this output to pdf
 void ReportGenerationWindow::onFailedGistCall(const QString& filepath,
                                               const QString& errorMessage,
                                               const QString& command) {
@@ -580,9 +591,8 @@ void ReportGenerationWindow::onFinishedGeneratingReport() {
 
   std::string hidden_dir_path = library->fullPath + "/.cadventory";
 
-  // yay this works
 
-  // make a temp dir for this report!
+  // make a temp dir for report
   std::string working_folders_dir =
       hidden_dir_path + "/working_folders_" + time;
   QDir wfdir(QString::fromStdString(working_folders_dir));
@@ -592,6 +602,7 @@ void ReportGenerationWindow::onFinishedGeneratingReport() {
     std::cout << "folder exists!" << std::endl;
   }
 
+  // move model.working folders into .cadventory
   for (const auto& model : selectedModels) {
     std::string model_working_path =
         model.file_path.substr(0, model.file_path.find(".g")) + ".working";
@@ -611,6 +622,8 @@ void ReportGenerationWindow::onFinishedGeneratingReport() {
     }
   }
 
+
+  // show error popup
   std::cout << "Report Generated" << std::endl;
   if (err_vec->size()) {
     // Convert std::vector<std::string> to QString
@@ -620,7 +633,6 @@ void ReportGenerationWindow::onFinishedGeneratingReport() {
                  "\n";  // Append each string with a newline
     }
 
-    // Create and show the popup
     QMessageBox msgBox(this);
     msgBox.setText("Errors:");
     msgBox.setInformativeText(message);
