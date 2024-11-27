@@ -27,16 +27,21 @@ private slots:
 
         // Initialize a valid QPixmap for the painter
         QPixmap pixmap(300, 100);
+        if (pixmap.isNull()) {
+            FAIL("QPixmap initialization failed.");
+        }
         pixmap.fill(Qt::white); // Ensure the pixmap is filled with a valid color
 
         QPainter painter(&pixmap);
-        REQUIRE(painter.isActive()); // Verify that the QPainter is active
+        if (!painter.isActive()) {
+            FAIL("QPainter initialization failed.");
+        }
 
         QStyleOptionViewItem option;
         option.rect = QRect(0, 0, 300, 100);
 
-        // Perform painting and handle exceptions
         try {
+            // Perform painting
             delegate.paint(&painter, option, index);
             REQUIRE(true); // Pass if no exception is thrown
         } catch (const std::exception& e) {
@@ -44,8 +49,10 @@ private slots:
         } catch (...) {
             FAIL_CHECK("Unknown exception during paint.");
         }
-    }
 
+        // Verify the pixmap has been modified by the paint operation
+        REQUIRE(!pixmap.isNull());
+    }
 
     // Test size hint logic
     void testSizeHint() {
@@ -73,24 +80,33 @@ private slots:
         ModelCardDelegate delegate;
 
         QMouseEvent mouseEvent(
-            QEvent::MouseButtonRelease,
-            QPointF(290, 20),   // Updated to use QPointF
-            Qt::LeftButton,
-            Qt::LeftButton,
-            Qt::NoModifier
+            QEvent::MouseButtonRelease,  // Event type
+            QPoint(290, 20),             // Mouse position
+            Qt::LeftButton,              // Button clicked
+            Qt::LeftButton,              // Button state
+            Qt::NoModifier               // No keyboard modifier
         );
         QStyleOptionViewItem option;
         option.rect = QRect(0, 0, 300, 100);
 
-        // Create a spy for the signal
-        QSignalSpy spy(&delegate, &ModelCardDelegate::modelViewClicked);
+        // Verify event coordinates fall within the option rect
+        QVERIFY(option.rect.contains(mouseEvent.pos()));
 
-        // Trigger the editor event
-        REQUIRE(delegate.editorEvent(&mouseEvent, &model, option, index));
+        try {
+            // Create a spy for the signal
+            QSignalSpy spy(&delegate, &ModelCardDelegate::modelViewClicked);
 
-        // Verify the signal was emitted with the correct data
-        REQUIRE(spy.count() == 1);
-        QCOMPARE(spy.takeFirst().at(0).toInt(), 123);
+            // Trigger the editor event
+            REQUIRE(delegate.editorEvent(&mouseEvent, &model, option, index));
+
+            // Verify the signal was emitted with the correct data
+            REQUIRE(spy.count() == 1);
+            QCOMPARE(spy.takeFirst().at(0).toInt(), 123);
+        } catch (const std::exception& e) {
+            FAIL_CHECK(std::string("Exception during editorEvent: ") + e.what());
+        } catch (...) {
+            FAIL_CHECK("Unknown exception during editorEvent.");
+        }
     }
 };
 

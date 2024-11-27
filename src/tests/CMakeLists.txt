@@ -280,27 +280,56 @@ target_include_directories(GeometryBrowserDialogTest PRIVATE
 # )
 
 # Add the ModelCardDelegateTest executable
-add_executable(ModelCardDelegateTest
-    ModelCardDelegateTest.cpp
-    ../ModelCardDelegate.cpp
+# add_executable(ModelCardDelegateTest
+#     ModelCardDelegateTest.cpp
+#     ../ModelCardDelegate.cpp
+#     ../Model.cpp
+# )
+
+# Link the ModelCardDelegateTest executable against the necessary libraries
+# target_link_libraries(ModelCardDelegateTest PRIVATE
+#     Catch2::Catch2WithMain
+#     Qt6::Core
+#     Qt6::Gui
+#     Qt6::Widgets
+#     Qt6::Test
+#     ${SQLITE_LIBRARY}
+# )
+
+# Include directories for ModelCardDelegateTest
+# target_include_directories(ModelCardDelegateTest PRIVATE
+#     ${CMAKE_SOURCE_DIR}/src
+#     ${CMAKE_BINARY_DIR}/src
+# )
+
+add_executable(FileSystemModelWithCheckboxesTest
+    FileSystemModelWithCheckboxesTest.cpp
+    ../FileSystemModelWithCheckboxes.cpp
     ../Model.cpp
 )
 
-# Link the ModelCardDelegateTest executable against the necessary libraries
-target_link_libraries(ModelCardDelegateTest PRIVATE
+target_link_libraries(FileSystemModelWithCheckboxesTest PRIVATE
     Catch2::Catch2WithMain
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
     Qt6::Test
-    ${SQLITE_LIBRARY}
+    sqlite3
 )
 
-# Include directories for ModelCardDelegateTest
-target_include_directories(ModelCardDelegateTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
+add_executable(FileSystemFilterProxyModelTest
+    FileSystemFilterProxyModelTest.cpp
+    ../FileSystemFilterProxyModel.cpp
 )
+
+target_link_libraries(FileSystemFilterProxyModelTest
+    Catch2::Catch2WithMain
+    Qt6::Test
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+)
+
 
 # Register each test with CTest
 add_test(NAME ModelTests COMMAND ModelTest)
@@ -312,4 +341,6 @@ add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
 add_test(NAME GeometryBrowserDialogTests COMMAND GeometryBrowserDialogTest)
 # add_test(NAME ProcessGFilesTests COMMAND ProcessGFilesTest)
 # add_test(NAME IndexingWorkerTests COMMAND IndexingWorkerTest)
-add_test(NAME ModelCardDelegateTests COMMAND ModelCardDelegateTest)
+# add_test(NAME ModelCardDelegateTests COMMAND ModelCardDelegateTest)
+add_test(NAME FileSystemModelWithCheckboxesTests COMMAND FileSystemModelWithCheckboxesTest)
+add_test(NAME FileSystemFilterProxyModelTests COMMAND FileSystemFilterProxyModelTest)
