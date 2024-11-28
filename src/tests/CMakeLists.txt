@@ -1,346 +1,219 @@
-# src/tests/CMakeLists.txt
-
 cmake_minimum_required(VERSION 3.25)
 
-project(CADventoryTests)
+project(CADventoryTests VERSION 0.1.0 LANGUAGES CXX)
 
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Enable testing
+enable_testing()
+
+# Enable Qt's automatic processing
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
+# Include directories from parent scope
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}      # Include the main build directory where config.h is located
     ${CMAKE_BINARY_DIR}/src
+    ${BRLCAD_INCLUDE_DIRS}
 )
 
-# Find the required Qt modules
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Test)
+# Find required Qt modules
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Test)
+qt_standard_project_setup()
 
-qt6_wrap_ui(UIS_HEADERS ../src/mainwindow.ui ../src/librarywindow.ui ../src/reportgenerationwindow.ui ../src/SettingWindow.ui ../src/modelview.ui)
-
-# Include FetchContent module
+# Include FetchContent module for Catch2
 include(FetchContent)
-
-# Fetch Catch2 testing framework
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.5.3
+  GIT_TAG        v3.5.1  # Specify the version you need
 )
 FetchContent_MakeAvailable(Catch2)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Adding code coverage flags")
+# Common libraries and include directories
+set(COMMON_LIBRARIES
+    Catch2::Catch2WithMain
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Test
+    ${SQLITE_LIBRARY}
+    ${BRLCAD_LIBRARIES}
+)
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        # GCC-specific coverage flags
-        add_compile_options(-fprofile-arcs -ftest-coverage -g -O0)
-        link_libraries(gcov)  # gcov library for coverage
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        # Clang-specific coverage flags
-        add_compile_options(-fprofile-instr-generate -fcoverage-mapping -g -O0)
-        add_link_options(-fprofile-instr-generate)
-    else()
-        message(WARNING "Code coverage is not supported for this compiler.")
+set(COMMON_INCLUDE_DIRECTORIES
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/src
+    ${BRLCAD_INCLUDE_DIRS}
+)
+
+# Function to add a test executable using qt_add_executable
+function(add_cadventory_test)
+    set(options)
+    set(oneValueArgs NAME)
+    set(multiValueArgs SOURCES)
+    cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(NOT TEST_NAME)
+        message(FATAL_ERROR "add_cadventory_test requires a NAME argument.")
     endif()
-endif()
 
-# Add the ModelTest executable
-add_executable(ModelTest
-    ModelTest.cpp
-    ../Model.cpp
+    qt_add_executable(${TEST_NAME}
+        ${TEST_SOURCES}
+    )
+
+    target_link_libraries(${TEST_NAME} PRIVATE ${COMMON_LIBRARIES})
+    target_include_directories(${TEST_NAME} PRIVATE ${COMMON_INCLUDE_DIRECTORIES})
+
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endfunction()
+
+# Add tests using the function
+add_cadventory_test(
+    NAME ModelTest
+    SOURCES
+        ModelTest.cpp
+        ../Model.cpp
 )
 
-# Link the test executable against the necessary libraries
-target_link_libraries(ModelTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-    ${BRLCAD_LIBRARIES}
+add_cadventory_test(
+    NAME LibraryTest
+    SOURCES
+        LibraryTest.cpp
+        ../Library.cpp
+        ../Model.cpp
+        ../FilesystemIndexer.cpp
 )
 
-# Include directories for ModelTest
-target_include_directories(ModelTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-    ${BRLCAD_INCLUDE_DIRS}
+add_cadventory_test(
+    NAME FilesystemIndexerTest
+    SOURCES
+        FilesystemIndexerTest.cpp
+        ../FilesystemIndexer.cpp
 )
 
-# Add the LibraryTest executable
-add_executable(LibraryTest
-    LibraryTest.cpp
-    ../Library.cpp
-    ../Model.cpp
-    ../FilesystemIndexer.cpp
+add_cadventory_test(
+    NAME FilesystemIndexerPerfTest
+    SOURCES
+        FilesystemIndexerPerfTest.cpp
+        ../FilesystemIndexer.cpp
 )
 
-# Link the test executable against the necessary libraries
-target_link_libraries(LibraryTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-    ${BRLCAD_LIBRARIES}
+add_cadventory_test(
+    NAME GeometryBrowserDialogTest
+    SOURCES
+        GeometryBrowserDialogTest.cpp
+        ../GeometryBrowserDialog.cpp
+        ../Model.cpp
 )
 
-# Include directories for LibraryTest
-target_include_directories(LibraryTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-    ${BRLCAD_INCLUDE_DIRS}
+add_cadventory_test(
+    NAME FileSystemModelWithCheckboxesTest
+    SOURCES
+        FileSystemModelWithCheckboxesTest.cpp
+        ../FileSystemModelWithCheckboxes.cpp
+        ../Model.cpp
 )
 
-# Add the FilesystemIndexerTest executable
-add_executable(FilesystemIndexerTest FilesystemIndexerTest.cpp ../FilesystemIndexer.cpp)
-
-# Link the FilesystemIndexerTest executable against the necessary libraries
-target_link_libraries(FilesystemIndexerTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-    ${BRLCAD_LIBRARIES}
+add_cadventory_test(
+    NAME FileSystemFilterProxyModelTest
+    SOURCES
+        FileSystemFilterProxyModelTest.cpp
+        ../FileSystemFilterProxyModel.cpp
 )
 
-# Include directories for FilesystemIndexerTest if necessary
-target_include_directories(FilesystemIndexerTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-    ${BRLCAD_INCLUDE_DIRS}
+add_cadventory_test(
+    NAME ProcessGFilesTest
+    SOURCES
+        ProcessGFilesTest.cpp
+        ../ProcessGFiles.cpp
+        ../Model.cpp
 )
 
-# Add the FilesystemIndexerPerfTest executable
-add_executable(FilesystemIndexerPerfTest FilesystemIndexerPerfTest.cpp ../FilesystemIndexer.cpp)
-
-# Link the FilesystemIndexerPerfTest executable against the necessary libraries
-target_link_libraries(FilesystemIndexerPerfTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    ${SQLITE_LIBRARY}
-    ${BRLCAD_LIBRARIES}
+add_cadventory_test(
+    NAME IndexingWorkerTest
+    SOURCES
+        IndexingWorkerTest.cpp
+        ../IndexingWorker.cpp
+        ../Library.cpp
+        ../Model.cpp
+        ../ProcessGFiles.cpp
+        ../FilesystemIndexer.cpp
 )
 
-# Include directories for FilesystemIndexerPerfTest
-target_include_directories(FilesystemIndexerPerfTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-    ${BRLCAD_INCLUDE_DIRS}
+add_cadventory_test(
+    NAME ModelCardDelegateTest
+    SOURCES
+        ModelCardDelegateTest.cpp
+        ../ModelCardDelegate.cpp
+        ../Model.cpp
 )
 
-# add_executable(MainWindowTest
-#     MainWindowTest.cpp
-#     ../MainWindow.cpp
-#     ../LibraryWindow.cpp
-#     ../Library.cpp
-#     ../Model.cpp
-#     ../ProcessGFiles.cpp
-#     ../IndexingWorker.cpp
-#     ../FilesystemIndexer.cpp
-#     ../ModelCardDelegate.cpp
-#     ../GeometryBrowserDialog.cpp
-#     ../ReportGenerationWindow.cpp
-#     ../ModelFilterProxyModel.cpp
-#     ../mainwindow.ui
-#     ../ReportGeneratorWorker.cpp
-#     ../ReportGeneratorWorker.h
-#     ../SettingWindow.h
-#     ../SettingWindow.cpp
-#     ../FileSystemModelWithCheckboxes.cpp
-#     ../FileSystemModelWithCheckboxes.h
-#     ../FileSystemFilterProxyModel.cpp
-#     ../FileSystemFilterProxyModel.h
-#     ../ModelView.cpp
-#     ../ModelView.h
-#     ../modelview.ui
-# )
-
-# Link the Main Window GUI test executable against the necessary libraries
-# target_link_libraries(MainWindowTest PRIVATE
-#     Catch2::Catch2WithMain
-#     Qt6::Core
-#     Qt6::Gui
-#     Qt6::Widgets
-#     Qt6::Test
-#     ${SQLITE_LIBRARY}
-# )
-
-# Include directories for MainWindowTest
-# target_include_directories(MainWindowTest PRIVATE
-#     ${CMAKE_SOURCE_DIR}/src
-#     ${CMAKE_BINARY_DIR}/src
-# )
-
-# Add the LibraryWindowTest executable
-# add_executable(LibraryWindowTest
-#     LibraryWindowTest.cpp
-#     ../LibraryWindow.cpp
-#     ../Library.cpp
-#     ../Model.cpp
-#     ../ProcessGFiles.cpp
-#     ../IndexingWorker.cpp
-#     ../FilesystemIndexer.cpp
-#     ../ModelCardDelegate.cpp
-#     ../GeometryBrowserDialog.cpp
-#     ../ReportGenerationWindow.cpp
-#     ../ModelFilterProxyModel.cpp
-#     ../mainwindow.ui
-#     ../librarywindow.ui
-# )
-
-# Link the LibraryWindow GUI test executable against the necessary libraries
-# target_link_libraries(LibraryWindowTest PRIVATE
-#     Catch2::Catch2WithMain
-#     Qt6::Core
-#     Qt6::Gui
-#     Qt6::Widgets
-#     Qt6::Test
-#     ${SQLITE_LIBRARY}
-# )
-
-# Include directories for LibraryWindowTest
-# target_include_directories(LibraryWindowTest PRIVATE
-#     ${CMAKE_SOURCE_DIR}/src
-#     ${CMAKE_BINARY_DIR}/src
-# )
-
-# Add the GeometryBrowserDialogTest executable
-add_executable(GeometryBrowserDialogTest
-    GeometryBrowserDialogTest.cpp
-    ../GeometryBrowserDialog.cpp
-    ../Model.cpp
+# For tests requiring UI and resources
+add_cadventory_test(
+    NAME MainWindowTest
+    SOURCES
+        MainWindowTest.cpp
+        ../MainWindow.cpp
+        ../LibraryWindow.cpp
+        ../Library.cpp
+        ../Model.cpp
+        ../ProcessGFiles.cpp
+        ../IndexingWorker.cpp
+        ../FilesystemIndexer.cpp
+        ../ModelCardDelegate.cpp
+        ../GeometryBrowserDialog.cpp
+        ../ReportGenerationWindow.cpp
+        ../ReportGeneratorWorker.cpp
+        ../ModelFilterProxyModel.cpp
+        ../ModelView.cpp
+        ../FileSystemModelWithCheckboxes.cpp
+        ../FileSystemFilterProxyModel.cpp
+        ../SettingWindow.cpp
+        # UI files
+        ../mainwindow.ui
+        ../librarywindow.ui
+        ../reportgenerationwindow.ui
+        ../SettingWindow.ui
+        ../modelview.ui
+        # Resource files
+        ${CMAKE_SOURCE_DIR}/images.qrc
 )
 
-# Link the GeometryBrowserDialogTest executable against the necessary libraries
-target_link_libraries(GeometryBrowserDialogTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Test
-    ${SQLITE_LIBRARY}
-    ${BRLCAD_LIBRARIES}
+add_cadventory_test(
+    NAME LibraryWindowTest
+    SOURCES
+        LibraryWindowTest.cpp
+        ../LibraryWindow.cpp
+        ../MainWindow.cpp               # Include MainWindow.cpp
+        ../Library.cpp
+        ../Model.cpp
+        ../ProcessGFiles.cpp
+        ../IndexingWorker.cpp
+        ../FilesystemIndexer.cpp
+        ../ModelCardDelegate.cpp
+        ../GeometryBrowserDialog.cpp
+        ../ReportGenerationWindow.cpp
+        ../ReportGeneratorWorker.cpp
+        ../ModelFilterProxyModel.cpp
+        ../ModelView.cpp
+        ../FileSystemModelWithCheckboxes.cpp
+        ../FileSystemFilterProxyModel.cpp
+        ../SettingWindow.cpp
+        # UI files
+        ../mainwindow.ui
+        ../librarywindow.ui
+        ../reportgenerationwindow.ui
+        ../SettingWindow.ui
+        ../modelview.ui
+        # Resource files
+        ${CMAKE_SOURCE_DIR}/images.qrc
 )
 
-# Include directories for GeometryBrowserDialogTest
-target_include_directories(GeometryBrowserDialogTest PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/src
-    ${BRLCAD_INCLUDE_DIRS}
-)
-
-# Add the ProcessGFilesTest executable
-# add_executable(ProcessGFilesTest
-#     ProcessGFilesTest.cpp
-#     ../ProcessGFiles.cpp
-#     ../Model.cpp
-# )
-
-# Link the test executable against the necessary libraries
-# target_link_libraries(ProcessGFilesTest PRIVATE
-#     Catch2::Catch2WithMain
-#     Qt6::Core
-#     Qt6::Gui
-#     ${SQLITE_LIBRARY}
-#     ${BRLCAD_LIBRARIES}
-# )
-
-# Include directories for ProcessGFilesTest
-# target_include_directories(ProcessGFilesTest PRIVATE
-#     ${CMAKE_SOURCE_DIR}/src
-#     ${CMAKE_BINARY_DIR}/src
-#     ${BRLCAD_INCLUDE_DIRS}
-# )
-
-# Add the IndexingWorkerTest executable
-# add_executable(IndexingWorkerTest
-#     IndexingWorkerTest.cpp
-#     ../IndexingWorker.cpp
-#     ../Library.cpp
-#     ../Model.cpp
-#     ../ProcessGFiles.cpp          
-#     ../FilesystemIndexer.cpp
-# )
-
-# Link the test executable against the necessary libraries
-# target_link_libraries(IndexingWorkerTest PRIVATE
-#     Catch2::Catch2WithMain
-#     Qt6::Core
-#     Qt6::Gui
-#     Qt6::Test
-#     sqlite3
-#     ${BRLCAD_LIBRARIES}
-# )
-
-# Include directories for IndexingWorkerTest
-# target_include_directories(IndexingWorkerTest PRIVATE
-#     ${CMAKE_SOURCE_DIR}/src
-#     ${CMAKE_BINARY_DIR}/src
-#     ${BRLCAD_INCLUDE_DIRS}
-# )
-
-# Add the ModelCardDelegateTest executable
-# add_executable(ModelCardDelegateTest
-#     ModelCardDelegateTest.cpp
-#     ../ModelCardDelegate.cpp
-#     ../Model.cpp
-# )
-
-# Link the ModelCardDelegateTest executable against the necessary libraries
-# target_link_libraries(ModelCardDelegateTest PRIVATE
-#     Catch2::Catch2WithMain
-#     Qt6::Core
-#     Qt6::Gui
-#     Qt6::Widgets
-#     Qt6::Test
-#     ${SQLITE_LIBRARY}
-# )
-
-# Include directories for ModelCardDelegateTest
-# target_include_directories(ModelCardDelegateTest PRIVATE
-#     ${CMAKE_SOURCE_DIR}/src
-#     ${CMAKE_BINARY_DIR}/src
-# )
-
-add_executable(FileSystemModelWithCheckboxesTest
-    FileSystemModelWithCheckboxesTest.cpp
-    ../FileSystemModelWithCheckboxes.cpp
-    ../Model.cpp
-)
-
-target_link_libraries(FileSystemModelWithCheckboxesTest PRIVATE
-    Catch2::Catch2WithMain
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Test
-    sqlite3
-)
-
-add_executable(FileSystemFilterProxyModelTest
-    FileSystemFilterProxyModelTest.cpp
-    ../FileSystemFilterProxyModel.cpp
-)
-
-target_link_libraries(FileSystemFilterProxyModelTest
-    Catch2::Catch2WithMain
-    Qt6::Test
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-
-# Register each test with CTest
-add_test(NAME ModelTests COMMAND ModelTest)
-add_test(NAME LibraryTests COMMAND LibraryTest)
-add_test(NAME FilesystemIndexerTests COMMAND FilesystemIndexerTest)
-add_test(NAME FilesystemIndexerPerfTests COMMAND FilesystemIndexerPerfTest)
-# add_test(NAME MainWindowTests COMMAND MainWindowTest)
-# add_test(NAME LibraryWindowTests COMMAND LibraryWindowTest)
-add_test(NAME GeometryBrowserDialogTests COMMAND GeometryBrowserDialogTest)
-# add_test(NAME ProcessGFilesTests COMMAND ProcessGFilesTest)
-# add_test(NAME IndexingWorkerTests COMMAND IndexingWorkerTest)
-# add_test(NAME ModelCardDelegateTests COMMAND ModelCardDelegateTest)
-add_test(NAME FileSystemModelWithCheckboxesTests COMMAND FileSystemModelWithCheckboxesTest)
-add_test(NAME FileSystemFilterProxyModelTests COMMAND FileSystemFilterProxyModelTest)
+# No need to register tests separately since it's done in the function
