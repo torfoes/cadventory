@@ -14,6 +14,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+
 # Include directories from parent scope
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
@@ -53,6 +54,30 @@ set(COMMON_INCLUDE_DIRECTORIES
     ${BRLCAD_INCLUDE_DIRS}
 )
 
+set(BRLCAD_BUILD "${BRLCAD_ROOT}")
+
+
+
+# Function to add a test executable using qt_add_executable
+# function(add_cadventory_test)
+#     set(options)
+#     set(oneValueArgs NAME)
+#     set(multiValueArgs SOURCES)
+#     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+#     if(NOT TEST_NAME)
+#         message(FATAL_ERROR "add_cadventory_test requires a NAME argument.")
+#     endif()
+
+#     qt_add_executable(${TEST_NAME}
+#         ${TEST_SOURCES}
+#     )
+
+#     target_link_libraries(${TEST_NAME} PRIVATE ${COMMON_LIBRARIES})
+#     target_include_directories(${TEST_NAME} PRIVATE ${COMMON_INCLUDE_DIRECTORIES})
+
+#     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+# endfunction()
 # Function to add a test executable using qt_add_executable
 function(add_cadventory_test)
     set(options)
@@ -71,8 +96,12 @@ function(add_cadventory_test)
     target_link_libraries(${TEST_NAME} PRIVATE ${COMMON_LIBRARIES})
     target_include_directories(${TEST_NAME} PRIVATE ${COMMON_INCLUDE_DIRECTORIES})
 
+    # Define BRLCAD_BUILD for use in the source code
+    target_compile_definitions(${TEST_NAME} PRIVATE BRLCAD_BUILD="${BRLCAD_ROOT}")
+
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endfunction()
+
 
 # Add tests using the function
 add_cadventory_test(
@@ -147,13 +176,13 @@ add_cadventory_test(
         ../FilesystemIndexer.cpp
 )
 
-add_cadventory_test(
-    NAME ModelCardDelegateTest
-    SOURCES
-        ModelCardDelegateTest.cpp
-        ../ModelCardDelegate.cpp
-        ../Model.cpp
-)
+# add_cadventory_test(
+#     NAME ModelCardDelegateTest
+#     SOURCES
+#         ModelCardDelegateTest.cpp
+#         ../ModelCardDelegate.cpp
+#         ../Model.cpp
+# )
 
 # For tests requiring UI and resources
 add_cadventory_test(

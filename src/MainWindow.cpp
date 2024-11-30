@@ -223,6 +223,10 @@ void MainWindow::updateStatusLabel(const char* status)
     ui.indexingStatus->setText(status);
 }
 
+QString MainWindow::getStatusLabel(){
+    return ui.indexingStatus->text();
+}
+
 void MainWindow::on_addLibraryButton_clicked()
 {
     QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select Folder"), ".");
