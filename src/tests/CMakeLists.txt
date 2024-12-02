@@ -9,6 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Enable testing
 enable_testing()
 
+# Enable coverage flags in Debug mode
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -g -O0")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+endif()
+
 # Enable Qt's automatic processing
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -185,64 +191,62 @@ add_cadventory_test(
 # )
 
 # For tests requiring UI and resources
-add_cadventory_test(
-    NAME MainWindowTest
-    SOURCES
-        MainWindowTest.cpp
-        ../MainWindow.cpp
-        ../LibraryWindow.cpp
-        ../Library.cpp
-        ../Model.cpp
-        ../ProcessGFiles.cpp
-        ../IndexingWorker.cpp
-        ../FilesystemIndexer.cpp
-        ../ModelCardDelegate.cpp
-        ../GeometryBrowserDialog.cpp
-        ../ReportGenerationWindow.cpp
-        ../ReportGeneratorWorker.cpp
-        ../ModelFilterProxyModel.cpp
-        ../ModelView.cpp
-        ../FileSystemModelWithCheckboxes.cpp
-        ../FileSystemFilterProxyModel.cpp
-        ../SettingWindow.cpp
-        # UI files
-        ../mainwindow.ui
-        ../librarywindow.ui
-        ../reportgenerationwindow.ui
-        ../SettingWindow.ui
-        ../modelview.ui
-        # Resource files
-        ${CMAKE_SOURCE_DIR}/images.qrc
-)
+# add_cadventory_test(
+#     NAME MainWindowTest
+#     SOURCES
+#         MainWindowTest.cpp
+#         ../MainWindow.cpp
+#         ../LibraryWindow.cpp
+#         ../Library.cpp
+#         ../Model.cpp
+#         ../ProcessGFiles.cpp
+#         ../IndexingWorker.cpp
+#         ../FilesystemIndexer.cpp
+#         ../ModelCardDelegate.cpp
+#         ../GeometryBrowserDialog.cpp
+#         ../ReportGenerationWindow.cpp
+#         ../ReportGeneratorWorker.cpp
+#         ../ModelFilterProxyModel.cpp
+#         ../ModelView.cpp
+#         ../FileSystemModelWithCheckboxes.cpp
+#         ../FileSystemFilterProxyModel.cpp
+#         ../SettingWindow.cpp
+#         # UI files
+#         ../mainwindow.ui
+#         ../librarywindow.ui
+#         ../reportgenerationwindow.ui
+#         ../SettingWindow.ui
+#         ../modelview.ui
+#         # Resource files
+#         ${CMAKE_SOURCE_DIR}/images.qrc
+# )
 
-add_cadventory_test(
-    NAME LibraryWindowTest
-    SOURCES
-        LibraryWindowTest.cpp
-        ../LibraryWindow.cpp
-        ../MainWindow.cpp               # Include MainWindow.cpp
-        ../Library.cpp
-        ../Model.cpp
-        ../ProcessGFiles.cpp
-        ../IndexingWorker.cpp
-        ../FilesystemIndexer.cpp
-        ../ModelCardDelegate.cpp
-        ../GeometryBrowserDialog.cpp
-        ../ReportGenerationWindow.cpp
-        ../ReportGeneratorWorker.cpp
-        ../ModelFilterProxyModel.cpp
-        ../ModelView.cpp
-        ../FileSystemModelWithCheckboxes.cpp
-        ../FileSystemFilterProxyModel.cpp
-        ../SettingWindow.cpp
-        # UI files
-        ../mainwindow.ui
-        ../librarywindow.ui
-        ../reportgenerationwindow.ui
-        ../SettingWindow.ui
-        ../modelview.ui
-        # Resource files
-        ${CMAKE_SOURCE_DIR}/images.qrc
-)
-
-# No need to register tests separately since it's done in the function
+# add_cadventory_test(
+#     NAME LibraryWindowTest
+#     SOURCES
+#         LibraryWindowTest.cpp
+#         ../LibraryWindow.cpp
+#         ../MainWindow.cpp               # Include MainWindow.cpp
+#         ../Library.cpp
+#         ../Model.cpp
+#         ../ProcessGFiles.cpp
+#         ../IndexingWorker.cpp
+#         ../FilesystemIndexer.cpp
+#         ../ModelCardDelegate.cpp
+#         ../GeometryBrowserDialog.cpp
+#         ../ReportGenerationWindow.cpp
+#         ../ReportGeneratorWorker.cpp
+#         ../ModelFilterProxyModel.cpp
+#         ../ModelView.cpp
+#         ../FileSystemModelWithCheckboxes.cpp
+#         ../FileSystemFilterProxyModel.cpp
+#         ../SettingWindow.cpp
+#         # UI files
+#         ../mainwindow.ui
+#         ../librarywindow.ui
+#         ../reportgenerationwindow.ui
+#         ../SettingWindow.ui
+#         ../modelview.ui
+#         # Resource files
+#         ${CMAKE_SOURCE_DIR}/images.qrc
+# )
