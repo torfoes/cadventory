@@ -94,6 +94,8 @@ void LibraryWindow::loadFromLibrary(Library* _library) {
 
     // Start indexing to process any already included but unprocessed models
     startIndexing();
+
+
 }
 
 void LibraryWindow::startIndexing() {
@@ -325,17 +327,17 @@ void LibraryWindow::on_backButton_clicked() {
 }
 
 void LibraryWindow::reloadLibrary() {
-    std::string path = library->fullPath + "/.cadventory/metadata.db";
+    std::string path = library->fullPath; //+ "/.cadventory/metadata.db";
     fs::path filePath(path);
 
     qDebug() << QString::fromStdString(filePath.string());
 
     // Check if the file exists
     if (fs::exists(filePath)) {
-        // Try to remove the file
+
+        qDebug() << "reloadLibrary is called" ;
         try {
 
-                std::cout << "File 'metadata.db' successfully deleted." << std::endl;
                 // Reload the library
                 model->resetDatabase();
                 model->refreshModelData();
@@ -348,7 +350,7 @@ void LibraryWindow::reloadLibrary() {
             std::cerr << "Error: " << e.what() << std::endl;
         }
     } else {
-        std::cout << "File 'metadata.db' does not exist." << std::endl;
+        std::cout << "'.cadventory' does not exist." << std::endl;
 }
 
 }

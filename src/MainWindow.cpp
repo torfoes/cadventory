@@ -144,20 +144,20 @@ void MainWindow::openLibrary()
         // Set the main window pointer using a setter method
         libraryWindow->setMainWindow(this);
 
-        // Load the library into the window (this should now start the indexing in the background)
-        libraryWindow->loadFromLibrary(foundLibrary);
 
-        std::cout << "Loaded library " << foundLibrary->name() << std::endl;
-
-        // Hide the main window and show the library window
-        //this->hide();
-        //libraryWindow->show();
         ui.librarywidget=libraryWindow;
 
         ui.origin->hide();
         setWindowTitle(foundLibrary->name() + QString(" Library"));
-        ui.librarywidget->setAttribute(Qt::WA_DeleteOnClose);
+       // ui.librarywidget->setAttribute(Qt::WA_DeleteOnClose);
         ui.librarywidget->show();
+
+        // Load the library into the window (this should now start the indexing in the background)
+        libraryWindow->loadFromLibrary(foundLibrary);
+
+
+        std::cout << "Loaded library " << foundLibrary->name() << std::endl;
+
 
     } else {
         QMessageBox::warning(this, "Library Not Found", "Could not find the library for " + lookupKey);
@@ -202,6 +202,7 @@ void MainWindow::addLibraryButton(const char* label, const char* /*path*/)
     /* add our new button */
     int row = (buttons) / COLUMNS;
     int column = (buttons) % COLUMNS;
+        qDebug() << "row = "<<row<< " column = "<<column;
     ui.gridLayout->addWidget(newButton, row, column);
 
     /* once we have a lot of buttons, make them all smaller */
@@ -355,15 +356,30 @@ void MainWindow::removeLibrary()
 
             QPushButton* button = qobject_cast<QPushButton*>(item->widget());
             if (button && button->text() == QString::fromLocal8Bit(foundLibrary->name())){
+                qDebug() << ui.gridLayout->count();
                 ui.gridLayout->removeWidget(button);
                 delete button;
-
                 qDebug() << ui.gridLayout->count();
+
+
+
+
                 break;
 
             }
         }
 
+        for (size_t i = (size_t)ui.gridLayout->count()-1; i > (size_t)0 ; --i) {
+            QLayoutItem* item = ui.gridLayout->itemAt(i);
+
+            QPushButton* button = qobject_cast<QPushButton*>(item->widget());
+            const size_t LAYOUT_SHIFT = 20;
+            const size_t COLUMNS = 5;
+            int row = i / COLUMNS;
+            int column = i % COLUMNS;
+            ui.gridLayout->addWidget(button,row,column);
+        }
+        fileMenu->removeAction(action);
         delete action;
         libraries.erase(std::remove(libraries.begin(), libraries.end(), foundLibrary), libraries.end());
 

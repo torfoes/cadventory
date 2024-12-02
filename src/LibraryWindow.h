@@ -31,6 +31,7 @@ public:
     void reloadLibrary();
     void setMainWindow(MainWindow* mainWindow);
 
+
 private slots:
     void onSearchTextChanged(const QString& text);
     void onSearchFieldChanged(const QString& field);
@@ -57,11 +58,10 @@ private:
     void setupModelsAndViews();
     void setupConnections();
 
-    Ui::LibraryWindow ui;
     Library* library;
     MainWindow* mainWindow;
     QAction* reload;
-
+    Ui::LibraryWindow ui;
     Model* model;
 
     ModelFilterProxyModel* availableModelsProxyModel;
