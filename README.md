@@ -9,12 +9,13 @@ testing, and code security testing.
 
 ## Installation
 
-1) Install: CMake 3.25+, SQLite3, and Qt6
-2) Clone/Download CADventory from source
-3) Compile (see .gitlab-ci.yml for variations):
+1) Install: CMake 3.25+, SQLite3, BRLCAD, and Qt6
+2) Clone/Install BRLCAD from https://github.com/BRL-CAD/brlcad.git
+3) Clone/Download CADventory from source
+4) Compile (see .gitlab-ci.yml for variations):
      mkdir .build
      cd .build
-     cmake .. -DCMAKE_INSTALL_PREFIX=/path -DCMAKE_BUILD_TYPE=Release -DQt6_DIR=/path/to/qt6
+     cmake .. -DCMAKE_INSTALL_PREFIX=/path -DCMAKE_BUILD_TYPE=Release -DQt6_DIR=/path/to/qt6 -DBRLCAD_ROOT=/path/to/BRLCAD
      cmake --build . --config Release
 
 ## Usage
