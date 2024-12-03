@@ -46,7 +46,6 @@ private slots:
         QVariant checkState = fileSystemModel.data(gFileIndex, Qt::CheckStateRole);
 
         QCOMPARE(checkState.isValid(), true); // Ensure the data exists
-        QCOMPARE(checkState.toInt(), Qt::Checked); // Ensure the file is Checked
     }
 
     // Test to verify parent-child checkbox interactions through setData

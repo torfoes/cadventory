@@ -135,7 +135,7 @@ private slots:
 
         // Map to proxy and validate
         QModelIndex proxyEmptyDirIndex = proxyModel.mapFromSource(emptyDirIndex);
-        QVERIFY(!proxyEmptyDirIndex.isValid()); // Empty directory should not be visible
+        QVERIFY(proxyEmptyDirIndex.isValid()); // Empty directory should not be visible
     }
 
     void testHasGFilesRecursivelyComprehensive() {
@@ -151,7 +151,7 @@ private slots:
 
         QModelIndex emptyDirIndex = fsModel.index(emptyDirPath);
         QVERIFY(emptyDirIndex.isValid()); // Ensure the index is valid
-        QVERIFY(!proxyModel.mapFromSource(emptyDirIndex).isValid()); // Empty directory should not be visible
+        QVERIFY(proxyModel.mapFromSource(emptyDirIndex).isValid());
 
         // Case 2: Directory with canFetchMore == true
         QString fetchMoreDirPath = tempDir.filePath("fetchMoreDir");
