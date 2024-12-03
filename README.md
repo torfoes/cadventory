@@ -40,6 +40,41 @@ To clear all settings, run with --no-gui command-line option.
 8. genhtml coverage_filtered.info --output-directory coverage_report
 9. view coverage_report/index.html 
 
+## Automated Test Suite via Python Script
+
+1. Dependencies:
+
+  Install CMake:
+    On macOS: brew install cmake
+    On Ubuntu: sudo apt install cmake
+    On Windows: Install from the CMake website.
+  Install LCOV and GenHTML:
+    On macOS: brew install lcov
+    On Ubuntu: sudo apt install lcov
+    On Windows: Install LCOV and GenHTML through Cygwin or equivalent.
+  Ensure make or mingw32-make is available.
+
+2. Environment Variable for BRLCAD_ROOT:
+
+  You can specify the BRLCAD_ROOT path interactively when the script runs.
+
+3. Cross-Platform Commands:
+
+  make: Uses mingw32-make on Windows.
+  File Paths: Adapts to Linux/macOS vs. Windows paths (/usr/* vs. C:/Program Files/*).
+  Opening HTML Reports: Uses start, open, or xdg-open based on the OS.
+
+4. Testing Workflow:
+
+  Compiles the application.
+  Runs unit tests with CTest.
+  Generates and filters a coverage report.
+  Opens the report in the default browser.
+
+5. Running the Script
+  Ensure Python is installed (version 3.6+).
+  Run it in your project directory (cadventory):
+    python run_tests.py or python3 run_tests.py
 
 ## Roadmap
 
