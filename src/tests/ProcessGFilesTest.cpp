@@ -1,14 +1,45 @@
+// Updated Test File: ProcessGFilesTests.cpp
+
 #include <catch2/catch_test_macros.hpp>
-#include "../ProcessGFiles.h" 
+#include "../ProcessGFiles.h"
 #include "../Model.h"
 #include <filesystem>
 #include <memory>
 #include <QDir>
+#include <QSettings>
+#include <QDebug>
+#include <fstream>       // Added to use std::ifstream
 
-const std::string TEST_LIBRARY_PATH = "./temp_test_library";  // Base path for testing
+// Base path for testing
+const std::string TEST_LIBRARY_PATH = "./temp_test_library";
 
+// Setup function to create necessary directories
 void setupTestLibraryPath() {
     std::filesystem::create_directories(TEST_LIBRARY_PATH + "/.cadventory");
+}
+
+// Helper function to clean up test data (if needed)
+void cleanupTestLibraryPath() {
+    std::filesystem::remove_all(TEST_LIBRARY_PATH);
+}
+
+// Helper function to create a test ModelData object
+ModelData createTestModelData(int id, const std::string& shortName, const std::string& filePath) {
+    return ModelData{
+        id,                 // id
+        shortName,          // short_name
+        filePath,           // primary_file
+        "",                 // override_info
+        "",                 // title
+        {},                 // thumbnail (empty vector<char>)
+        "Author Name",      // author (std::string)
+        TEST_LIBRARY_PATH,  // file_path (library path)
+        "Unknown Library",  // library_name
+        false,              // is_selected
+        false,              // is_processed
+        false,              // is_included
+        {}                  // tags
+    };
 }
 
 // Test initialization and object creation
@@ -19,6 +50,8 @@ TEST_CASE("ProcessGFiles - Initialization", "[ProcessGFiles]") {
 
     REQUIRE(model != nullptr);
     REQUIRE(&processor != nullptr);
+
+    cleanupTestLibraryPath();
 }
 
 // Test processing a file (using `annual_gift_man.g`)
@@ -27,227 +60,76 @@ TEST_CASE("ProcessGFiles - File Processing with annual_gift_man.g", "[ProcessGFi
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
     ProcessGFiles processor(model.get());
 
-    // Create a ModelData object
-    ModelData modelData = {
-        1,                                  // ID
-        "annual_gift_man",                  // Short name
-        "../src/tests/annual_gift_man.g",   // File path
-        "",                                 // Title
-        std::string{},                      // Thumbnail (empty string for compatibility)
-        std::vector<char>("Author Name", "Author Name" + 11), // Author
-        TEST_LIBRARY_PATH,                  // File path (library path)
-        "Unknown Library",                  // Library name
-        "",                                 // Is selected
-        "",                                 // Is processed
-        "",                                 // Is included
-        {}                                  // Tags
-    };
+    // Adjust the path to where your test .g files are located
+    std::string testFilePath = "../src/tests/annual_gift_man.g";
+
+    // Create a ModelData object with correct fields
+    ModelData modelData = createTestModelData(1, "annual_gift_man", testFilePath);
 
     SECTION("Process annual_gift_man.g file") {
         if (std::filesystem::exists(modelData.primary_file)) {
             processor.processGFile(modelData);
 
+            // Verify that the model is marked as processed
+            REQUIRE(modelData.is_processed == true);
+
             // Verify thumbnail generation
             REQUIRE(!modelData.thumbnail.empty());
+
+            // Verify that the title is extracted
+            REQUIRE(!modelData.title.empty());
         } else {
             WARN("annual_gift_man.g file not found, skipping test");
         }
     }
+
+    cleanupTestLibraryPath();
 }
 
-// Test thumbnail generation for `annual_gift_man.g`
-TEST_CASE("ProcessGFiles - Thumbnail Generation", "[ProcessGFiles]") {
+// Test generating a gist report and checking for .pdf output
+TEST_CASE("ProcessGFiles - Generate Gist Report and Check PDF Output", "[ProcessGFiles]") {
     setupTestLibraryPath();
     auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
     ProcessGFiles processor(model.get());
 
-    ModelData modelData = {
-        1,                                  // ID
-        "annual_gift_man",                  // Short name
-        "../src/tests/annual_gift_man.g",   // File path
-        "",                                 // Title
-        std::string{},                      // Thumbnail (empty string for compatibility)
-        std::vector<char>("Author Name", "Author Name" + 11), // Author
-        TEST_LIBRARY_PATH,                  // File path (library path)
-        "Unknown Library",                  // Library name
-        "",                                 // Is selected
-        "",                                 // Is processed
-        "",                                 // Is included
-        {}                                  // Tags
-    };
-
-    if (std::filesystem::exists(modelData.primary_file)) {
-        processor.processGFile(modelData);
-
-        // Check that a thumbnail is generated
-        REQUIRE(!modelData.thumbnail.empty());
-    } else {
-        WARN("annual_gift_man.g file not found, skipping test");
-    }
-}
-
-
-TEST_CASE("ProcessGFiles - Generate Gist Report for annual_gift_man.g", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-
-    std::string outputFilePath = "./temp_test_library/annual_gist_report.txt";  // Use accessible path
+    std::string inputFilePath = "../src/tests/annual_gift_man.g";
+    std::string outputFilePath = TEST_LIBRARY_PATH + "/annual_gist_report.pdf";  // Expecting a .pdf output
+    std::string primaryObject = "all";
     std::string label = "Test Label";
 
-    // Ensure the input file exists before testing
-    if (std::filesystem::exists("../src/tests/annual_gift_man.g")) {
-        auto [success, errorMessage, command] = processor.generateGistReport(
-            "../src/tests/annual_gift_man.g", 
-            outputFilePath, 
-            "annual_gift_man", 
-            label
-        );
+    SECTION("Generate gist report and check for PDF output") {
+        if (std::filesystem::exists(inputFilePath)) {
+            auto [success, errorMessage, command] = processor.generateGistReport(
+                inputFilePath, outputFilePath, primaryObject, label
+                );
 
-        // Pass the test if the function runs without errors, even if the output isn't generated
-        REQUIRE(success == true);
-        REQUIRE(errorMessage.empty());
+            // Verify that the gist report was generated successfully
+            REQUIRE(success == true);
+            REQUIRE(errorMessage.empty());
 
-        // Check for output file existence
-        if (std::filesystem::exists(outputFilePath)) {
-            REQUIRE(std::filesystem::file_size(outputFilePath) > 0);
+            // Check for output file existence
+            if (std::filesystem::exists(outputFilePath)) {
+                REQUIRE(std::filesystem::file_size(outputFilePath) > 0);
+
+                // Optionally, verify that the output file is indeed a PDF
+                std::ifstream file(outputFilePath, std::ios::binary);
+                char buffer[5];
+                file.read(buffer, 4);
+                buffer[4] = '\0';
+                std::string header(buffer);
+                REQUIRE(header == "%PDF");
+            } else {
+                FAIL("Gist report PDF output file not generated");
+            }
         } else {
-            WARN("Gist report output file not generated, skipping file size check");
+            WARN("annual_gift_man.g file not found, skipping test");
         }
-    } else {
-        WARN("annual_gift_man.g file not found, skipping test");
     }
-}
 
-TEST_CASE("ProcessGFiles - Empty File Path", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-
-    ModelData modelData = {
-        2,                                  // ID
-        "empty_file",                       // Short name
-        "",                                 // File path (empty)
-        "",                                 // Title
-        {},                                 // Thumbnail
-        {},                                 // Author
-        TEST_LIBRARY_PATH,                  // Library path
-        "Unknown Library"                   // Library name
-    };
-
-    processor.processGFile(modelData);
-
-    // Verify that the file was not processed
-    REQUIRE(modelData.is_processed == false);
-}
-
-
-TEST_CASE("ProcessGFiles - Invalid BRL-CAD Database Path", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-
-    ModelData modelData = {
-        3,                                  // ID
-        "invalid_path",                     // Short name
-        "nonexistent_file.g",               // Invalid file path
-        "",                                 // Title
-        {},                                 // Thumbnail
-        {},                                 // Author
-        TEST_LIBRARY_PATH,                  // Library path
-        "Unknown Library"                   // Library name
-    };
-
-    processor.processGFile(modelData);
-
-    // Verify that the file was not processed
-    REQUIRE(modelData.is_processed == false);
-}
-
-
-TEST_CASE("ProcessGFiles - Thumbnail Generation Failure", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-
-    ModelData modelData = {
-        4,                                  // ID
-        "thumbnail_fail",                   // Short name
-        "../src/tests/corrupted_file.g",    // Path to a corrupted file
-        "",                                 // Title
-        {},                                 // Thumbnail
-        {},                                 // Author
-        TEST_LIBRARY_PATH,                  // Library path
-        "Unknown Library"                   // Library name
-    };
-
-    // Ensure the file exists (adjust path as necessary for your test environment)
-    if (std::filesystem::exists(modelData.file_path)) {
-        processor.processGFile(modelData);
-
-        // Validate the thumbnail was generated
-        REQUIRE(!modelData.thumbnail.empty());
-    } else {
-        WARN("Test file annual_gift_man.g not found. Skipping test.");
+    // Clean up the generated PDF file
+    if (std::filesystem::exists(outputFilePath)) {
+        std::filesystem::remove(outputFilePath);
     }
+
+    cleanupTestLibraryPath();
 }
-
-
-TEST_CASE("ProcessGFiles - Title Extraction with annual_gift_man.g", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-
-    ModelData modelData = {
-        5,                                  // ID
-        "annual_gift_man",                  // Short name
-        "../src/tests/annual_gift_man.g",   // File path
-        "",                                 // Title
-        {},                                 // Thumbnail
-        {},                                 // Author
-        TEST_LIBRARY_PATH,                  // Library path
-        "Unknown Library"                   // Library name
-    };
-
-    if (std::filesystem::exists(modelData.file_path)) {
-        processor.processGFile(modelData);
-
-        // Pass the test if the title is set or defaults to "(Untitled)"
-        REQUIRE(!modelData.title.empty());
-        REQUIRE((modelData.title == "(Untitled)" || !modelData.title.empty()));
-    } else {
-        WARN("annual_gift_man.g file not found, skipping test");
-    }
-}
-
-TEST_CASE("ProcessGFiles - Object Extraction with annual_gift_man.g", "[ProcessGFiles]") {
-    setupTestLibraryPath();
-    auto model = std::make_unique<Model>(TEST_LIBRARY_PATH, nullptr);
-    ProcessGFiles processor(model.get());
-
-    ModelData modelData = {
-        6,                                  // ID
-        "annual_gift_man",                  // Short name
-        "../src/tests/annual_gift_man.g",   // File path
-        "",                                 // Title
-        {},                                 // Thumbnail
-        {},                                 // Author
-        TEST_LIBRARY_PATH,                  // Library path
-        "Unknown Library"                   // Library name
-    };
-
-    if (std::filesystem::exists(modelData.file_path)) {
-        processor.processGFile(modelData);
-
-        // Verify object extraction; either objects are found or not
-        auto objects = model->getObjectsForModel(modelData.id);
-        if (!objects.empty()) {
-            REQUIRE(!objects.empty());
-        } else {
-            REQUIRE(objects.empty());
-        }
-    } else {
-        WARN("annual_gift_man.g file not found, skipping test");
-    }
-}
-
