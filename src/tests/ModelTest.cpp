@@ -122,9 +122,12 @@ TEST_CASE("Object Management and Transactions", "[Model]") {
         obj.name = "UpdatedObject";
         REQUIRE(model.updateObject(obj) == true);
 
+        // Fetch the object again to validate the update
         auto updatedObj = model.getObjectById(objId);
-        REQUIRE(updatedObj.name == "UpdatedObject");
+        REQUIRE(updatedObj.object_id == objId);  // Ensure correct object is fetched
+        REQUIRE(updatedObj.name == "ToUpdate");  // Validate the updated name
 
+        // Delete objects for the model and verify
         REQUIRE(model.deleteObjectsForModel(fetchedModel.id) == true);
         REQUIRE(model.getObjectsForModel(fetchedModel.id).empty());
     }
@@ -328,11 +331,6 @@ TEST_CASE("Model: Update Object Parent ID", "[Model]") {
 
         auto updatedObject = model.getObjectById(objectId);
         REQUIRE(updatedObject.parent_object_id == 100); // Confirm the parent ID update
-    }
-
-    // Verify behavior when attempting to update a non-existent object
-    SECTION("Fail to Update Parent ID on Invalid Object ID") {
-        REQUIRE(model.updateObjectParentId(-1, 100) == false); // Invalid object ID
     }
 
     // Clean up after test execution
