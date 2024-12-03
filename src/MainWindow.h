@@ -48,6 +48,7 @@ public:
 
 public slots:
     void updateStatusLabel(const char* status);
+    QString getStatusLabel();
 
 private slots:
     void on_addLibraryButton_clicked();
